@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { UserMenu } from "@/components/user-menu";
+import { isStaff } from "@/lib/types";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -16,7 +17,10 @@ export async function SiteHeader() {
             <Link href="/modules" className="transition-colors hover:text-foreground">
               Модулиуд
             </Link>
-            {session?.user?.role === "teacher" && (
+            <Link href="/leaderboard" className="transition-colors hover:text-foreground">
+              Шилдэг сурагчид
+            </Link>
+            {isStaff(session?.user?.role) && (
               <Link href="/teacher" className="transition-colors hover:text-foreground">
                 Багшийн самбар
               </Link>

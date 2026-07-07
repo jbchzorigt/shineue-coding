@@ -9,7 +9,7 @@ import {
   upsertChallenge,
   deleteChallenge as deleteChallengeDoc,
 } from "@/lib/firebase/challenges";
-import type { Challenge, ChallengePrivate, ChallengeType, PublicTestCase } from "@/lib/types";
+import { isStaff, type Challenge, type ChallengePrivate, type ChallengeType, type PublicTestCase } from "@/lib/types";
 
 export interface ActionState {
   error: string | null;
@@ -21,9 +21,39 @@ async function requireTeacher(): Promise<void> {
   const profile = session?.user?.id
     ? await getUserProfile(session.user.id)
     : null;
-  if (profile?.role !== "teacher") {
+  if (!isStaff(profile?.role)) {
     throw new Error("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
   }
+}
+
+async function requireAdmin(): Promise<void> {
+  const session = await auth();
+  const profile = session?.user?.id
+    ? await getUserProfile(session.user.id)
+    : null;
+  if (profile?.role !== "admin") {
+    throw new Error("Зөвхөн админ энэ үйлдлийг хийх эрхтэй.");
+  }
+}
+
+/**
+ * Admin-only: appoints/demotes teachers. The admin role itself can never
+ * be assigned or removed here — it is bound to SUPER_ADMIN_EMAIL.
+ */
+export async function setUserRole(
+  uid: string,
+  role: "student" | "teacher",
+  _form?: FormData
+): Promise<void> {
+  await requireAdmin();
+  if (!["student", "teacher"].includes(role)) return;
+
+  const target = await getUserProfile(uid);
+  if (!target || target.role === "admin") return;
+
+  const { getDb } = await import("@/lib/firebase/admin");
+  await getDb().doc(`users/${uid}`).update({ role });
+  revalidatePath("/teacher");
 }
 
 const ID_RE = /^[a-z0-9-]{3,60}$/;

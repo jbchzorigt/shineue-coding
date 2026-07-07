@@ -1,4 +1,9 @@
-export type UserRole = "student" | "teacher";
+export type UserRole = "student" | "teacher" | "admin";
+
+/** Teachers and the super admin share all staff privileges. */
+export function isStaff(role: UserRole | undefined | null): boolean {
+  return role === "teacher" || role === "admin";
+}
 
 export interface UserProfile {
   uid: string;

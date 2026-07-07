@@ -2,12 +2,13 @@ import "server-only";
 
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
-import type { UserProfile } from "@/lib/types";
+import type { UserProfile, UserRole } from "@/lib/types";
 
 export interface StudentOverview {
   uid: string;
   name: string | null;
   email: string;
+  role: UserRole;
   total_xp: number;
   unlocked_count: number;
   passed_count: number;
@@ -16,10 +17,17 @@ export interface StudentOverview {
   last_login: string | null;
 }
 
-/** Class-sized roster — a collection scan per student is fine here. */
-export async function listStudentOverviews(): Promise<StudentOverview[]> {
+/**
+ * Class-sized roster — a collection scan per student is fine here.
+ * `includeStaff` lists teachers/admin too (the admin's user management view).
+ */
+export async function listStudentOverviews(
+  includeStaff = false
+): Promise<StudentOverview[]> {
   const db = getDb();
-  const users = await db.collection("users").where("role", "==", "student").get();
+  const users = includeStaff
+    ? await db.collection("users").get()
+    : await db.collection("users").where("role", "==", "student").get();
 
   const overviews = await Promise.all(
     users.docs.map(async (doc) => {
@@ -40,6 +48,7 @@ export async function listStudentOverviews(): Promise<StudentOverview[]> {
         uid: doc.id,
         name: p.name,
         email: p.email,
+        role: p.role ?? "student",
         total_xp: p.total_xp ?? 0,
         unlocked_count: p.unlocked_modules?.length ?? 0,
         passed_count: passed,

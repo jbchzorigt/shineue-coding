@@ -6,6 +6,7 @@ import { getUserProfile } from "@/lib/firebase/users";
 import { listChallengesByModule } from "@/lib/firebase/challenges";
 import { listPassedChallengeIds } from "@/lib/firebase/submissions";
 import { getModule } from "@/lib/firebase/modules";
+import { isStaff } from "@/lib/types";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export default async function ModuleLessonPage({
 
   const profile = await getUserProfile(session.user.id).catch(() => null);
   const isUnlocked =
-    profile?.role === "teacher" ||
+    isStaff(profile?.role) ||
     (profile?.unlocked_modules ?? []).includes(moduleId);
 
   const [challenges, passedIds] = isUnlocked

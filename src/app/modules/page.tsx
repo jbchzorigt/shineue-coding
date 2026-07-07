@@ -3,6 +3,7 @@ import { Lock, BookOpen, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { listModules } from "@/lib/firebase/modules";
+import { isStaff } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ export default async function ModulesPage() {
     : null;
 
   const lessons = await listModules();
-  const isTeacher = profile?.role === "teacher";
+  const isTeacher = isStaff(profile?.role);
   const unlocked = new Set(profile?.unlocked_modules ?? []);
 
   return (

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getChallenge, getChallengePrivate } from "@/lib/firebase/challenges";
 import { getUserProfile } from "@/lib/firebase/users";
 import { getSubmission, markHintUsed } from "@/lib/firebase/submissions";
+import { isStaff } from "@/lib/types";
 
 export async function POST(
   _req: NextRequest,
@@ -22,7 +23,7 @@ export async function POST(
 
   const profile = await getUserProfile(uid);
   const isUnlocked =
-    profile?.role === "teacher" ||
+    isStaff(profile?.role) ||
     (profile?.unlocked_modules ?? []).includes(challenge.module_id);
   if (!isUnlocked) {
     return NextResponse.json({ message: "Энэ модуль танд түгжээтэй байна." }, { status: 403 });

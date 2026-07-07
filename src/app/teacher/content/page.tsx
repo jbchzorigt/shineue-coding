@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BookOpen, Pencil, Plus } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
+import { isStaff } from "@/lib/types";
 import { listModules } from "@/lib/firebase/modules";
 import { listChallengesByModule } from "@/lib/firebase/challenges";
 import { SiteHeader } from "@/components/site-header";
@@ -20,7 +21,7 @@ export default async function TeacherContentPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const profile = await getUserProfile(session.user.id).catch(() => null);
-  if (profile?.role !== "teacher") redirect("/");
+  if (!isStaff(profile?.role)) redirect("/");
 
   const modules = await listModules();
   const challengesPerModule = await Promise.all(

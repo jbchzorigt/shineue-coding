@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getChallenge } from "@/lib/firebase/challenges";
 import { getUserProfile } from "@/lib/firebase/users";
 import { getSubmission } from "@/lib/firebase/submissions";
+import { isStaff } from "@/lib/types";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { UserMenu } from "@/components/user-menu";
 import { SiteHeader } from "@/components/site-header";
@@ -26,7 +27,7 @@ export default async function ChallengePage({
 
   const profile = await getUserProfile(session.user.id).catch(() => null);
   const isUnlocked =
-    profile?.role === "teacher" ||
+    isStaff(profile?.role) ||
     (profile?.unlocked_modules ?? []).includes(challenge.module_id);
   if (!isUnlocked) redirect(`/modules/${challenge.module_id}`);
 

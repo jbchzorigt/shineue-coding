@@ -5,7 +5,7 @@ import { getUserProfile } from "@/lib/firebase/users";
 import { getSubmission, recordSubmission } from "@/lib/firebase/submissions";
 import { maybeUnlockNextModule } from "@/lib/progression";
 import { gradePython, normalizeOutput } from "@/lib/piston";
-import type { Challenge, ChallengePrivate } from "@/lib/types";
+import { isStaff, type Challenge, type ChallengePrivate } from "@/lib/types";
 
 // Sequential Piston runs can exceed Vercel's default function timeout.
 export const maxDuration = 60;
@@ -83,7 +83,7 @@ export async function POST(
   // The module gate applies to submissions too, not just the lesson UI.
   const profile = await getUserProfile(uid);
   const isUnlocked =
-    profile?.role === "teacher" ||
+    isStaff(profile?.role) ||
     (profile?.unlocked_modules ?? []).includes(challenge.module_id);
   if (!isUnlocked) {
     return NextResponse.json(

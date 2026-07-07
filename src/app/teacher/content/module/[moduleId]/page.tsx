@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
+import { isStaff } from "@/lib/types";
 import { getModule } from "@/lib/firebase/modules";
 import { SiteHeader } from "@/components/site-header";
 import { ModuleForm } from "@/components/teacher/module-form";
@@ -16,7 +17,7 @@ export default async function EditModulePage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const profile = await getUserProfile(session.user.id).catch(() => null);
-  if (profile?.role !== "teacher") redirect("/");
+  if (!isStaff(profile?.role)) redirect("/");
 
   const { moduleId } = await params;
   const isNew = moduleId === "new";

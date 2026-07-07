@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { FolderKanban, GraduationCap, Lightbulb } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
+import { isStaff } from "@/lib/types";
 import { listStudentOverviews } from "@/lib/firebase/teacher";
+import { setUserRole } from "@/lib/teacher-actions";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -28,9 +30,12 @@ export default async function TeacherPage() {
 
   // The Firestore role is authoritative (the JWT copy can be stale).
   const profile = await getUserProfile(session.user.id).catch(() => null);
-  if (profile?.role !== "teacher") redirect("/");
+  if (!isStaff(profile?.role)) redirect("/");
 
-  const students = await listStudentOverviews();
+  const isAdmin = profile?.role === "admin";
+  // The admin manages roles, so they see every account; teachers see students.
+  const allUsers = await listStudentOverviews(isAdmin);
+  const students = allUsers.filter((u) => u.role === "student");
   const totalPassed = students.reduce((s, x) => s + x.passed_count, 0);
 
   return (
@@ -93,20 +98,29 @@ export default async function TeacherPage() {
                   </span>
                 </TableHead>
                 <TableHead className="text-right">Сүүлд нэвтэрсэн</TableHead>
+                {isAdmin && <TableHead className="text-right">Үүрэг</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.length === 0 && (
+              {allUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                    Бүртгэлтэй сурагч алга.
+                  <TableCell colSpan={isAdmin ? 9 : 8} className="py-8 text-center text-muted-foreground">
+                    Бүртгэлтэй хэрэглэгч алга.
                   </TableCell>
                 </TableRow>
               )}
-              {students.map((s) => (
+              {allUsers.map((s) => (
                 <TableRow key={s.uid}>
                   <TableCell>
-                    <p className="font-medium">{s.name ?? "—"}</p>
+                    <p className="font-medium">
+                      {s.name ?? "—"}
+                      {s.role === "teacher" && (
+                        <span className="ml-2 rounded bg-sky-500/15 px-1.5 py-0.5 text-xs font-medium text-sky-700">Багш</span>
+                      )}
+                      {s.role === "admin" && (
+                        <span className="ml-2 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-700">Админ</span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{s.email}</p>
                   </TableCell>
                   <TableCell className="text-right font-medium">{s.total_xp}</TableCell>
@@ -118,6 +132,23 @@ export default async function TeacherPage() {
                   <TableCell className="text-right text-muted-foreground">
                     {s.last_login ?? "—"}
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      {s.role !== "admin" && (
+                        <form
+                          action={setUserRole.bind(
+                            null,
+                            s.uid,
+                            s.role === "teacher" ? "student" : "teacher"
+                          )}
+                        >
+                          <Button type="submit" variant="outline" size="sm">
+                            {s.role === "teacher" ? "Сурагч болгох" : "Багш болгох"}
+                          </Button>
+                        </form>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

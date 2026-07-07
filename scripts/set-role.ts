@@ -1,6 +1,6 @@
 /**
  * Sets a user's role by email.
- * Run: NODE_OPTIONS="--conditions=react-server" npx tsx scripts/set-role.ts <email> <student|teacher>
+ * Run: NODE_OPTIONS="--conditions=react-server" npx tsx scripts/set-role.ts <email> <student|teacher|admin>
  *
  * Note: the role is copied into the session JWT at sign-in, so the user
  * must sign out and back in to see the change in the UI.
@@ -10,8 +10,8 @@ import { resolve } from "node:path";
 
 async function main() {
   const [email, role] = process.argv.slice(2);
-  if (!email || !["student", "teacher"].includes(role)) {
-    console.error('Usage: npx tsx scripts/set-role.ts <email> <student|teacher>');
+  if (!email || !["student", "teacher", "admin"].includes(role)) {
+    console.error('Usage: npx tsx scripts/set-role.ts <email> <student|teacher|admin>');
     process.exit(1);
   }
 
