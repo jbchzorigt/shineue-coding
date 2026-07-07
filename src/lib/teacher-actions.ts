@@ -56,6 +56,36 @@ export async function setUserRole(
   revalidatePath("/teacher");
 }
 
+/**
+ * Admin-only: removes a mistaken registration entirely — profile,
+ * submissions, certificates and contest participations. Does NOT block
+ * the Google account from signing in again (a fresh profile would be
+ * created); it only erases the data.
+ */
+export async function deleteUser(uid: string, _form?: FormData): Promise<void> {
+  await requireAdmin();
+
+  const target = await getUserProfile(uid);
+  if (!target || target.role === "admin") return;
+
+  const { getDb } = await import("@/lib/firebase/admin");
+  const db = getDb();
+
+  await db.recursiveDelete(db.collection("users").doc(uid));
+
+  const certs = await db.collection("certificates").where("uid", "==", uid).get();
+  await Promise.all(certs.docs.map((d) => d.ref.delete()));
+
+  const contests = await db.collection("contests").get();
+  await Promise.all(
+    contests.docs.map((c) =>
+      db.recursiveDelete(c.ref.collection("participants").doc(uid))
+    )
+  );
+
+  revalidatePath("/teacher");
+}
+
 const ID_RE = /^[a-z0-9-]{3,60}$/;
 
 function str(form: FormData, key: string): string {

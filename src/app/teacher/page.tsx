@@ -6,6 +6,7 @@ import { getUserProfile } from "@/lib/firebase/users";
 import { isStaff } from "@/lib/types";
 import { listStudentOverviews } from "@/lib/firebase/teacher";
 import { setUserRole } from "@/lib/teacher-actions";
+import { DeleteUserButton } from "@/components/teacher/delete-user-button";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -141,17 +142,20 @@ export default async function TeacherPage() {
                   {isAdmin && (
                     <TableCell className="text-right">
                       {s.role !== "admin" && (
-                        <form
-                          action={setUserRole.bind(
-                            null,
-                            s.uid,
-                            s.role === "teacher" ? "student" : "teacher"
-                          )}
-                        >
-                          <Button type="submit" variant="outline" size="sm">
-                            {s.role === "teacher" ? "Сурагч болгох" : "Багш болгох"}
-                          </Button>
-                        </form>
+                        <div className="flex items-center justify-end gap-1">
+                          <form
+                            action={setUserRole.bind(
+                              null,
+                              s.uid,
+                              s.role === "teacher" ? "student" : "teacher"
+                            )}
+                          >
+                            <Button type="submit" variant="outline" size="sm">
+                              {s.role === "teacher" ? "Сурагч болгох" : "Багш болгох"}
+                            </Button>
+                          </form>
+                          <DeleteUserButton uid={s.uid} name={s.name} />
+                        </div>
                       )}
                     </TableCell>
                   )}
