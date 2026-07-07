@@ -34,8 +34,9 @@ async function main() {
   });
 
   const { encode } = await import("next-auth/jwt");
+  const role = process.argv.includes("--teacher") ? "teacher" : "student";
   const cookie = await encode({
-    token: { sub: UID, name: "Тест Сурагч", email: "ui-test@shineue.edu.mn", role: "student" },
+    token: { sub: UID, name: "Тест Сурагч", email: "ui-test@shineue.edu.mn", role },
     secret: process.env.AUTH_SECRET!,
     salt: "authjs.session-token",
   });
