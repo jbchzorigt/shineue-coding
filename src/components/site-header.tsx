@@ -20,6 +20,9 @@ export async function SiteHeader() {
             <Link href="/leaderboard" className="transition-colors hover:text-foreground">
               Шилдэг сурагчид
             </Link>
+            <Link href="/contests" className="transition-colors hover:text-foreground">
+              Тэмцээн
+            </Link>
             {isStaff(session?.user?.role) && (
               <Link href="/teacher" className="transition-colors hover:text-foreground">
                 Багшийн самбар
