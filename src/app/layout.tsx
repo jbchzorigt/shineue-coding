@@ -28,7 +28,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <div className="flex-1">{children}</div>
+        <footer className="border-t bg-background py-4 text-center text-xs text-muted-foreground">
+          Developed by Zorigt Gantumur
+        </footer>
+      </body>
     </html>
   );
 }
