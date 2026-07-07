@@ -10,7 +10,7 @@ import {
 } from "@/lib/firebase/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
-import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
+import { ContestStatusBadge, formatTime, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -82,13 +82,14 @@ export default async function ContestLeaderboardPage({
                     /{maxTotal}
                   </span>
                 </TableHead>
+                <TableHead className="text-right">Цаг</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {participants.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={problems.length + 3}
+                    colSpan={problems.length + 4}
                     className="py-8 text-center text-muted-foreground"
                   >
                     Оролцогч бүртгүүлээгүй байна.
@@ -128,12 +129,20 @@ export default async function ContestLeaderboardPage({
                       );
                     })}
                     <TableCell className="text-right font-bold">{p.total}</TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">
+                      {p.last_improved_at ? formatTime(p.last_improved_at) : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          «Цаг» — оноогоо сүүлд ахиулсан мөч. Нийт оноо тэнцсэн үед оноогоо
+          <strong> түрүүлж бүрдүүлсэн</strong> оролцогч дээгүүр эрэмбэлэгдэнэ. ⏱
+        </p>
       </main>
     </div>
   );

@@ -22,6 +22,15 @@ export function ContestStatusBadge({ status }: { status: ContestStatus }) {
   );
 }
 
+export function formatTime(ms: number): string {
+  return new Date(ms).toLocaleString("mn-MN", {
+    timeZone: "Asia/Ulaanbaatar",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 export function formatWindow(startsAt: number, endsAt: number): string {
   const fmt = (ms: number) =>
     new Date(ms).toLocaleString("mn-MN", {
