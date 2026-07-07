@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FolderKanban, GraduationCap, Lightbulb, Swords } from "lucide-react";
+import { FolderKanban, GraduationCap, Lightbulb, Newspaper, Swords } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { isStaff } from "@/lib/types";
@@ -56,9 +56,13 @@ export default async function TeacherPage() {
               <FolderKanban className="size-4" />
               Контент удирдлага
             </Button>
-            <Button render={<Link href="/teacher/contests" />} nativeButton={false}>
+            <Button render={<Link href="/teacher/contests" />} nativeButton={false} variant="outline">
               <Swords className="size-4" />
               Тэмцээн удирдлага
+            </Button>
+            <Button render={<Link href="/teacher/news" />} nativeButton={false}>
+              <Newspaper className="size-4" />
+              Мэдээний удирдлага
             </Button>
           </div>
         </div>

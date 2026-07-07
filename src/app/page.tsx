@@ -46,6 +46,7 @@ export default async function HomePage() {
     { href: "/modules", label: "Модулиуд", color: "sky" },
     { href: "/leaderboard", label: "Шилдэг сурагчид", color: "amber" },
     { href: "/contests", label: "Тэмцээн", color: "violet" },
+    { href: "/news", label: "Мэдээ", color: "rose" },
     ...(isStaff(profile?.role)
       ? [{ href: "/teacher", label: "Багшийн самбар", color: "emerald" as const }]
       : []),
