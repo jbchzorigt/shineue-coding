@@ -32,7 +32,7 @@ export default async function TeacherContentPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-4xl space-y-6 p-4 pt-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Контент удирдлага</h1>
             <p className="text-muted-foreground">
@@ -47,7 +47,7 @@ export default async function TeacherContentPage() {
 
         {modules.map((mod, i) => (
           <Card key={mod.id}>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
                   {mod.syllabus_ref} · Модуль {mod.order} · <code>{mod.id}</code>

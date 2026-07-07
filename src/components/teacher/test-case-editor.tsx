@@ -45,7 +45,7 @@ export function TestCaseEditor({
       </div>
       <p className="text-xs text-muted-foreground">{help}</p>
       {tests.map((t, i) => (
-        <div key={i} className="grid grid-cols-[1fr_1fr_2rem] items-start gap-2">
+        <div key={i} className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[1fr_1fr_2rem]">
           <Textarea
             value={t.input}
             onChange={(e) => update(i, "input", e.target.value)}

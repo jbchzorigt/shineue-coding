@@ -46,7 +46,7 @@ export default async function EditContestPage({
 
         {!isNew && (
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base">Бодлогууд</CardTitle>
               <div className="flex gap-2">
                 <Button

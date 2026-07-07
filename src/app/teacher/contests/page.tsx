@@ -28,7 +28,7 @@ export default async function TeacherContestsPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold">
               <Swords className="size-6" />
@@ -52,7 +52,7 @@ export default async function TeacherContestsPage() {
 
         {contests.map((c, i) => (
           <Card key={c.id}>
-            <CardContent className="flex items-center justify-between gap-3">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="font-semibold">{c.title}</h2>

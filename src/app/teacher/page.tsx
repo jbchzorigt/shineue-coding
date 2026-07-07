@@ -42,7 +42,7 @@ export default async function TeacherPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-5xl space-y-6 p-4 pt-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold">
               <GraduationCap className="size-6" />
@@ -50,7 +50,7 @@ export default async function TeacherPage() {
             </h1>
             <p className="text-muted-foreground">Ангийн сурагчдын явцын тойм.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button render={<Link href="/teacher/content" />} nativeButton={false} variant="outline">
               <FolderKanban className="size-4" />
               Контент удирдлага
