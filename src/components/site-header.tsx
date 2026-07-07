@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { LogIn } from "lucide-react";
+import { auth } from "@/auth";
 import { UserMenu } from "@/components/user-menu";
+import { Button } from "@/components/ui/button";
 
 export async function SiteHeader() {
+  const session = await auth();
+
   return (
     <header className="border-b bg-background">
       <div className="relative mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-4">
@@ -17,7 +22,14 @@ export async function SiteHeader() {
           Лого
         </div>
 
-        <UserMenu />
+        {session?.user ? (
+          <UserMenu />
+        ) : (
+          <Button render={<Link href="/login" />} nativeButton={false} size="sm">
+            <LogIn className="size-4" />
+            Нэвтрэх
+          </Button>
+        )}
       </div>
     </header>
   );

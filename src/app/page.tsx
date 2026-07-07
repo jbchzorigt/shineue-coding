@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { GraduationCap, Star } from "lucide-react";
+import { ArrowRight, GraduationCap, LogIn, Newspaper, Star } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { listPassedChallengeIds } from "@/lib/firebase/submissions";
+import { listNews } from "@/lib/firebase/news";
 import { getCourseProgress, levelFromXp } from "@/lib/progression";
 import { isStaff, type UserProfile } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { NavCards, type NavLink } from "@/components/nav-cards";
+import { NewsList } from "@/components/news/news-list";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,6 +21,39 @@ import { Progress } from "@/components/ui/progress";
 
 export default async function HomePage() {
   const session = await auth();
+
+  // Public landing for visitors: hero + news + sign-in.
+  if (!session?.user?.id) {
+    const posts = (await listNews().catch(() => [])).slice(0, 5);
+    return (
+      <div className="min-h-screen bg-muted/40">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl space-y-10 p-4 pt-12">
+          <section className="space-y-4 text-center">
+            <h1 className="text-3xl font-bold sm:text-4xl">
+              IBDP Computer Science
+            </h1>
+            <p className="mx-auto max-w-xl text-muted-foreground">
+              IBDP CS 2027 хөтөлбөрийн интерактив сургалтын платформ — хичээл
+              уншиж, кодоо шууд бичиж шалгуулан, XP цуглуулж, тэмцээнд оролцоорой.
+            </p>
+            <Button render={<Link href="/login" />} nativeButton={false} size="lg">
+              <LogIn className="size-4" />
+              Сургуулийн имэйлээр нэвтрэх
+            </Button>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold">
+              <Newspaper className="size-5" />
+              Мэдээ, зарлал
+            </h2>
+            <NewsList posts={posts} />
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   let profile: UserProfile | null = null;
   let passedCount = 0;
@@ -38,6 +74,8 @@ export default async function HomePage() {
       profileError = true;
     }
   }
+
+  const latestNews = (await listNews().catch(() => [])).slice(0, 3);
 
   const xp = profile?.total_xp ?? 0;
   const { level, progress, nextLevelXp } = levelFromXp(xp);
@@ -141,6 +179,23 @@ export default async function HomePage() {
           </Link>{" "}
           руу орж хичээлээ үргэлжлүүлээрэй.
         </p>
+
+        <section className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-xl font-bold">
+              <Newspaper className="size-5" />
+              Мэдээ, зарлал
+            </h2>
+            <Link
+              href="/news"
+              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Бүх мэдээ
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+          <NewsList posts={latestNews} />
+        </section>
       </main>
     </div>
   );

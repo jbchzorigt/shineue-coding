@@ -42,8 +42,10 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const { pathname } = request.nextUrl;
 
-      // Certificate verification is public — universities/teachers
-      // check validity without an account.
+      // Public pages: landing (news showcase), news reading, and
+      // certificate verification.
+      if (pathname === "/") return true;
+      if (pathname.startsWith("/news")) return true;
       if (pathname.startsWith("/verify")) return true;
 
       const isLoginPage = pathname.startsWith("/login");

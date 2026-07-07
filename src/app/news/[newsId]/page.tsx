@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { auth } from "@/auth";
 import { getNews } from "@/lib/firebase/news";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import {
@@ -18,9 +17,6 @@ export default async function NewsArticlePage({
 }: {
   params: Promise<{ newsId: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-
   const { newsId } = await params;
   const post = await getNews(newsId);
   if (!post) notFound();
