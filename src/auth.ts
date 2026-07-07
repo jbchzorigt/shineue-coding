@@ -14,9 +14,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     async jwt({ token, account, profile }) {
       // Only present on the initial sign-in round trip.
-      if (account?.provider === "google" && token.sub) {
+      if (account?.provider === "google") {
+        // Without an adapter NextAuth mints a random UUID per sign-in as
+        // user.id/token.sub — use Google's stable account id instead, or
+        // every sign-in would create a fresh Firestore profile.
+        token.sub = account.providerAccountId;
         const userProfile = await ensureUserProfile({
-          uid: token.sub,
+          uid: account.providerAccountId,
           email: profile?.email ?? "",
           name: profile?.name ?? null,
           photo_url: typeof profile?.picture === "string" ? profile.picture : null,
