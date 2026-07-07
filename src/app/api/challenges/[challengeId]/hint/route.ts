@@ -1,0 +1,44 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/auth";
+import { getChallenge, getChallengePrivate } from "@/lib/firebase/challenges";
+import { getUserProfile } from "@/lib/firebase/users";
+import { getSubmission, markHintUsed } from "@/lib/firebase/submissions";
+
+export async function POST(
+  _req: NextRequest,
+  { params }: { params: Promise<{ challengeId: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Нэвтрээгүй байна." }, { status: 401 });
+  }
+  const uid = session.user.id;
+
+  const { challengeId } = await params;
+  const challenge = await getChallenge(challengeId);
+  if (!challenge) {
+    return NextResponse.json({ message: "Даалгавар олдсонгүй." }, { status: 404 });
+  }
+
+  const profile = await getUserProfile(uid);
+  const isUnlocked =
+    profile?.role === "teacher" ||
+    (profile?.unlocked_modules ?? []).includes(challenge.module_id);
+  if (!isUnlocked) {
+    return NextResponse.json({ message: "Энэ модуль танд түгжээтэй байна." }, { status: 403 });
+  }
+
+  const hint = (await getChallengePrivate(challengeId))?.hint;
+  if (!hint) {
+    return NextResponse.json({ message: "Энэ даалгаварт hint алга." }, { status: 404 });
+  }
+
+  // Already passed → the hint is free; otherwise record the penalty
+  // BEFORE the text leaves the server.
+  const submission = await getSubmission(uid, challengeId);
+  if (!submission?.passed && !submission?.hint_used) {
+    await markHintUsed(uid, challengeId);
+  }
+
+  return NextResponse.json({ hint });
+}
