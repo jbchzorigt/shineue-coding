@@ -31,3 +31,22 @@ export async function listChallengesByModule(moduleId: string): Promise<Challeng
     .map((d) => ({ ...(d.data() as Omit<Challenge, "id">), id: d.id }))
     .sort((a, b) => a.order - b.order);
 }
+
+/** Writes public + private parts together (teacher content editor). */
+export async function upsertChallenge(
+  challenge: Challenge,
+  privateData: ChallengePrivate
+): Promise<void> {
+  const db = getDb();
+  const { id, ...publicData } = challenge;
+  const ref = db.collection(CHALLENGES).doc(id);
+  const batch = db.batch();
+  batch.set(ref, publicData);
+  batch.set(ref.collection("private").doc("answers"), privateData);
+  await batch.commit();
+}
+
+export async function deleteChallenge(id: string): Promise<void> {
+  const db = getDb();
+  await db.recursiveDelete(db.collection(CHALLENGES).doc(id));
+}

@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { listChallengesByModule } from "@/lib/firebase/challenges";
 import { listPassedChallengeIds } from "@/lib/firebase/submissions";
-import { getLesson } from "@/lib/content";
+import { getModule } from "@/lib/firebase/modules";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export default async function ModuleLessonPage({
   params: Promise<{ moduleId: string }>;
 }) {
   const { moduleId } = await params;
-  const lesson = getLesson(moduleId);
+  const lesson = await getModule(moduleId);
   if (!lesson) notFound();
 
   const session = await auth();
@@ -45,7 +45,7 @@ export default async function ModuleLessonPage({
           </div>
           <h1 className="text-xl font-bold">Энэ модуль түгжээтэй байна</h1>
           <p className="max-w-md text-muted-foreground">
-            «{lesson.meta.title}» модулийг нээхийн тулд өмнөх модулийн бүх
+            «{lesson.title}» модулийг нээхийн тулд өмнөх модулийн бүх
             дасгалыг амжилттай бодож дуусгах шаардлагатай.
           </p>
           <Button render={<Link href="/modules" />} nativeButton={false} variant="outline">
@@ -67,12 +67,12 @@ export default async function ModuleLessonPage({
             Модулиуд
           </Button>
           <span className="text-sm text-muted-foreground">
-            {lesson.meta.syllabus_ref} · Модуль {lesson.meta.order}
+            {lesson.syllabus_ref} · Модуль {lesson.order}
           </span>
         </div>
 
         <article className="prose prose-neutral dark:prose-invert max-w-none rounded-xl border bg-background p-6 sm:p-10 prose-pre:rounded-lg prose-pre:border">
-          <MdxContent source={lesson.content} />
+          <MdxContent source={lesson.lesson_mdx} />
         </article>
 
         {challenges.length > 0 && (

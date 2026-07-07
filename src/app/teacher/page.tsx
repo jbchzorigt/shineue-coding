@@ -1,10 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { GraduationCap, Lightbulb } from "lucide-react";
+import { FolderKanban, GraduationCap, Lightbulb } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { listStudentOverviews } from "@/lib/firebase/teacher";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -35,12 +37,18 @@ export default async function TeacherPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-5xl space-y-6 p-4 pt-8">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <GraduationCap className="size-6" />
-            Багшийн самбар
-          </h1>
-          <p className="text-muted-foreground">Ангийн сурагчдын явцын тойм.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
+              <GraduationCap className="size-6" />
+              Багшийн самбар
+            </h1>
+            <p className="text-muted-foreground">Ангийн сурагчдын явцын тойм.</p>
+          </div>
+          <Button render={<Link href="/teacher/content" />} nativeButton={false}>
+            <FolderKanban className="size-4" />
+            Контент удирдлага
+          </Button>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">

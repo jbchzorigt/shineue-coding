@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { listChallengesByModule } from "@/lib/firebase/challenges";
 import { listPassedChallengeIds } from "@/lib/firebase/submissions";
-import { listLessons } from "@/lib/content";
+import { listModules } from "@/lib/firebase/modules";
 
 /** 100 XP per level, level 1 at 0 XP. */
 export function levelFromXp(totalXp: number): {
@@ -29,10 +29,10 @@ export interface CourseProgress {
  * a challenge-less module would otherwise be uncompletable.)
  */
 export async function getCourseProgress(uid: string): Promise<CourseProgress> {
-  const lessons = listLessons();
+  const lessons = await listModules();
   const [passedIds, perModule] = await Promise.all([
     listPassedChallengeIds(uid),
-    Promise.all(lessons.map((l) => listChallengesByModule(l.module_id))),
+    Promise.all(lessons.map((l) => listChallengesByModule(l.id))),
   ]);
 
   const all = perModule.flat();
@@ -61,15 +61,15 @@ export async function maybeUnlockNextModule(
   if (challenges.length === 0) return null;
   if (!challenges.every((ch) => passedIds.has(ch.id))) return null;
 
-  const lessons = listLessons();
-  const current = lessons.find((l) => l.module_id === moduleId);
-  if (!current) return null;
-  const next = lessons.find((l) => l.order === current.order + 1);
-  if (!next || alreadyUnlocked.includes(next.module_id)) return null;
+  const lessons = await listModules();
+  const currentIdx = lessons.findIndex((l) => l.id === moduleId);
+  if (currentIdx === -1) return null;
+  const next = lessons[currentIdx + 1];
+  if (!next || alreadyUnlocked.includes(next.id)) return null;
 
   await getDb()
     .doc(`users/${uid}`)
-    .update({ unlocked_modules: FieldValue.arrayUnion(next.module_id) });
+    .update({ unlocked_modules: FieldValue.arrayUnion(next.id) });
 
-  return { id: next.module_id, title: next.title };
+  return { id: next.id, title: next.title };
 }

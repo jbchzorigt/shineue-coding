@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Lock, BookOpen, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
-import { listLessons } from "@/lib/content";
+import { listModules } from "@/lib/firebase/modules";
 import { SiteHeader } from "@/components/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ export default async function ModulesPage() {
     ? await getUserProfile(session.user.id).catch(() => null)
     : null;
 
-  const lessons = listLessons();
+  const lessons = await listModules();
   const isTeacher = profile?.role === "teacher";
   const unlocked = new Set(profile?.unlocked_modules ?? []);
 
@@ -30,7 +30,7 @@ export default async function ModulesPage() {
 
         <div className="space-y-3">
           {lessons.map((lesson) => {
-            const isUnlocked = isTeacher || unlocked.has(lesson.module_id);
+            const isUnlocked = isTeacher || unlocked.has(lesson.id);
             const inner = (
               <Card
                 className={cn(
@@ -68,11 +68,11 @@ export default async function ModulesPage() {
             );
 
             return isUnlocked ? (
-              <Link key={lesson.module_id} href={`/modules/${lesson.module_id}`} className="block">
+              <Link key={lesson.id} href={`/modules/${lesson.id}`} className="block">
                 {inner}
               </Link>
             ) : (
-              <div key={lesson.module_id}>{inner}</div>
+              <div key={lesson.id}>{inner}</div>
             );
           })}
         </div>

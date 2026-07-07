@@ -2,6 +2,7 @@ import "server-only";
 
 import { FieldValue } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
+import { getFirstModuleId } from "@/lib/firebase/modules";
 import { FIRST_MODULE_ID } from "@/lib/constants";
 import type { UserProfile } from "@/lib/types";
 
@@ -20,6 +21,9 @@ export async function ensureUserProfile(params: {
 }): Promise<UserProfile> {
   const ref = getDb().collection(USERS).doc(params.uid);
 
+  // The entry module is whichever the teacher ordered first.
+  const firstModule = (await getFirstModuleId().catch(() => null)) ?? FIRST_MODULE_ID;
+
   const newProfile: UserProfile = {
     uid: params.uid,
     email: params.email,
@@ -27,7 +31,7 @@ export async function ensureUserProfile(params: {
     photo_url: params.photo_url,
     role: "student",
     total_xp: 0,
-    unlocked_modules: [FIRST_MODULE_ID],
+    unlocked_modules: [firstModule],
   };
 
   try {
