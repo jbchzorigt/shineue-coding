@@ -4,8 +4,9 @@ import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/firebase/users";
 import { listPassedChallengeIds } from "@/lib/firebase/submissions";
 import { getCourseProgress, levelFromXp } from "@/lib/progression";
-import type { UserProfile } from "@/lib/types";
+import { isStaff, type UserProfile } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
+import { NavCards, type NavLink } from "@/components/nav-cards";
 import {
   Card,
   CardContent,
@@ -40,6 +41,15 @@ export default async function HomePage() {
 
   const xp = profile?.total_xp ?? 0;
   const { level, progress, nextLevelXp } = levelFromXp(xp);
+
+  const navLinks: NavLink[] = [
+    { href: "/modules", label: "Модулиуд", color: "sky" },
+    { href: "/leaderboard", label: "Шилдэг сурагчид", color: "amber" },
+    { href: "/contests", label: "Тэмцээн", color: "violet" },
+    ...(isStaff(profile?.role)
+      ? [{ href: "/teacher", label: "Багшийн самбар", color: "emerald" as const }]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -76,6 +86,8 @@ export default async function HomePage() {
             </div>
           </Link>
         )}
+
+        <NavCards links={navLinks} />
 
         {profile && (
           <Card>
