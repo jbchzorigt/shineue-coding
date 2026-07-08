@@ -9,6 +9,7 @@ import { isStaff, type UserProfile } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { NavCards, type NavLink } from "@/components/nav-cards";
 import { NewsList } from "@/components/news/news-list";
+import { HeroStencilTitle } from "@/components/landing/hero-stencil-title";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,9 +31,7 @@ export default async function HomePage() {
         <SiteHeader />
         <main className="mx-auto max-w-3xl space-y-10 p-4 pt-12">
           <section className="space-y-4 text-center">
-            <h1 className="text-3xl font-bold sm:text-4xl">
-              IBDP Computer Science
-            </h1>
+            <HeroStencilTitle text="IBDP Computer Science" />
             <p className="mx-auto max-w-xl text-muted-foreground">
               IBDP CS 2027 хөтөлбөрийн интерактив сургалтын платформ — хичээл
               уншиж, кодоо шууд бичиж шалгуулан, XP цуглуулж, тэмцээнд оролцоорой.
