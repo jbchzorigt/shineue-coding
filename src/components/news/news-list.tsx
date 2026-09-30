@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Music, Video } from "lucide-react";
 import { formatDate } from "@/components/news/news-media";
 import { Card, CardContent } from "@/components/ui/card";
-import type { NewsPost } from "@/lib/firebase/news";
+import type { NewsPost } from "@/lib/db/news";
+import { newsExcerpt } from "@/lib/news-text";
 
 export function NewsList({ posts }: { posts: NewsPost[] }) {
   if (posts.length === 0) {
@@ -31,7 +32,7 @@ export function NewsList({ posts }: { posts: NewsPost[] }) {
             <CardContent className="space-y-1.5">
               <h2 className="text-lg font-semibold">{p.title}</h2>
               <p className="line-clamp-2 text-sm text-muted-foreground">
-                {p.body_mdx.replace(/[#*`>\[\]]/g, "").slice(0, 200)}
+                {newsExcerpt(p.body_mdx)}
               </p>
               <p className="flex items-center gap-3 pt-1 text-xs text-muted-foreground">
                 <span>{p.author_name ?? "Багш"}</span>

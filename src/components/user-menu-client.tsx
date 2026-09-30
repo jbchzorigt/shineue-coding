@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap, KeyRound, LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,13 @@ export function UserMenuClient({
   name,
   email,
   image,
+  staff,
 }: {
   name: string | null;
   email: string | null;
   image: string | null;
+  /** Teachers and the admin also get a link to the management pages. */
+  staff: boolean;
 }) {
   const initials = (name ?? email ?? "?")
     .split(" ")
@@ -50,6 +54,16 @@ export function UserMenuClient({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        {staff && (
+          <DropdownMenuItem render={<Link href="/teacher" />}>
+            <GraduationCap className="size-4" />
+            Багшийн самбар
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem render={<Link href="/account/password" />}>
+          <KeyRound className="size-4" />
+          Нууц үг солих
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => void signOutAction()}>
           <LogOut className="size-4" />
           Гарах

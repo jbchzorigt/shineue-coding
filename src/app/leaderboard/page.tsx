@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { auth } from "@/auth";
-import { listStudentOverviews } from "@/lib/firebase/teacher";
+import { listStudentOverviews } from "@/lib/db/teacher";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
 import {

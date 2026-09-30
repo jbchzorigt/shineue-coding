@@ -7,11 +7,16 @@ import {
   getParticipant,
   getProblem,
   getProblemPrivate,
-} from "@/lib/firebase/contests";
-import { getUserProfile } from "@/lib/firebase/users";
+} from "@/lib/db/contests";
+import { getUserProfile } from "@/lib/db/users";
+import { NotFoundError } from "@/lib/errors";
+import { gradeLogic } from "@/lib/logic/grade";
 import { gradePython } from "@/lib/piston";
 import { isStaff } from "@/lib/types";
-import type { TestResultDto } from "@/app/api/challenges/[challengeId]/submit/route";
+import type {
+  LogicResultDto,
+  TestResultDto,
+} from "@/app/api/challenges/[challengeId]/submit/route";
 
 // Sequential Piston runs can exceed Vercel's default function timeout.
 export const maxDuration = 60;
@@ -19,6 +24,15 @@ export const maxDuration = 60;
 const MAX_CODE_LENGTH = 20_000;
 const COOLDOWN_MS = 5_000;
 const lastSubmitAt = new Map<string, number>();
+
+/** What one attempt earned, before it is scored. */
+interface Attempt {
+  stored: string;
+  passedTests: number;
+  totalTests: number;
+  results: TestResultDto[];
+  logic?: LogicResultDto;
+}
 
 export async function POST(
   req: NextRequest,
@@ -40,13 +54,9 @@ export async function POST(
   lastSubmitAt.set(uid, now);
 
   const { contestId, problemId } = await params;
-  const body = (await req.json().catch(() => null)) as { code?: string } | null;
-  const code = body?.code;
-  if (typeof code !== "string" || code.trim().length === 0) {
-    return NextResponse.json({ message: "Код хоосон байна." }, { status: 400 });
-  }
-  if (code.length > MAX_CODE_LENGTH) {
-    return NextResponse.json({ message: "Код хэт урт байна." }, { status: 400 });
+  const body = (await req.json().catch(() => null)) as { code?: unknown; circuit?: unknown } | null;
+  if (!body) {
+    return NextResponse.json({ message: "Хүсэлт буруу байна." }, { status: 400 });
   }
 
   const contest = await getContest(contestId);
@@ -80,65 +90,114 @@ export async function POST(
     }
   }
 
-  const publicTests = problem.public_test_cases ?? [];
-  const hiddenTests = (await getProblemPrivate(contestId, problemId))?.hidden_test_cases ?? [];
-  const allTests = [
-    ...publicTests.map((t) => ({ ...t, hidden: false })),
-    ...hiddenTests.map((t) => ({ ...t, hidden: true })),
-  ];
-  if (allTests.length === 0) {
-    return NextResponse.json({ message: "Бодлогод тест алга." }, { status: 400 });
-  }
+  const priv = await getProblemPrivate(contestId, problemId);
+  let attempt: Attempt;
+  if (problem.kind === "logic") {
+    const expected = priv?.expected_table;
+    if (!problem.logic_spec || !expected) {
+      return NextResponse.json(
+        { message: "Бодлогын тохиргоо дутуу байна. Багшдаа хэлнэ үү." },
+        { status: 409 }
+      );
+    }
+    const grade = gradeLogic(problem.logic_spec, expected, body.circuit);
+    if (grade.status === "malformed") {
+      return NextResponse.json({ message: grade.message }, { status: 400 });
+    }
+    attempt =
+      grade.status === "invalid"
+        ? {
+            stored: JSON.stringify(grade.circuit),
+            passedTests: 0,
+            totalTests: expected.length,
+            results: [],
+            logic: { correctRows: 0, totalRows: expected.length, errors: grade.errors },
+          }
+        : {
+            stored: JSON.stringify(grade.circuit),
+            passedTests: grade.correctRows,
+            totalTests: grade.totalRows,
+            results: [],
+            logic: { correctRows: grade.correctRows, totalRows: grade.totalRows },
+          };
+  } else {
+    const code = body.code;
+    if (typeof code !== "string" || code.trim().length === 0) {
+      return NextResponse.json({ message: "Код хоосон байна." }, { status: 400 });
+    }
+    if (code.length > MAX_CODE_LENGTH) {
+      return NextResponse.json({ message: "Код хэт урт байна." }, { status: 400 });
+    }
+    const allTests = [
+      ...problem.public_test_cases.map((t) => ({ ...t, hidden: false })),
+      ...(priv?.hidden_test_cases ?? []).map((t) => ({ ...t, hidden: true })),
+    ];
+    if (allTests.length === 0) {
+      return NextResponse.json({ message: "Бодлогод тест алга." }, { status: 400 });
+    }
 
-  let graded;
-  try {
-    graded = await gradePython(code, allTests);
-  } catch (err) {
-    console.error("Piston execution failed:", err);
-    return NextResponse.json(
-      { message: "Код ажиллуулах сервертэй холбогдож чадсангүй. Дахин оролдоно уу." },
-      { status: 502 }
-    );
-  }
-
-  const results: TestResultDto[] = graded.map((g, i) => {
-    const test = allTests[i];
-    if (test.hidden) return { passed: g.passed, hidden: true };
-    return {
-      passed: g.passed,
-      hidden: false,
-      input: test.input,
-      expected: test.expected_output,
-      actual: g.actual,
-      ...(g.error ? { error: g.error } : {}),
+    let graded;
+    try {
+      graded = await gradePython(code, allTests);
+    } catch (err) {
+      console.error("Piston execution failed:", err);
+      return NextResponse.json(
+        { message: "Код ажиллуулах сервертэй холбогдож чадсангүй. Дахин оролдоно уу." },
+        { status: 502 }
+      );
+    }
+    attempt = {
+      stored: code,
+      passedTests: graded.filter((g) => g.passed).length,
+      totalTests: allTests.length,
+      results: graded.map((g, i) => {
+        const test = allTests[i];
+        if (test.hidden) return { passed: g.passed, hidden: true };
+        return {
+          passed: g.passed,
+          hidden: false,
+          input: test.input,
+          expected: test.expected_output,
+          actual: g.actual,
+          ...(g.error ? { error: g.error } : {}),
+        };
+      }),
     };
-  });
+  }
 
-  const passedTests = graded.filter((g) => g.passed).length;
-  const score = Math.round((problem.points * passedTests) / allTests.length);
+  const score = Math.round((problem.points * attempt.passedTests) / attempt.totalTests);
 
   // Staff dry-runs (or staff who registered anyway) never affect the board.
   let bestScore = score;
   let improved = false;
   if (!staff && participant) {
-    ({ bestScore, improved } = await applySubmissionScore({
-      contestId,
-      uid,
-      problemId,
-      score,
-      code,
-      passedTests,
-      totalTests: allTests.length,
-    }));
+    try {
+      ({ bestScore, improved } = await applySubmissionScore({
+        contestId,
+        uid,
+        problemId,
+        score,
+        code: attempt.stored,
+        passedTests: attempt.passedTests,
+        totalTests: attempt.totalTests,
+      }));
+    } catch (err) {
+      // The contest (and its participants) was deleted while grading.
+      if (err instanceof NotFoundError) {
+        return NextResponse.json({ message: err.message }, { status: 404 });
+      }
+      throw err;
+    }
   }
 
   return NextResponse.json({
-    results,
-    passedTests,
-    totalTests: allTests.length,
+    results: attempt.results,
+    passedTests: attempt.passedTests,
+    totalTests: attempt.totalTests,
     score,
     bestScore,
     improved,
     maxPoints: problem.points,
+    logic: attempt.logic,
   });
 }

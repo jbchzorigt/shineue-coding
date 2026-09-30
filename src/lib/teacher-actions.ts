@@ -3,26 +3,29 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
-import { upsertModule, deleteModule as deleteModuleDoc } from "@/lib/firebase/modules";
+import { deleteUserCascade, getUserProfile, updateUserRole } from "@/lib/db/users";
+import { upsertModule, deleteModule as deleteModuleDoc } from "@/lib/db/modules";
 import {
   upsertChallenge,
   deleteChallenge as deleteChallengeDoc,
-} from "@/lib/firebase/challenges";
+} from "@/lib/db/challenges";
+import { UserError, userMessage } from "@/lib/errors";
+import { parseLogicSpecJson } from "@/lib/logic/spec";
+import { mdxError, normalizeMdx } from "@/lib/mdx-check";
 import { isStaff, type Challenge, type ChallengePrivate, type ChallengeType, type PublicTestCase } from "@/lib/types";
 
 export interface ActionState {
   error: string | null;
 }
 
-/** Every action re-checks the Firestore role — never trust the client. */
+/** Every action re-checks the database role — never trust the client. */
 async function requireTeacher(): Promise<void> {
   const session = await auth();
   const profile = session?.user?.id
     ? await getUserProfile(session.user.id)
     : null;
   if (!isStaff(profile?.role)) {
-    throw new Error("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
+    throw new UserError("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
   }
 }
 
@@ -32,7 +35,7 @@ async function requireAdmin(): Promise<void> {
     ? await getUserProfile(session.user.id)
     : null;
   if (profile?.role !== "admin") {
-    throw new Error("Зөвхөн админ энэ үйлдлийг хийх эрхтэй.");
+    throw new UserError("Зөвхөн админ энэ үйлдлийг хийх эрхтэй.");
   }
 }
 
@@ -51,8 +54,7 @@ export async function setUserRole(
   const target = await getUserProfile(uid);
   if (!target || target.role === "admin") return;
 
-  const { getDb } = await import("@/lib/firebase/admin");
-  await getDb().doc(`users/${uid}`).update({ role });
+  await updateUserRole(uid, role);
   revalidatePath("/teacher");
 }
 
@@ -68,20 +70,8 @@ export async function deleteUser(uid: string, _form?: FormData): Promise<void> {
   const target = await getUserProfile(uid);
   if (!target || target.role === "admin") return;
 
-  const { getDb } = await import("@/lib/firebase/admin");
-  const db = getDb();
-
-  await db.recursiveDelete(db.collection("users").doc(uid));
-
-  const certs = await db.collection("certificates").where("uid", "==", uid).get();
-  await Promise.all(certs.docs.map((d) => d.ref.delete()));
-
-  const contests = await db.collection("contests").get();
-  await Promise.all(
-    contests.docs.map((c) =>
-      db.recursiveDelete(c.ref.collection("participants").doc(uid))
-    )
-  );
+  // ON DELETE CASCADE removes submissions, certificates and contest entries.
+  await deleteUserCascade(uid);
 
   revalidatePath("/teacher");
 }
@@ -105,7 +95,7 @@ export async function saveModule(
     const id = str(form, "id").toLowerCase();
     const title = str(form, "title");
     const order = Number(str(form, "order"));
-    const lesson_mdx = str(form, "lesson_mdx");
+    const lesson_mdx = normalizeMdx(str(form, "lesson_mdx"));
 
     if (!ID_RE.test(id)) {
       return { error: "ID нь 3-60 тэмдэгт, зөвхөн латин жижиг үсэг, тоо, зураас байх ёстой (жишээ: module-04)." };
@@ -113,6 +103,8 @@ export async function saveModule(
     if (!title) return { error: "Гарчиг хоосон байна." };
     if (!Number.isFinite(order) || order < 1) return { error: "Дараалал 1-ээс их тоо байх ёстой." };
     if (lesson_mdx.length < 20) return { error: "Хичээлийн агуулга хэт богино байна." };
+    const mdxProblem = await mdxError(lesson_mdx);
+    if (mdxProblem) return { error: mdxProblem };
 
     await upsertModule({
       id,
@@ -123,7 +115,7 @@ export async function saveModule(
       lesson_mdx,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа." };
+    return { error: userMessage(err) };
   }
   revalidatePath("/modules");
   revalidatePath("/teacher/content");
@@ -161,14 +153,14 @@ export async function saveChallenge(
     moduleId = str(form, "module_id");
     const type = str(form, "type") as ChallengeType;
     const title = str(form, "title");
-    const prompt = str(form, "prompt");
+    const prompt = normalizeMdx(str(form, "prompt"));
     const xp = Number(str(form, "xp_reward"));
     const order = Number(str(form, "order"));
 
     if (!ID_RE.test(id)) {
       return { error: "ID нь 3-60 тэмдэгт, зөвхөн латин жижиг үсэг, тоо, зураас байх ёстой (жишээ: ch-04-loops)." };
     }
-    if (!["coding", "mcq", "tracing", "theory"].includes(type)) {
+    if (!["coding", "mcq", "tracing", "theory", "logic"].includes(type)) {
       return { error: "Төрөл буруу байна." };
     }
     if (!title) return { error: "Гарчиг хоосон байна." };
@@ -219,6 +211,11 @@ export async function saveChallenge(
       const scheme = str(form, "mark_scheme");
       if (!scheme) return { error: "Үнэлгээний схем хоосон байна." };
       privateData.mark_scheme = scheme;
+    } else if (type === "logic") {
+      const parsed = parseLogicSpecJson(str(form, "logic_spec"), str(form, "expected_table"));
+      if (!parsed.ok) return { error: parsed.errors.join(" ") };
+      challenge.logic_spec = parsed.spec;
+      privateData.expected_table = parsed.table;
     }
 
     await upsertChallenge(challenge, privateData);
@@ -226,7 +223,7 @@ export async function saveChallenge(
     if (err instanceof SyntaxError) {
       return { error: "Тестүүдийн формат буруу байна." };
     }
-    return { error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа." };
+    return { error: userMessage(err) };
   }
   revalidatePath("/teacher/content");
   revalidatePath(`/modules/${moduleId}`);

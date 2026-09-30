@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Loader2, Save, Trash2 } from "lucide-react";
 import { saveChallenge, deleteChallenge, type ActionState } from "@/lib/teacher-actions";
+import { LogicSpecFields } from "@/components/teacher/logic-spec-fields";
 import { TestCaseEditor } from "@/components/teacher/test-case-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ const TYPES: { value: ChallengeType; label: string }[] = [
   { value: "mcq", label: "Сонгох тест (MCQ)" },
   { value: "tracing", label: "Код мөшгих (гаралт таах)" },
   { value: "theory", label: "Онолын асуулт (mark scheme)" },
+  { value: "logic", label: "Логик хэлхээ (Gate)" },
 ];
 
 export function ChallengeForm({
@@ -189,6 +191,13 @@ export function ChallengeForm({
         </div>
       )}
 
+      {type === "logic" && (
+        <LogicSpecFields
+          initialSpec={challenge?.logic_spec}
+          initialTable={privateData?.expected_table}
+        />
+      )}
+
       <div className="space-y-1.5">
         <Label htmlFor="hint">Hint (заавал биш — ашиглавал XP-ийн 30% суутгагдана)</Label>
         <Textarea
@@ -217,7 +226,13 @@ export function ChallengeForm({
             formNoValidate
             variant="destructive"
             onClick={(e) => {
-              if (!confirm(`«${challenge.title}» даалгаврыг устгах уу?`)) e.preventDefault();
+              if (
+                !confirm(
+                  `«${challenge.title}» даалгаврыг устгах уу? Сурагчдын энэ даалгаврын бодолтууд хамт устана (авсан XP хэвээр үлдэнэ). Буцаах боломжгүй.`
+                )
+              ) {
+                e.preventDefault();
+              }
             }}
           >
             <Trash2 className="size-4" />

@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { getChallenge, getChallengePrivate } from "@/lib/firebase/challenges";
-import { getUserProfile } from "@/lib/firebase/users";
-import { getSubmission, markHintUsed } from "@/lib/firebase/submissions";
+import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
+import { getUserProfile } from "@/lib/db/users";
+import { getSubmission, markHintUsed } from "@/lib/db/submissions";
+import { NotFoundError } from "@/lib/errors";
 import { isStaff } from "@/lib/types";
 
 export async function POST(
@@ -38,7 +39,14 @@ export async function POST(
   // BEFORE the text leaves the server.
   const submission = await getSubmission(uid, challengeId);
   if (!submission?.passed && !submission?.hint_used) {
-    await markHintUsed(uid, challengeId);
+    try {
+      await markHintUsed(uid, challengeId);
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        return NextResponse.json({ message: err.message }, { status: 404 });
+      }
+      throw err;
+    }
   }
 
   return NextResponse.json({ hint });

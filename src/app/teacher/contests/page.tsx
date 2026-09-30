@@ -2,9 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarClock, Pencil, Plus, Swords, Users } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { contestStatus, listContests, listParticipants, listProblems } from "@/lib/firebase/contests";
+import { contestStatus, listContests, listParticipants, listProblems } from "@/lib/db/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export default async function TeacherContestsPage() {
         {contests.length === 0 && (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              Тэмцээн үүсгээгүй байна — "Шинэ тэмцээн" дарж эхлээрэй.
+              Тэмцээн үүсгээгүй байна — &ldquo;Шинэ тэмцээн&rdquo; дарж эхлээрэй.
             </CardContent>
           </Card>
         )}

@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Lock, BookOpen, ChevronRight } from "lucide-react";
+import { Lock, BookOpen, ChevronRight, Pencil } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
-import { listModules } from "@/lib/firebase/modules";
+import { getUserProfile } from "@/lib/db/users";
+import { listModules } from "@/lib/db/modules";
 import { isStaff } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
+import { StaffLink } from "@/components/staff-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -22,11 +23,17 @@ export default async function ModulesPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
-        <div>
-          <h1 className="text-2xl font-bold">Модулиуд</h1>
-          <p className="text-muted-foreground">
-            Модуль бүрийг дуусгаж дараагийнхаа түгжээг тайлаарай.
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold">Модулиуд</h1>
+            <p className="text-muted-foreground">
+              Модуль бүрийг дуусгаж дараагийнхаа түгжээг тайлаарай.
+            </p>
+          </div>
+          <StaffLink href="/teacher/content">
+            <Pencil className="size-4" />
+            Контент удирдлага
+          </StaffLink>
         </div>
 
         <div className="space-y-3">

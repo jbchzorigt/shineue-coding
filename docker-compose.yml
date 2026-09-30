@@ -1,0 +1,38 @@
+# Local services for the platform: PostgreSQL + Piston (Python sandbox).
+# Ports bind to 127.0.0.1 only — nothing here is reachable from the LAN.
+# Start with `npm run db:up` (reads POSTGRES_PASSWORD from .env.local).
+name: shineue-coding
+
+services:
+  db:
+    image: postgres:17
+    container_name: coding-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: coding
+      POSTGRES_USER: coding
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.local}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - coding-pgdata:/var/lib/postgresql/data
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coding -d coding"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  piston:
+    image: ghcr.io/engineer-man/piston:latest
+    container_name: coding-piston
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "127.0.0.1:2000:2000"
+    volumes:
+      - coding-piston:/piston
+
+volumes:
+  coding-pgdata:
+  coding-piston:

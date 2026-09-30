@@ -7,7 +7,7 @@ import type { ActionState } from "@/lib/teacher-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Contest } from "@/lib/firebase/contests";
+import type { Contest } from "@/lib/db/contests";
 
 /** datetime-local value (local time) for a given epoch ms. */
 function toLocalInput(ms: number): string {

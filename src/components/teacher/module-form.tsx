@@ -1,19 +1,35 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, type ChangeEvent } from "react";
 import { Loader2, Save, Trash2 } from "lucide-react";
 import { saveModule, deleteModule, type ActionState } from "@/lib/teacher-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { ModuleDoc } from "@/lib/firebase/modules";
+import type { ModuleDoc } from "@/lib/db/modules";
 
 export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(
     saveModule,
     { error: null }
   );
+  // Controlled: React resets uncontrolled fields after every action, which
+  // would throw away a long lesson whenever the server returns an error.
+  const [fields, setFields] = useState({
+    id: mod?.id ?? "",
+    syllabus_ref: mod?.syllabus_ref ?? "",
+    title: mod?.title ?? "",
+    order: mod ? String(mod.order) : "",
+    description: mod?.description ?? "",
+    lesson_mdx: mod?.lesson_mdx ?? "",
+  });
+  const bind = (name: keyof typeof fields) => ({
+    name,
+    value: fields[name],
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setFields((f) => ({ ...f, [name]: e.target.value })),
+  });
 
   return (
     <form action={action} className="space-y-5">
@@ -22,8 +38,7 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
           <Label htmlFor="id">Модулийн ID</Label>
           <Input
             id="id"
-            name="id"
-            defaultValue={mod?.id ?? ""}
+            {...bind("id")}
             placeholder="module-04"
             readOnly={!!mod}
             className={mod ? "bg-muted" : ""}
@@ -39,8 +54,7 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
           <Label htmlFor="syllabus_ref">Хөтөлбөрийн лавлагаа</Label>
           <Input
             id="syllabus_ref"
-            name="syllabus_ref"
-            defaultValue={mod?.syllabus_ref ?? ""}
+            {...bind("syllabus_ref")}
             placeholder="A2.1"
           />
         </div>
@@ -49,16 +63,15 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
         <div className="space-y-1.5">
           <Label htmlFor="title">Гарчиг</Label>
-          <Input id="title" name="title" defaultValue={mod?.title ?? ""} required />
+          <Input id="title" {...bind("title")} required />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="order">Дараалал</Label>
           <Input
             id="order"
-            name="order"
+            {...bind("order")}
             type="number"
             min={1}
-            defaultValue={mod?.order ?? ""}
             required
           />
         </div>
@@ -68,8 +81,7 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
         <Label htmlFor="description">Товч тайлбар</Label>
         <Input
           id="description"
-          name="description"
-          defaultValue={mod?.description ?? ""}
+          {...bind("description")}
           placeholder="Модулиудын жагсаалтад харагдана"
         />
       </div>
@@ -78,14 +90,14 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
         <Label htmlFor="lesson_mdx">Хичээлийн агуулга (MDX/Markdown)</Label>
         <Textarea
           id="lesson_mdx"
-          name="lesson_mdx"
-          defaultValue={mod?.lesson_mdx ?? ""}
+          {...bind("lesson_mdx")}
           className="min-h-96 font-mono text-sm"
           placeholder={"# Гарчиг\n\nЭнгийн markdown бичнэ: **тод**, `код`, хүснэгт, ```python код блок```.\n\n<Callout type=\"info\">Санамж хайрцаг</Callout>"}
           required
         />
         <p className="text-xs text-muted-foreground">
           Markdown + хүснэгт, кодын блок (```python), мөн {"<Callout type=\"info|warning\">"} хайрцаг дэмжинэ.
+          HTML таг хаагдсан байх ёстой: {"<img src=\"…\" />"}, {"<br />"}.
         </p>
       </div>
 
@@ -107,7 +119,11 @@ export function ModuleForm({ module: mod }: { module: ModuleDoc | null }) {
             formNoValidate
             variant="destructive"
             onClick={(e) => {
-              if (!confirm(`«${mod.title}» модулийг устгах уу? Даалгаврууд нь үлдэнэ.`)) {
+              if (
+                !confirm(
+                  `«${mod.title}» модулийг устгах уу? Түүний бүх даалгавар болон сурагчдын бодолтууд хамт устана (авсан XP хэвээр үлдэнэ). Буцаах боломжгүй.`
+                )
+              ) {
                 e.preventDefault();
               }
             }}

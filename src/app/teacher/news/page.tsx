@@ -2,9 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Newspaper, Pencil, Plus } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { listNews } from "@/lib/firebase/news";
+import { listNews } from "@/lib/db/news";
 import { formatDate } from "@/components/news/news-media";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export default async function TeacherNewsPage() {
         {posts.length === 0 && (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              Мэдээ нийтлээгүй байна — "Шинэ мэдээ" дарж эхлээрэй.
+              Мэдээ нийтлээгүй байна — &ldquo;Шинэ мэдээ&rdquo; дарж эхлээрэй.
             </CardContent>
           </Card>
         )}

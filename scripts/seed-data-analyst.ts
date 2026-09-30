@@ -1,19 +1,14 @@
 /**
  * Seeds the Data Analyst track: modules 4-6 (beginner → advanced)
- * with lessons (worked examples included) and 9 challenges.
- * Run: NODE_OPTIONS="--conditions=react-server" npx tsx scripts/seed-data-analyst.ts
+ * with lessons (worked examples included) and 9 challenges. Safe to re-run.
+ * Run: npm run script -- scripts/seed-data-analyst.ts
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { closeDb } from "../src/lib/db/client";
+import { upsertChallenge } from "../src/lib/db/challenges";
+import { upsertModule } from "../src/lib/db/modules";
+import type { Challenge, ChallengePrivate, PublicTestCase } from "../src/lib/types";
 
 async function main() {
-  for (const line of readFileSync(resolve(__dirname, "../.env.local"), "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)="(.*)"$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-
-  const { getDb } = await import("../src/lib/firebase/admin");
-  const db = getDb();
 
   /* ------------------------------ modules ------------------------------ */
 
@@ -245,19 +240,18 @@ print(f"{prediction:.1f}")              # 55.0
   ];
 
   for (const mod of modules) {
-    const { id, ...data } = mod;
-    await db.collection("modules").doc(id).set(data);
-    console.log("module seeded:", id);
+    await upsertModule(mod);
+    console.log("module seeded:", mod.id);
   }
 
   /* ----------------------------- challenges ---------------------------- */
 
   interface SeedChallenge {
     id: string;
-    public: Record<string, unknown>;
-    hidden?: { input: string; expected_output: string }[];
+    public: Omit<Challenge, "id">;
+    hidden?: PublicTestCase[];
     hint?: string;
-    private?: Record<string, unknown>;
+    private?: ChallengePrivate;
   }
 
   const challenges: SeedChallenge[] = [
@@ -447,22 +441,21 @@ print(f"{prediction:.1f}")              # 55.0
   ];
 
   for (const ch of challenges) {
-    await db.collection("challenges").doc(ch.id).set(ch.public);
-    await db
-      .collection("challenges")
-      .doc(ch.id)
-      .collection("private")
-      .doc("answers")
-      .set({
+    await upsertChallenge(
+      { ...ch.public, id: ch.id },
+      {
         ...(ch.hidden ? { hidden_test_cases: ch.hidden } : {}),
         ...(ch.hint ? { hint: ch.hint } : {}),
         ...(ch.private ?? {}),
-      });
+      }
+    );
     console.log("challenge seeded:", ch.id);
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(() => closeDb());

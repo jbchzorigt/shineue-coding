@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { signIn } from "@/auth";
-import { ALLOWED_DOMAIN } from "@/auth.config";
+import { ALLOWED_DOMAIN, googleEnabled } from "@/auth.config";
+import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,38 +23,62 @@ export default async function LoginPage({
     <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <Image
+            src="/logo.png"
+            alt="Шинэ Үе сургууль"
+            width={96}
+            height={96}
+            priority
+            className="mx-auto mb-2"
+          />
           <CardTitle className="text-2xl">IBDP Computer Science</CardTitle>
-          <CardDescription>
-            2027 хөтөлбөрийн дасгал, сорилын платформ
-          </CardDescription>
+          <CardDescription>2027 хөтөлбөрийн дасгал, сорилын платформ</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Errors below come back from the optional Google sign-in. */}
           {error === "AccessDenied" && (
             <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              Зөвхөн сургуулийн <strong>@{ALLOWED_DOMAIN}</strong> имэйл
-              хаягаар нэвтрэх боломжтой.
+              Зөвхөн сургуулийн <strong>@{ALLOWED_DOMAIN}</strong> имэйл хаягаар нэвтрэх боломжтой.
             </p>
           )}
-          {error && error !== "AccessDenied" && (
+          {error === "AccountConflict" && (
+            <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+              Энэ имэйл хаяг өөр Google бүртгэлтэй холбогдсон байна. Админд хандаж хуучин
+              бүртгэлийг устгуулаад дахин нэвтэрнэ үү.
+            </p>
+          )}
+          {error && error !== "AccessDenied" && error !== "AccountConflict" && (
             <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
               Нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу.
             </p>
           )}
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google", { redirectTo: "/" });
-            }}
-          >
-            <Button type="submit" className="w-full" size="lg">
-              <GoogleIcon />
-              Google-ээр нэвтрэх
-            </Button>
-          </form>
+
+          <LoginForm />
+
+          {googleEnabled && (
+            <>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                эсвэл
+                <span className="h-px flex-1 bg-border" />
+              </div>
+              <form
+                action={async () => {
+                  "use server";
+                  await signIn("google", { redirectTo: "/" });
+                }}
+              >
+                <Button type="submit" variant="outline" className="w-full">
+                  <GoogleIcon />
+                  Google-ээр нэвтрэх
+                </Button>
+              </form>
+            </>
+          )}
         </CardContent>
         <CardFooter>
           <p className="w-full text-center text-xs text-muted-foreground">
-            Сургуулийн бүртгэлтэй Google хаяг шаардлагатай
+            Нууц үгээ мартсан бол багшдаа хандана уу.
           </p>
         </CardFooter>
       </Card>

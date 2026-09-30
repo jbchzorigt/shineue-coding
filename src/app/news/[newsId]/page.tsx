@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getNews } from "@/lib/firebase/news";
+import { getNews } from "@/lib/db/news";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import {
   NewsAudio,

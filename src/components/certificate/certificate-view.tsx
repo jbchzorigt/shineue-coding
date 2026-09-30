@@ -13,7 +13,7 @@ interface CertificateData {
   verifyUrl: string;
 }
 
-async function loadFontAsBase64(url: string): Promise<string> {
+async function loadAsBase64(url: string): Promise<string> {
   const buf = await (await fetch(url)).arrayBuffer();
   let binary = "";
   const bytes = new Uint8Array(buf);
@@ -28,9 +28,10 @@ async function generatePdf(cert: CertificateData): Promise<void> {
   const { jsPDF } = await import("jspdf");
 
   // PT Sans covers Cyrillic — jsPDF's built-in fonts do not.
-  const [regular, bold] = await Promise.all([
-    loadFontAsBase64("/fonts/PTSans-Regular.ttf"),
-    loadFontAsBase64("/fonts/PTSans-Bold.ttf"),
+  const [regular, bold, logo] = await Promise.all([
+    loadAsBase64("/fonts/PTSans-Regular.ttf"),
+    loadAsBase64("/fonts/PTSans-Bold.ttf"),
+    loadAsBase64("/logo.png"),
   ]);
 
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -52,36 +53,38 @@ async function generatePdf(cert: CertificateData): Promise<void> {
   doc.setLineWidth(0.3);
   doc.rect(13, 13, W - 26, H - 26);
 
+  doc.addImage(logo, "PNG", cx - 12, 17, 24, 24);
+
   doc.setFont("PTSans", "bold");
   doc.setTextColor(23, 23, 23);
   doc.setFontSize(13);
-  doc.text("IBDP COMPUTER SCIENCE", cx, 38, { align: "center" });
+  doc.text("IBDP COMPUTER SCIENCE", cx, 50, { align: "center" });
 
   doc.setFontSize(34);
-  doc.text("ГЭРЧИЛГЭЭ", cx, 58, { align: "center" });
+  doc.text("ГЭРЧИЛГЭЭ", cx, 70, { align: "center" });
   doc.setFont("PTSans", "normal");
   doc.setFontSize(14);
   doc.setTextColor(120, 113, 108);
-  doc.text("Certificate of Completion", cx, 67, { align: "center" });
+  doc.text("Certificate of Completion", cx, 79, { align: "center" });
 
   doc.setFontSize(13);
   doc.setTextColor(23, 23, 23);
-  doc.text("Энэхүү гэрчилгээг", cx, 88, { align: "center" });
+  doc.text("Энэхүү гэрчилгээг", cx, 100, { align: "center" });
 
   doc.setFont("PTSans", "bold");
   doc.setFontSize(28);
-  doc.text(cert.name, cx, 103, { align: "center" });
+  doc.text(cert.name, cx, 115, { align: "center" });
   const nameWidth = doc.getTextWidth(cert.name);
   doc.setLineWidth(0.4);
-  doc.line(cx - nameWidth / 2 - 5, 107, cx + nameWidth / 2 + 5, 107);
+  doc.line(cx - nameWidth / 2 - 5, 119, cx + nameWidth / 2 + 5, 119);
 
   doc.setFont("PTSans", "normal");
   doc.setFontSize(13);
   const body = `${cert.syllabus} хөтөлбөрийн бүх модулийг амжилттай дүүргэсэн тул олгов.`;
-  doc.text(doc.splitTextToSize(body, 180), cx, 120, { align: "center" });
+  doc.text(doc.splitTextToSize(body, 180), cx, 132, { align: "center" });
 
   doc.setFontSize(12);
-  doc.text(`Олгосон огноо: ${cert.issuedAt}`, cx, 145, { align: "center" });
+  doc.text(`Олгосон огноо: ${cert.issuedAt}`, cx, 157, { align: "center" });
 
   doc.setFontSize(9);
   doc.setTextColor(120, 113, 108);

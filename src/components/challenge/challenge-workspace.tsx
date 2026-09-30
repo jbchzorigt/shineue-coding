@@ -6,12 +6,12 @@ import dynamic from "next/dynamic";
 import {
   CheckCircle2,
   ChevronRight,
-  Lightbulb,
   Loader2,
   Play,
   Send,
   TerminalSquare,
 } from "lucide-react";
+import { HintBox } from "@/components/challenge/hint-box";
 import { Button } from "@/components/ui/button";
 import {
   ResizablePanelGroup,
@@ -63,9 +63,6 @@ export function ChallengeWorkspace({
 }) {
   const [code, setCode] = useState(initialCode);
   const [terminal, setTerminal] = useState<TerminalState>({ kind: "idle" });
-  const [hint, setHint] = useState<string | null>(null);
-  const [hintUsed, setHintUsed] = useState(hintAlreadyUsed);
-  const [hintLoading, setHintLoading] = useState(false);
 
   const busy = terminal.kind === "running";
 
@@ -88,22 +85,6 @@ export function ChallengeWorkspace({
     }
   }
 
-  async function fetchHint() {
-    setHintLoading(true);
-    try {
-      const res = await fetch(`/api/challenges/${challengeId}/hint`, { method: "POST" });
-      const data = (await res.json()) as { hint?: string; message?: string };
-      if (res.ok && data.hint) {
-        setHint(data.hint);
-        setHintUsed(true);
-      } else {
-        setTerminal({ kind: "error", message: data.message ?? "Hint авахад алдаа гарлаа." });
-      }
-    } finally {
-      setHintLoading(false);
-    }
-  }
-
   return (
     <ResizablePanelGroup
       orientation="horizontal"
@@ -117,23 +98,12 @@ export function ChallengeWorkspace({
           </div>
 
           {hasHint && (
-            <div className="mt-6">
-              {hint ? (
-                <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-                  <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-600" />
-                  <p className="text-amber-900 dark:text-amber-200">{hint}</p>
-                </div>
-              ) : (
-                <Button onClick={fetchHint} disabled={hintLoading} variant="outline" size="sm">
-                  {hintLoading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Lightbulb className="size-4" />
-                  )}
-                  {alreadyPassed || hintUsed ? "Hint харах" : "Hint авах (−30% XP)"}
-                </Button>
-              )}
-            </div>
+            <HintBox
+              challengeId={challengeId}
+              alreadyPassed={alreadyPassed}
+              hintAlreadyUsed={hintAlreadyUsed}
+              onError={(message) => setTerminal({ kind: "error", message })}
+            />
           )}
         </div>
       </ResizablePanel>

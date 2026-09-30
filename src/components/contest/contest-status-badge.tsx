@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { ContestStatus } from "@/lib/firebase/contests";
+import type { ContestStatus } from "@/lib/db/contests";
 
 const LABEL: Record<ContestStatus, string> = {
   upcoming: "Удахгүй",

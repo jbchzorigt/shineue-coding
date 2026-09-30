@@ -33,7 +33,7 @@ export function ChallengeQuiz({
   initialAnswer,
 }: {
   challengeId: string;
-  type: Exclude<ChallengeType, "coding">;
+  type: Exclude<ChallengeType, "coding" | "logic">;
   options?: string[];
   alreadyPassed: boolean;
   initialAnswer: string;

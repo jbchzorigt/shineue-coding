@@ -1,5 +1,5 @@
 import { BadgeCheck, BadgeX } from "lucide-react";
-import { getCertificate } from "@/lib/firebase/certificates";
+import { getCertificate } from "@/lib/db/certificates";
 import {
   Card,
   CardContent,

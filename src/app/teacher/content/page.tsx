@@ -2,10 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookOpen, Pencil, Plus } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { listModules } from "@/lib/firebase/modules";
-import { listChallengesByModule } from "@/lib/firebase/challenges";
+import { listModules } from "@/lib/db/modules";
+import { listChallengesByModule } from "@/lib/db/challenges";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ const TYPE_LABEL = {
   mcq: "Тест",
   tracing: "Мөшгих",
   theory: "Онол",
+  logic: "Хэлхээ",
 } as const;
 
 export default async function TeacherContentPage() {

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarClock, CheckCircle2, Swords, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, Plus, Swords, Users } from "lucide-react";
 import { auth } from "@/auth";
-import { contestStatus, listContests, listParticipants, getParticipant } from "@/lib/firebase/contests";
+import { contestStatus, listContests, listParticipants, getParticipant } from "@/lib/db/contests";
 import { registerForContest } from "@/lib/contest-actions";
 import { SiteHeader } from "@/components/site-header";
+import { StaffLink } from "@/components/staff-link";
 import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,14 +26,20 @@ export default async function ContestsPage() {
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
       <main className="mx-auto max-w-3xl space-y-6 p-4 pt-8">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Swords className="size-6" />
-            Тэмцээн
-          </h1>
-          <p className="text-muted-foreground">
-            Программчлалын тэмцээнд оролцож ур чадвараа сорь!
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
+              <Swords className="size-6" />
+              Тэмцээн
+            </h1>
+            <p className="text-muted-foreground">
+              Программчлалын тэмцээнд оролцож ур чадвараа сорь!
+            </p>
+          </div>
+          <StaffLink href="/teacher/contests/new">
+            <Plus className="size-4" />
+            Шинэ тэмцээн
+          </StaffLink>
         </div>
 
         {contests.length === 0 && (

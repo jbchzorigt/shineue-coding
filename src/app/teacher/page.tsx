@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FolderKanban, GraduationCap, Lightbulb, Newspaper, Swords } from "lucide-react";
+import { FolderKanban, GraduationCap, Lightbulb, Newspaper, Swords, UserPlus } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
-import { isStaff } from "@/lib/types";
-import { listStudentOverviews } from "@/lib/firebase/teacher";
+import { getUserProfile } from "@/lib/db/users";
+import { canManageAccount, isStaff } from "@/lib/types";
+import { listStudentOverviews } from "@/lib/db/teacher";
 import { setUserRole } from "@/lib/teacher-actions";
 import { DeleteUserButton } from "@/components/teacher/delete-user-button";
+import { ResetPasswordButton } from "@/components/teacher/reset-password-button";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export default async function TeacherPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // The Firestore role is authoritative (the JWT copy can be stale).
+  // The database role is authoritative (the JWT copy can be stale).
   const profile = await getUserProfile(session.user.id).catch(() => null);
   if (!isStaff(profile?.role)) redirect("/");
 
@@ -63,6 +64,10 @@ export default async function TeacherPage() {
             <Button render={<Link href="/teacher/news" />} nativeButton={false}>
               <Newspaper className="size-4" />
               Мэдээний удирдлага
+            </Button>
+            <Button render={<Link href="/teacher/users/new" />} nativeButton={false} variant="outline">
+              <UserPlus className="size-4" />
+              Хэрэглэгч нэмэх
             </Button>
           </div>
         </div>
@@ -109,13 +114,13 @@ export default async function TeacherPage() {
                   </span>
                 </TableHead>
                 <TableHead className="text-right">Сүүлд нэвтэрсэн</TableHead>
-                {isAdmin && <TableHead className="text-right">Үүрэг</TableHead>}
+                <TableHead className="text-right">Үйлдэл</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {allUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 9 : 8} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     Бүртгэлтэй хэрэглэгч алга.
                   </TableCell>
                 </TableRow>
@@ -131,6 +136,9 @@ export default async function TeacherPage() {
                       {s.role === "admin" && (
                         <span className="ml-2 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-700">Админ</span>
                       )}
+                      {s.locked && (
+                        <span className="ml-2 rounded bg-red-500/15 px-1.5 py-0.5 text-xs font-medium text-red-700">Түгжигдсэн</span>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">{s.email}</p>
                   </TableCell>
@@ -143,10 +151,13 @@ export default async function TeacherPage() {
                   <TableCell className="text-right text-muted-foreground">
                     {s.last_login ?? "—"}
                   </TableCell>
-                  {isAdmin && (
-                    <TableCell className="text-right">
-                      {s.role !== "admin" && (
-                        <div className="flex items-center justify-end gap-1">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {canManageAccount(profile?.role, s.role) && (
+                        <ResetPasswordButton uid={s.uid} name={s.name ?? s.email} />
+                      )}
+                      {isAdmin && s.role !== "admin" && (
+                        <>
                           <form
                             action={setUserRole.bind(
                               null,
@@ -159,10 +170,10 @@ export default async function TeacherPage() {
                             </Button>
                           </form>
                           <DeleteUserButton uid={s.uid} name={s.name} />
-                        </div>
+                        </>
                       )}
-                    </TableCell>
-                  )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

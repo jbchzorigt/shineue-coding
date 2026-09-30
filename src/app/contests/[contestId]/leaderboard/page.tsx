@@ -7,7 +7,7 @@ import {
   getContest,
   listParticipants,
   listProblems,
-} from "@/lib/firebase/contests";
+} from "@/lib/db/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
 import { ContestStatusBadge, formatTime, formatWindow } from "@/components/contest/contest-status-badge";

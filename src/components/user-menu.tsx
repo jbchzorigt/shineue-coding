@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { isStaff } from "@/lib/types";
 import { UserMenuClient } from "@/components/user-menu-client";
 
 export async function UserMenu() {
@@ -11,6 +12,7 @@ export async function UserMenu() {
       name={name ?? null}
       email={email ?? null}
       image={image ?? null}
+      staff={isStaff(session.user.role)}
     />
   );
 }

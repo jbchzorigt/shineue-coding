@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowRight, GraduationCap, LogIn, Newspaper, Star } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
-import { listPassedChallengeIds } from "@/lib/firebase/submissions";
-import { listNews } from "@/lib/firebase/news";
+import { getUserProfile } from "@/lib/db/users";
+import { listPassedChallengeIds } from "@/lib/db/submissions";
+import { listNews } from "@/lib/db/news";
 import { getCourseProgress, levelFromXp } from "@/lib/progression";
 import { isStaff, type UserProfile } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
@@ -105,8 +105,8 @@ export default async function HomePage() {
 
         {profileError && (
           <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-            Firestore-той холбогдож чадсангүй. .env.local доторх FIREBASE_*
-            тохиргоог шалгана уу.
+            Өгөгдлийн сантай холбогдож чадсангүй. Docker (npm run db:up) ажиллаж
+            байгаа эсэх, .env.local доторх DATABASE_URL-ийг шалгана уу.
           </p>
         )}
 

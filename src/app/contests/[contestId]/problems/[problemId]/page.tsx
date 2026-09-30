@@ -7,12 +7,15 @@ import {
   getContest,
   getParticipant,
   getProblem,
-} from "@/lib/firebase/contests";
-import { getUserProfile } from "@/lib/firebase/users";
+  getProblemPrivate,
+} from "@/lib/db/contests";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { ContestRunner } from "@/components/contest/contest-runner";
+import { LogicConstraints } from "@/components/logic/logic-constraints";
+import { LogicSolver } from "@/components/logic/logic-solver";
 import { Button } from "@/components/ui/button";
 
 export default async function ContestProblemPage({
@@ -42,6 +45,10 @@ export default async function ContestProblemPage({
   }
 
   const myScore = participant?.scores?.[problem.id];
+  const logicSpec = problem.kind === "logic" ? problem.logic_spec : undefined;
+  const expected = logicSpec?.table_visible
+    ? ((await getProblemPrivate(contestId, problem.id))?.expected_table ?? null)
+    : null;
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -69,14 +76,35 @@ export default async function ContestProblemPage({
           <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
             <MdxContent source={problem.prompt} />
           </div>
+          {logicSpec && <LogicConstraints spec={logicSpec} />}
         </div>
 
-        <ContestRunner
-          contestId={contestId}
-          problemId={problem.id}
-          initialCode={problem.starter_code ?? ""}
-          disabled={!staff && status !== "running"}
-        />
+        {problem.kind === "logic" ? (
+          logicSpec ? (
+            <div className="h-[40rem] overflow-hidden rounded-lg border bg-background">
+              <LogicSolver
+                spec={logicSpec}
+                expected={expected}
+                initialCircuit={null}
+                target={{
+                  kind: "contest",
+                  contestId,
+                  problemId: problem.id,
+                  disabled: !staff && status !== "running",
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-destructive">Бодлогын тохиргоо дутуу байна.</p>
+          )
+        ) : (
+          <ContestRunner
+            contestId={contestId}
+            problemId={problem.id}
+            initialCode={problem.starter_code ?? ""}
+            disabled={!staff && status !== "running"}
+          />
+        )}
       </main>
     </div>
   );

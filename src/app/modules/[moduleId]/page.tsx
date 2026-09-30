@@ -2,10 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Code2, Lock, Trophy } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
-import { listChallengesByModule } from "@/lib/firebase/challenges";
-import { listPassedChallengeIds } from "@/lib/firebase/submissions";
-import { getModule } from "@/lib/firebase/modules";
+import { getUserProfile } from "@/lib/db/users";
+import { listChallengesByModule } from "@/lib/db/challenges";
+import { listPassedChallengeIds } from "@/lib/db/submissions";
+import { getModule } from "@/lib/db/modules";
 import { isStaff } from "@/lib/types";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
@@ -98,7 +98,7 @@ export default async function ModuleLessonPage({
                           <p className="text-sm text-muted-foreground">
                             {passed
                               ? "Амжилттай бодсон"
-                              : { coding: "Кодын даалгавар", mcq: "Сонгох тест", tracing: "Код мөшгих", theory: "Онолын асуулт" }[ch.type]}
+                              : { coding: "Кодын даалгавар", mcq: "Сонгох тест", tracing: "Код мөшгих", theory: "Онолын асуулт", logic: "Логик хэлхээ" }[ch.type]}
                           </p>
                         </div>
                         <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground">

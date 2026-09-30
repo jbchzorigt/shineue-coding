@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { getNews } from "@/lib/firebase/news";
+import { getNews } from "@/lib/db/news";
 import { SiteHeader } from "@/components/site-header";
 import { NewsForm } from "@/components/teacher/news-form";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,8 @@ export default async function EditNewsPage({
           </h1>
         </div>
         <div className="rounded-xl border bg-background p-6">
-          <NewsForm post={post} />
+          {/* Vercel (no writable disk) stores news media in Blob. */}
+          <NewsForm post={post} store={process.env.BLOB_READ_WRITE_TOKEN ? "blob" : "local"} />
         </div>
       </main>
     </div>

@@ -3,14 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
 import {
   deleteContest as deleteContestDoc,
   deleteProblem as deleteProblemDoc,
   registerParticipant,
   upsertContest,
   upsertProblem,
-} from "@/lib/firebase/contests";
+} from "@/lib/db/contests";
+import { NotFoundError, UserError, userMessage } from "@/lib/errors";
+import { parseLogicSpecJson } from "@/lib/logic/spec";
+import { normalizeMdx } from "@/lib/mdx-check";
 import { isStaff, type PublicTestCase } from "@/lib/types";
 import type { ActionState } from "@/lib/teacher-actions";
 
@@ -25,7 +28,7 @@ async function requireStaff(): Promise<void> {
   const session = await auth();
   const profile = session?.user?.id ? await getUserProfile(session.user.id) : null;
   if (!isStaff(profile?.role)) {
-    throw new Error("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
+    throw new UserError("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
   }
 }
 
@@ -36,11 +39,17 @@ export async function registerForContest(contestId: string): Promise<void> {
   if (!session?.user?.id) redirect("/login");
   if (!ID_RE.test(contestId)) return;
 
-  await registerParticipant(contestId, {
-    uid: session.user.id,
-    name: session.user.name ?? null,
-    email: session.user.email ?? "",
-  });
+  try {
+    await registerParticipant(contestId, {
+      uid: session.user.id,
+      name: session.user.name ?? null,
+      email: session.user.email ?? "",
+    });
+  } catch (err) {
+    // The contest was deleted meanwhile, or the session outlived its account.
+    if (err instanceof NotFoundError) redirect("/contests");
+    throw err;
+  }
   revalidatePath("/contests");
   revalidatePath(`/contests/${contestId}`);
   redirect(`/contests/${contestId}`);
@@ -77,7 +86,7 @@ export async function saveContest(
       ends_at: ends,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа." };
+    return { error: userMessage(err) };
   }
   revalidatePath("/contests");
   revalidatePath("/teacher/contests");
@@ -114,7 +123,7 @@ export async function saveContestProblem(
     contestId = str(form, "contest_id");
     const id = str(form, "id").toLowerCase();
     const title = str(form, "title");
-    const prompt = str(form, "prompt");
+    const prompt = normalizeMdx(str(form, "prompt"));
     const points = Number(str(form, "points"));
     const order = Number(str(form, "order"));
 
@@ -129,28 +138,38 @@ export async function saveContestProblem(
     }
     if (!Number.isFinite(order) || order < 1) return { error: "Дараалал 1-ээс их тоо байх ёстой." };
 
-    const publicTests = parseTests(str(form, "public_tests"));
-    const hiddenTests = parseTests(str(form, "hidden_tests"));
-    if (publicTests.length + hiddenTests.length === 0) {
-      return { error: "Дор хаяж нэг тест шаардлагатай." };
+    if (str(form, "kind") === "logic") {
+      const parsed = parseLogicSpecJson(str(form, "logic_spec"), str(form, "expected_table"));
+      if (!parsed.ok) return { error: parsed.errors.join(" ") };
+      await upsertProblem(
+        contestId,
+        { id, title, prompt, points, order, kind: "logic", public_test_cases: [], logic_spec: parsed.spec },
+        { hidden_test_cases: [], expected_table: parsed.table }
+      );
+    } else {
+      const publicTests = parseTests(str(form, "public_tests"));
+      const hiddenTests = parseTests(str(form, "hidden_tests"));
+      if (publicTests.length + hiddenTests.length === 0) {
+        return { error: "Дор хаяж нэг тест шаардлагатай." };
+      }
+      await upsertProblem(
+        contestId,
+        {
+          id,
+          title,
+          prompt,
+          points,
+          order,
+          kind: "python",
+          starter_code: (form.get("starter_code") as string | null) ?? "",
+          public_test_cases: publicTests,
+        },
+        { hidden_test_cases: hiddenTests }
+      );
     }
-
-    await upsertProblem(
-      contestId,
-      {
-        id,
-        title,
-        prompt,
-        points,
-        order,
-        starter_code: (form.get("starter_code") as string | null) ?? "",
-        public_test_cases: publicTests,
-      },
-      { hidden_test_cases: hiddenTests }
-    );
   } catch (err) {
     if (err instanceof SyntaxError) return { error: "Тестүүдийн формат буруу байна." };
-    return { error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа." };
+    return { error: userMessage(err) };
   }
   revalidatePath(`/contests/${contestId}`);
   revalidatePath(`/teacher/contests/${contestId}`);

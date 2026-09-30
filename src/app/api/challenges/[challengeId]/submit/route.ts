@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { getChallenge, getChallengePrivate } from "@/lib/firebase/challenges";
-import { getUserProfile } from "@/lib/firebase/users";
-import { getSubmission, recordSubmission } from "@/lib/firebase/submissions";
+import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
+import { getUserProfile } from "@/lib/db/users";
+import { getSubmission, recordSubmission } from "@/lib/db/submissions";
+import { NotFoundError } from "@/lib/errors";
 import { maybeUnlockNextModule } from "@/lib/progression";
 import { gradePython, normalizeOutput } from "@/lib/piston";
+import { gradeLogic } from "@/lib/logic/grade";
+import type { LogicError } from "@/lib/logic/evaluate";
 import { isStaff, type Challenge, type ChallengePrivate } from "@/lib/types";
 
 // Sequential Piston runs can exceed Vercel's default function timeout.
@@ -26,6 +29,14 @@ export interface TestResultDto {
   error?: string;
 }
 
+/** Logic challenges: rows only — which rows were wrong is never sent. */
+export interface LogicResultDto {
+  correctRows: number;
+  totalRows: number;
+  /** Structural problems; the attempt still counts as failed. */
+  errors?: LogicError[];
+}
+
 interface SubmitBody {
   mode?: string;
   /** coding */
@@ -36,6 +47,8 @@ interface SubmitBody {
   answer?: string;
   /** theory — student confirms their answer matched the mark scheme. */
   selfAssess?: boolean;
+  /** logic — the circuit JSON (untrusted). */
+  circuit?: unknown;
 }
 
 interface Graded {
@@ -44,6 +57,7 @@ interface Graded {
   snapshot: string;
   results?: TestResultDto[];
   markScheme?: string;
+  logic?: LogicResultDto;
   /** When set, skip recording entirely (coding "run" mode). */
   runOnly?: boolean;
   errorResponse?: NextResponse;
@@ -106,6 +120,9 @@ export async function POST(
     case "theory":
       graded = await gradeTheory(challenge, body, uid);
       break;
+    case "logic":
+      graded = await gradeLogicChallenge(challenge, body);
+      break;
     default:
       return NextResponse.json({ message: "Үл мэдэгдэх төрөл." }, { status: 400 });
   }
@@ -121,13 +138,22 @@ export async function POST(
     });
   }
 
-  const { xpAwarded } = await recordSubmission({
-    uid,
-    challengeId,
-    code: graded.snapshot,
-    passed: graded.passed,
-    xpReward: challenge.xp_reward,
-  });
+  let xpAwarded: number;
+  try {
+    ({ xpAwarded } = await recordSubmission({
+      uid,
+      challengeId,
+      code: graded.snapshot,
+      passed: graded.passed,
+      xpReward: challenge.xp_reward,
+    }));
+  } catch (err) {
+    // The challenge was deleted while Piston was grading it.
+    if (err instanceof NotFoundError) {
+      return NextResponse.json({ message: err.message }, { status: 404 });
+    }
+    throw err;
+  }
 
   const unlockedModule = graded.passed
     ? await maybeUnlockNextModule(
@@ -141,6 +167,7 @@ export async function POST(
     passed: graded.passed,
     results: graded.results ?? [],
     markScheme: graded.markScheme,
+    logic: graded.logic,
     xpAwarded,
     unlockedModule,
   });
@@ -285,5 +312,36 @@ async function gradeTheory(
     passed: false,
     snapshot: answer,
     markScheme: priv.mark_scheme,
+  };
+}
+
+async function gradeLogicChallenge(challenge: Challenge, body: SubmitBody): Promise<Graded> {
+  const expected = (await getChallengePrivate(challenge.id))?.expected_table;
+  if (!challenge.logic_spec || !expected) {
+    return {
+      passed: false,
+      snapshot: "",
+      errorResponse: NextResponse.json(
+        { message: "Бодлогын тохиргоо дутуу байна. Багшдаа хэлнэ үү." },
+        { status: 409 }
+      ),
+    };
+  }
+  const grade = gradeLogic(challenge.logic_spec, expected, body.circuit);
+  if (grade.status === "malformed") return badRequest(grade.message);
+
+  // Stored even when broken, so an unfinished circuit comes back next time.
+  const snapshot = JSON.stringify(grade.circuit);
+  if (grade.status === "invalid") {
+    return {
+      passed: false,
+      snapshot,
+      logic: { correctRows: 0, totalRows: expected.length, errors: grade.errors },
+    };
+  }
+  return {
+    passed: grade.correctRows === grade.totalRows,
+    snapshot,
+    logic: { correctRows: grade.correctRows, totalRows: grade.totalRows },
   };
 }

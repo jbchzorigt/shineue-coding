@@ -7,8 +7,8 @@ import {
   getContest,
   getParticipant,
   listProblems,
-} from "@/lib/firebase/contests";
-import { getUserProfile } from "@/lib/firebase/users";
+} from "@/lib/db/contests";
+import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
 import { registerForContest } from "@/lib/contest-actions";
 import { SiteHeader } from "@/components/site-header";

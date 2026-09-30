@@ -1,0 +1,8 @@
+# never upload secrets, local uploads or tooling state
+.env*
+!.env.example
+data
+.superpowers
+docker
+.next
+node_modules

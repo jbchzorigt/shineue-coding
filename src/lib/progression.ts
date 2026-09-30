@@ -1,10 +1,9 @@
 import "server-only";
 
-import { FieldValue } from "firebase-admin/firestore";
-import { getDb } from "@/lib/firebase/admin";
-import { listChallengesByModule } from "@/lib/firebase/challenges";
-import { listPassedChallengeIds } from "@/lib/firebase/submissions";
-import { listModules } from "@/lib/firebase/modules";
+import { listChallengesByModule } from "@/lib/db/challenges";
+import { listPassedChallengeIds } from "@/lib/db/submissions";
+import { listModules } from "@/lib/db/modules";
+import { unlockModule } from "@/lib/db/users";
 
 /** 100 XP per level, level 1 at 0 XP. */
 export function levelFromXp(totalXp: number): {
@@ -67,9 +66,7 @@ export async function maybeUnlockNextModule(
   const next = lessons[currentIdx + 1];
   if (!next || alreadyUnlocked.includes(next.id)) return null;
 
-  await getDb()
-    .doc(`users/${uid}`)
-    .update({ unlocked_modules: FieldValue.arrayUnion(next.id) });
+  await unlockModule(uid, next.id);
 
   return { id: next.id, title: next.title };
 }

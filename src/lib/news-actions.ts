@@ -3,20 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getUserProfile } from "@/lib/firebase/users";
+import { getUserProfile } from "@/lib/db/users";
+import { UserError, userMessage } from "@/lib/errors";
+import { isAllowedMediaUrl } from "@/lib/media";
+import { mdxError, normalizeMdx } from "@/lib/mdx-check";
 import { isStaff } from "@/lib/types";
 import {
   createNews,
   deleteNews as deleteNewsDoc,
   updateNews,
-} from "@/lib/firebase/news";
+} from "@/lib/db/news";
 import type { ActionState } from "@/lib/teacher-actions";
 
 async function requireStaff(): Promise<{ uid: string; name: string | null }> {
   const session = await auth();
   const profile = session?.user?.id ? await getUserProfile(session.user.id) : null;
   if (!profile || !isStaff(profile.role)) {
-    throw new Error("Зөвхөн багш/админ мэдээ нийтлэх эрхтэй.");
+    throw new UserError("Зөвхөн багш/админ мэдээ нийтлэх эрхтэй.");
   }
   return { uid: profile.uid, name: profile.name };
 }
@@ -26,16 +29,17 @@ function str(form: FormData, key: string): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-function urlOrNull(form: FormData, key: string): string | null {
+/**
+ * Empty → null; a web link or one of our /media files → kept; anything
+ * else is refused out loud rather than silently dropped from the post.
+ */
+function urlOrNull(form: FormData, key: string, label: string): string | null {
   const v = str(form, key);
   if (!v) return null;
-  try {
-    const u = new URL(v);
-    if (u.protocol !== "https:" && u.protocol !== "http:") return null;
-    return v;
-  } catch {
-    return null;
+  if (!isAllowedMediaUrl(v)) {
+    throw new UserError(`${label} буруу байна: https://-ээр эхэлсэн хаяг оруулна уу.`);
   }
+  return v;
 }
 
 export async function saveNews(
@@ -47,16 +51,18 @@ export async function saveNews(
 
     const id = str(form, "id"); // empty = create
     const title = str(form, "title");
-    const body = str(form, "body_mdx");
+    const body = normalizeMdx(str(form, "body_mdx"));
     if (!title) return { error: "Гарчиг хоосон байна." };
     if (body.length < 10) return { error: "Мэдээний агуулга хэт богино байна." };
+    const mdxProblem = await mdxError(body);
+    if (mdxProblem) return { error: mdxProblem };
 
     const data = {
       title,
       body_mdx: body,
-      image_url: urlOrNull(form, "image_url"),
-      video_url: urlOrNull(form, "video_url"),
-      audio_url: urlOrNull(form, "audio_url"),
+      image_url: urlOrNull(form, "image_url", "Нүүр зургийн холбоос"),
+      video_url: urlOrNull(form, "video_url", "Видео холбоос"),
+      audio_url: urlOrNull(form, "audio_url", "Дууны холбоос"),
     };
 
     if (id) {
@@ -69,7 +75,7 @@ export async function saveNews(
       });
     }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа." };
+    return { error: userMessage(err) };
   }
   revalidatePath("/news");
   revalidatePath("/teacher/news");

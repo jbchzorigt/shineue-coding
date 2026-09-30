@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { getCourseProgress } from "@/lib/progression";
-import { getOrCreateCertificate } from "@/lib/firebase/certificates";
+import { getOrCreateCertificate } from "@/lib/db/certificates";
 import { SiteHeader } from "@/components/site-header";
 import { CertificateView } from "@/components/certificate/certificate-view";
 import { Button } from "@/components/ui/button";

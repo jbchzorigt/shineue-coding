@@ -1,25 +1,19 @@
 /**
- * Seeds coding challenges for module-01.
- * Run: NODE_OPTIONS="--conditions=react-server" npx tsx scripts/seed-challenges.ts
+ * Seeds the challenges of modules 1-3. Run scripts/import-content.ts first —
+ * challenges reference their module. Safe to re-run.
+ * Run: npm run script -- scripts/seed-challenges.ts
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { closeDb } from "../src/lib/db/client";
+import { upsertChallenge } from "../src/lib/db/challenges";
+import type { Challenge, ChallengePrivate, PublicTestCase } from "../src/lib/types";
 
 async function main() {
-  for (const line of readFileSync(resolve(__dirname, "../.env.local"), "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)="(.*)"$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-
-  const { getDb } = await import("../src/lib/firebase/admin");
-  const db = getDb();
-
   interface SeedChallenge {
     id: string;
-    public: Record<string, unknown>;
-    hidden?: { input: string; expected_output: string }[];
+    public: Omit<Challenge, "id">;
+    hidden?: PublicTestCase[];
     hint?: string;
-    private?: Record<string, unknown>;
+    private?: ChallengePrivate;
   }
 
   const challenges: SeedChallenge[] = [
@@ -168,22 +162,21 @@ async function main() {
   ];
 
   for (const ch of challenges) {
-    await db.collection("challenges").doc(ch.id).set(ch.public);
-    await db
-      .collection("challenges")
-      .doc(ch.id)
-      .collection("private")
-      .doc("answers")
-      .set({
+    await upsertChallenge(
+      { ...ch.public, id: ch.id },
+      {
         ...(ch.hidden ? { hidden_test_cases: ch.hidden } : {}),
         ...(ch.hint ? { hint: ch.hint } : {}),
         ...(ch.private ?? {}),
-      });
+      }
+    );
     console.log("seeded", ch.id);
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(() => closeDb());
