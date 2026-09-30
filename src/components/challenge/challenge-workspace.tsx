@@ -12,6 +12,8 @@ import {
   TerminalSquare,
 } from "lucide-react";
 import { HintBox } from "@/components/challenge/hint-box";
+import { NextChallengeButton } from "@/components/challenge/challenge-nav";
+import type { NavItem } from "@/lib/challenge-nav";
 import { Button } from "@/components/ui/button";
 import {
   ResizablePanelGroup,
@@ -51,6 +53,8 @@ export function ChallengeWorkspace({
   alreadyPassed,
   hasHint,
   hintAlreadyUsed,
+  next,
+  moduleId,
   description,
 }: {
   challengeId: string;
@@ -58,11 +62,16 @@ export function ChallengeWorkspace({
   alreadyPassed: boolean;
   hasHint: boolean;
   hintAlreadyUsed: boolean;
+  /** The module's next challenge, or null after the last one. */
+  next: NavItem | null;
+  moduleId: string;
   /** Server-rendered MDX prompt. */
   description: ReactNode;
 }) {
   const [code, setCode] = useState(initialCode);
   const [terminal, setTerminal] = useState<TerminalState>({ kind: "idle" });
+  // Stays true after a passing submit, even if a later run fails.
+  const [solved, setSolved] = useState(alreadyPassed);
 
   const busy = terminal.kind === "running";
 
@@ -79,6 +88,7 @@ export function ChallengeWorkspace({
         setTerminal({ kind: "error", message: data.message ?? "Алдаа гарлаа. Дахин оролдоно уу." });
       } else {
         setTerminal({ kind: "result", mode, response: data });
+        if (mode === "submit" && data.passed) setSolved(true);
       }
     } catch {
       setTerminal({ kind: "error", message: "Сервертэй холбогдож чадсангүй." });
@@ -118,7 +128,7 @@ export function ChallengeWorkspace({
               <div className="flex items-center justify-between border-b bg-muted/60 px-3 py-1.5">
                 <span className="font-mono text-xs text-muted-foreground">main.py</span>
                 <div className="flex items-center gap-2">
-                  {alreadyPassed && (
+                  {solved && (
                     <span className="mr-1 flex items-center gap-1 text-xs font-medium text-emerald-600">
                       <CheckCircle2 className="size-3.5" />
                       Бодсон
@@ -145,6 +155,7 @@ export function ChallengeWorkspace({
                     )}
                     Илгээх
                   </Button>
+                  {solved && <NextChallengeButton next={next} moduleId={moduleId} compact />}
                 </div>
               </div>
               <div className="min-h-0 flex-1">

@@ -63,12 +63,15 @@ export function LogicSolver({
   expected,
   initialCircuit,
   target,
+  onSolved,
 }: {
   spec: LogicSpec;
   /** Only when the problem shows its table; hidden tables never reach the client. */
   expected: TruthTable | null;
   initialCircuit: Circuit | null;
   target: SolverTarget;
+  /** Called when a submission gets every row right. */
+  onSolved?: () => void;
 }) {
   const state = useCircuit(spec, initialCircuit);
   const [panel, setPanel] = useState<PanelState>({ kind: "idle" });
@@ -125,6 +128,7 @@ export function LogicSolver({
         table: truthTable(circuit, spec),
         graded: { correctRows: data.logic.correctRows, totalRows: data.logic.totalRows, outcome },
       });
+      if (data.logic.correctRows === data.logic.totalRows) onSolved?.();
     } catch {
       setPanel({ kind: "message", message: "Сервертэй холбогдож чадсангүй." });
     }

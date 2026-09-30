@@ -1,0 +1,258 @@
+{
+  "module_id": "b2-1",
+  "challenges": [
+    {
+      "id": "b2-1-01-trace",
+      "section": "B2.1.1",
+      "type": "tracing",
+      "title": "Хүрээг мөшгих: глобал, локал, параметр",
+      "prompt": "Программ юу хэвлэх вэ? Функц бүр аль `score`, аль `bonus`-ийг ашиглаж байгааг анхаар: глобал уу, локал уу?\n\n```python\nscore = 10\nbonus = 5\n\ndef add_bonus():\n    global score\n    score = score + bonus\n\ndef reset(score):\n    score = 0\n    print(\"inside reset:\", score)\n\ndef show():\n    bonus = 100\n    print(\"inside show:\", score + bonus)\n\nadd_bonus()\nreset(score)\nshow()\nadd_bonus()\nprint(\"score:\", score, \"bonus:\", bonus)\n```\n\nЗөвлөмж: глобал `score`, `bonus` ба функц бүрийн локал хувьсагчид тусдаа баганатай мөшгих хүснэгт зур. Функцийг дуудах бүрт түүний локал хувьсагчид шинээр үүсч, функц дуусахад устана.\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "inside reset: 0\ninside show: 115\nscore: 20 bonus: 5",
+      "hint": "Зөвхөн `global score` гэж бичсэн функц глобал `score`-ийг өөрчилнө. `reset`-ийн `score` бол параметр — локал хувьсагч, тиймээс глобал утгад нөлөөлөхгүй. `show` доторх `bonus = 100` зөвхөн тэр функцэд хамаарна, харин `score`-ийг уншихад глобал утга нь ашиглагдана."
+    },
+    {
+      "id": "b2-1-01-code",
+      "section": "B2.1.1",
+      "type": "coding",
+      "title": "Дүнгийн хуудас: дөрвөн өгөгдлийн төрөл",
+      "prompt": "Сургуулийн цахим дэвтэрт сурагчийн нэр ба гурван шалгалтын оноо **текст** хэлбэрээр ирдэг — `input()` үргэлж string буцаадаг. Утгуудыг зөв төрөлд хөрвүүлж, дүнгийн хуудас хэвлэ. Гаралтын мөрүүдэд IB-ийн дөрвөн төрөл гарна: string, integer, decimal, Boolean.\n\n**Оролт:** 4 мөр — 1-р мөрөнд сурагчийн нэр (зай агуулж болно), 2–4-р мөрөнд гурван оноо (0–100 бүхэл тоо), мөр бүрт нэг.\n\n**Гаралт:** яг 4 мөр:\n\n- `Name:`, нэг зай, нэр (string);\n- `Total:`, нэг зай, гурван онооны нийлбэр (integer);\n- `Average:`, нэг зай, дундаж оноо (decimal) — `round(average, 1)`-ээр аравны нэг орон хүртэл бөөрөнхийлсөн. Бутархай тоо тул бүхэл гарсан ч `.0`-тэй хэвлэгдэнэ: `80.0`;\n- `Passed:`, нэг зай, дундаж 50 буюу түүнээс их бол `True`, эс бөгөөс `False` (Boolean).\n\n```text\nОролт:      Гаралт:\nAnu         Name: Anu\n80          Total: 245\n90          Average: 81.7\n75          Passed: True\n```\n\n245 / 3 = 81.666… → `81.7`; дундаж 50-аас их тул `True`.\n\n```text\nОролт:      Гаралт:\nBold        Name: Bold\n40          Total: 125\n35          Average: 41.7\n50          Passed: False\n```\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "name = input()\nm1 = input()      # careful: input() always gives a string\nm2 = input()\nm3 = input()\n\n# convert the marks, then work out total (integer), average (decimal)\n# and passed (Boolean), and print the four lines\n",
+      "tests": [
+        {
+          "input": "Anu\n80\n90\n75",
+          "output": "Name: Anu\nTotal: 245\nAverage: 81.7\nPassed: True"
+        },
+        {
+          "input": "Bold\n40\n35\n50",
+          "output": "Name: Bold\nTotal: 125\nAverage: 41.7\nPassed: False"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "Temuulen\n80\n80\n80",
+          "output": "Name: Temuulen\nTotal: 240\nAverage: 80.0\nPassed: True"
+        },
+        {
+          "input": "Saraa\n50\n50\n50",
+          "output": "Name: Saraa\nTotal: 150\nAverage: 50.0\nPassed: True"
+        },
+        {
+          "input": "Dorj\n49\n50\n50",
+          "output": "Name: Dorj\nTotal: 149\nAverage: 49.7\nPassed: False"
+        },
+        {
+          "input": "Zaya\n0\n0\n0",
+          "output": "Name: Zaya\nTotal: 0\nAverage: 0.0\nPassed: False"
+        },
+        {
+          "input": "Enkh\n30\n30\n31",
+          "output": "Name: Enkh\nTotal: 91\nAverage: 30.3\nPassed: False"
+        },
+        {
+          "input": "Nomin\n100\n100\n99",
+          "output": "Name: Nomin\nTotal: 299\nAverage: 99.7\nPassed: True"
+        },
+        {
+          "input": "Oyun Erdene\n100\n0\n1",
+          "output": "Name: Oyun Erdene\nTotal: 101\nAverage: 33.7\nPassed: False"
+        }
+      ],
+      "solution": "name = input()\nm1 = int(input())\nm2 = int(input())\nm3 = int(input())\n\ntotal = m1 + m2 + m3        # integer\naverage = total / 3         # decimal\npassed = average >= 50      # Boolean\n\nprint(\"Name:\", name)\nprint(\"Total:\", total)\nprint(\"Average:\", round(average, 1))\nprint(\"Passed:\", passed)\n",
+      "hint": "Оноо бүрийг `int(input())`-ээр бүхэл тоо болго. Дундажийг `/`-ээр ол (`//` бутархайг хаяна!) — `round(average, 1)`. `average >= 50` илэрхийлэл өөрөө `True` эсвэл `False` утга өгдөг тул түүнийг хувьсагчид хадгалаад шууд хэвлэж болно."
+    },
+    {
+      "id": "b2-1-02-trace",
+      "section": "B2.1.2",
+      "type": "tracing",
+      "title": "Зүсэлтийг мөшгих: сурагчийн код",
+      "prompt": "`code` хувьсагчид сурагчийн бүртгэлийн код хадгалагдсан. Программ юу хэвлэх вэ? Эхлээд тэмдэгт бүрийн эерэг ба сөрөг индексийг бичээд, дараа нь мөр бүрийг бод.\n\n```python\ncode = \"UB-2026-CS-Anu\"\nprint(code[:2])\nprint(code[3:7])\nprint(code[-3:])\nprint(code[3:-4])\nprint(code[-6:-4])\ndash = code.find(\"-\")\nprint(code[dash + 1:dash + 3])\nprint(code.replace(\"-\", \"\").lower()[:6])\nprint(len(code[8:]))\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "UB\n2026\nAnu\n2026-CS\nCS\n20\nub2026\n6",
+      "hint": "`code` 14 тэмдэгттэй, индекс нь 0–13. `[a:b]` нь a-г оруулж, b-г оруулахгүй. Сөрөг индексийг 14 дээр нэмж эерэг болго: −4 → 10, −6 → 8. `find` ЭХНИЙ `-`-ийн индексийг буцаана. `replace` ба `lower` шинэ мөр үүсгэсний дараа `[:6]` зүсэгдэнэ."
+    },
+    {
+      "id": "b2-1-02-code",
+      "section": "B2.1.2",
+      "type": "coding",
+      "title": "Имэйлийг хэсэглэж, нууцлах",
+      "prompt": "Банкны апп, сургуулийн систем хэрэглэгчийн имэйлийг дэлгэцэнд бүтнээр нь биш, `a*****t@school.mn` шиг нууцалж харуулдаг. Имэйлийг цэгцэлж, хэсэглэж, нууцалдаг программ бич.\n\n**Дүрэм:**\n\n1. Эхлээд мөрийн хоёр захын зайг арилгаж, бүх үсгийг жижиг болго.\n2. `@`-ийн өмнөх хэсэг — **хэрэглэгчийн нэр (user)**, дараах хэсэг — **домэйн (domain)**.\n3. Нууцалсан имэйл = хэрэглэгчийн нэрийн эхний тэмдэгт + эхний ба сүүлийн тэмдэгтийн хоорондох тэмдэгт бүрийн оронд нэг `*` + сүүлийн тэмдэгт + `@` + домэйн. Хэрэглэгчийн нэр ганц тэмдэгттэй бол нууцлахгүй, тэр чигээр нь үлдээнэ.\n\n**Оролт:** нэг мөр — имэйл хаяг. Дотор нь яг нэг `@` бий, түүний өмнөх ба дараах хэсэг хоосон биш. Мөрийн хоёр захад зай, дотор нь том үсэг байж болно.\n\n**Гаралт:** 3 мөр — `User:`, `Domain:`, `Masked:` тус бүрийн ард нэг зай ба харгалзах утга.\n\n```text\nОролт:                 Гаралт:\nanu.bat@school.mn      User: anu.bat\n                       Domain: school.mn\n                       Masked: a*****t@school.mn\n```\n\n`anu.bat` 7 тэмдэгттэй: эхний `a`, сүүлийн `t`, хооронд нь 5 тэмдэгт → 5 од.\n\n```text\nОролт:                 Гаралт:\n  Bold99@Gmail.com     User: bold99\n                       Domain: gmail.com\n                       Masked: b****9@gmail.com\n```\n\nЭнэ оролтын мөр 2 зайгаар эхэлж, 1 зайгаар төгсдөг.\n\nХэрэгтэй хэрэгсэл: `strip()`, `lower()`, `find(\"@\")`, зүсэлт, `len()`, `\"*\" * 3` → `\"***\"`.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "email = input()\n\n# 1. clean: remove the spaces at both ends, make everything lower case\n# 2. split at the @ into user and domain (find + slicing)\n# 3. build the masked address and print the three lines\n",
+      "tests": [
+        {
+          "input": "anu.bat@school.mn",
+          "output": "User: anu.bat\nDomain: school.mn\nMasked: a*****t@school.mn"
+        },
+        {
+          "input": "  Bold99@Gmail.com ",
+          "output": "User: bold99\nDomain: gmail.com\nMasked: b****9@gmail.com"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "x@y.mn",
+          "output": "User: x\nDomain: y.mn\nMasked: x@y.mn"
+        },
+        {
+          "input": "jo@mail.mn",
+          "output": "User: jo\nDomain: mail.mn\nMasked: jo@mail.mn"
+        },
+        {
+          "input": "ABC@SCHOOL.MN",
+          "output": "User: abc\nDomain: school.mn\nMasked: a*c@school.mn"
+        },
+        {
+          "input": "   Temuulen.Ganbaatar@ib.school.mn   ",
+          "output": "User: temuulen.ganbaatar\nDomain: ib.school.mn\nMasked: t****************r@ib.school.mn"
+        },
+        {
+          "input": "99112233@mobi.mn",
+          "output": "User: 99112233\nDomain: mobi.mn\nMasked: 9******3@mobi.mn"
+        }
+      ],
+      "solution": "email = input().strip().lower()\nat = email.find(\"@\")\nuser = email[:at]\ndomain = email[at + 1:]\n\nif len(user) == 1:\n    masked_user = user\nelse:\n    masked_user = user[0] + \"*\" * (len(user) - 2) + user[-1]\n\nprint(\"User:\", user)\nprint(\"Domain:\", domain)\nprint(\"Masked:\", masked_user + \"@\" + domain)\n",
+      "hint": "`at = email.find(\"@\")` — `@`-ийн индекс. `email[:at]` нь өмнөх, `email[at + 1:]` нь дараах хэсэг. Хоорондох тэмдэгтийн тоо = `len(user) - 2`; `user[0]` ба `user[-1]` — эхний ба сүүлийн тэмдэгт. Ганц тэмдэгттэй нэрийг `if`-ээр тусад нь шалга: эс бөгөөс `user[0]` ба `user[-1]` нэг тэмдэгт тул хоёр удаа гарна."
+    },
+    {
+      "id": "b2-1-03-mcq",
+      "section": "B2.1.3",
+      "type": "mcq",
+      "title": "Тохирох except байхгүй бол",
+      "prompt": "Программ:\n\n```python\ntry:\n    n = int(input())\n    print(100 / n)\nexcept ValueError:\n    print(\"A\")\nfinally:\n    print(\"B\")\n```\n\nХэрэглэгч `0` гэж оруулбал юу болох вэ?",
+      "xp": 10,
+      "options": [
+        "«A», дараа нь «B» хэвлэгдээд программ хэвийн дуусна",
+        "«B» хэвлэгдээд, дараа нь программ ZeroDivisionError-оор зогсоно",
+        "Зөвхөн «B» хэвлэгдээд программ хэвийн дуусна — finally блок алдааг зохицуулсан",
+        "Юу ч хэвлэгдэхгүй — программ finally блокт хүрэхээс өмнө зогсоно"
+      ],
+      "answer": 1,
+      "hint": "`0` бол бүхэл тоо тул `int()` амжилттай. Дараагийн мөрөнд ямар онцгой тохиолдол гарах вэ, түүнийг барих `except` байна уу? `finally` хэзээ ажилладаг, тохирох `except` байхгүй үед юу болдгийг сана."
+    },
+    {
+      "id": "b2-1-03-code",
+      "section": "B2.1.3",
+      "type": "coding",
+      "title": "Тооцоо хуваах: буруу оролтод унахгүй программ",
+      "prompt": "Найзууд кафед хооллоод тооцоогоо тэнцүү хуваахаар боллоо. Программ тооцооны дүн ба хүний тоог уншаад, нэг хүн хэдэн төгрөг төлөх, хэдэн төгрөг үлдэхийг хэвлэнэ. Хэрэглэгч буруу оруулсан ч программ **зогсох ёсгүй** — `try`, `except`, `finally` ашигла.\n\n**Оролт:** 2 мөр — 1-р мөрөнд тооцооны дүн (₮), 2-р мөрөнд хүний тоо. Хоёулаа бүхэл тоо байх ёстой ч хэрэглэгч үсэг эсвэл бутархай тоо оруулж болно. Бүхэл тоо оруулсан бол тэр нь 0 эсвэл эерэг.\n\n**Гаралт:**\n\n- Хоёр мөр хоёулаа бүхэл тоо, хүний тоо 0 биш бол: `Each pays:`, нэг зай, нэг хүний төлөх бүхэл төгрөг (`//`); дараагийн мөрөнд `Left over:`, нэг зай, үлдэгдэл (`%`).\n- Аль нэг мөр бүхэл тоо биш бол (жишээ нь `ten`, `12.5`): `Error: please type whole numbers only.`\n- Хүний тоо 0 бол: `Error: you cannot divide by zero.`\n- **Ямар ч тохиолдолд** хамгийн сүүлийн мөрөнд: `Calculation finished.`\n\nПрограмм эхлээд хоёр мөрийг хоёуланг нь бүхэл тоо болгож, **дараа нь** хуваана. Тиймээс хоёр алдаа зэрэг байвал (жишээ нь `abc` ба `0`) бүхэл тоо биш гэсэн алдаа хэвлэгдэнэ.\n\n```text\nОролт:      Гаралт:\n100000      Each pays: 33333\n3           Left over: 1\n            Calculation finished.\n```\n\n```text\nОролт:      Гаралт:\n50000       Error: you cannot divide by zero.\n0           Calculation finished.\n```\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "try:\n    bill = int(input())      # line 1: the bill in tugrik\n    # line 2: the number of people\n    # divide with // and %\nexcept ValueError:\n    print(\"Error: please type whole numbers only.\")\n# add: an except for dividing by zero, an else that prints the result,\n# and a finally that always prints \"Calculation finished.\"\n",
+      "tests": [
+        {
+          "input": "100000\n3",
+          "output": "Each pays: 33333\nLeft over: 1\nCalculation finished."
+        },
+        {
+          "input": "50000\n0",
+          "output": "Error: you cannot divide by zero.\nCalculation finished."
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "ten\n2",
+          "output": "Error: please type whole numbers only.\nCalculation finished."
+        },
+        {
+          "input": "12.5\n2",
+          "output": "Error: please type whole numbers only.\nCalculation finished."
+        },
+        {
+          "input": "abc\n0",
+          "output": "Error: please type whole numbers only.\nCalculation finished."
+        },
+        {
+          "input": "90000\nthree",
+          "output": "Error: please type whole numbers only.\nCalculation finished."
+        },
+        {
+          "input": "100000\n4",
+          "output": "Each pays: 25000\nLeft over: 0\nCalculation finished."
+        },
+        {
+          "input": "0\n5",
+          "output": "Each pays: 0\nLeft over: 0\nCalculation finished."
+        },
+        {
+          "input": "7\n10",
+          "output": "Each pays: 0\nLeft over: 7\nCalculation finished."
+        }
+      ],
+      "solution": "try:\n    bill = int(input())\n    people = int(input())\n    share = bill // people\n    left = bill % people\nexcept ValueError:\n    print(\"Error: please type whole numbers only.\")\nexcept ZeroDivisionError:\n    print(\"Error: you cannot divide by zero.\")\nelse:\n    print(\"Each pays:\", share)\n    print(\"Left over:\", left)\nfinally:\n    print(\"Calculation finished.\")\n",
+      "hint": "Хоёр `int(input())` ба `//`, `%` бүгд `try` дотор байх ёстой. `except ValueError:` ба `except ZeroDivisionError:` тус бүр өөрийн мессежийг хэвлэнэ. Амжилттай үед хэвлэх хоёр мөрийг `else:`-д, `Calculation finished.`-ийг `finally:`-д бич — тэгвэл аль ч замаар хамгийн сүүлд хэвлэгдэнэ."
+    },
+    {
+      "id": "b2-1-04-mcq",
+      "section": "B2.1.4",
+      "type": "mcq",
+      "title": "Түр хэвлэх мөр юу харуулж байна?",
+      "prompt": "Гурван тооны дундаж олох функц `6.0`-ийн оронд `2.6666666666666665` буцаажээ. Сурагч давталтын дотор `# DEBUG` гэж тэмдэглэсэн түр `print` нэмээд ажиллуулав:\n\n```python\ndef average_of(nums):\n    total = 0\n    for n in nums:\n        total = n\n        print(\"DEBUG n =\", n, \"total =\", total)   # DEBUG\n    return total / len(nums)\n\nprint(average_of([4, 6, 8]))\n```\n\n```text\nDEBUG n = 4 total = 4\nDEBUG n = 6 total = 6\nDEBUG n = 8 total = 8\n2.6666666666666665\n```\n\nЭнэ гаралтаас юу дүгнэж, алдааг яаж засах вэ?",
+      "xp": 10,
+      "options": [
+        "total-ийн анхны утга буруу: total = 0 мөрийг total = 1 болговол хариу зөв болно",
+        "len(nums) нэгээр илүү тоолж байна: len(nums) - 1-д хуваах хэрэгтэй",
+        "DEBUG мөр total-ийн утгыг өөрчилж байгаа тул түүнийг устгахад хариу зөв болно",
+        "total давталт бүрд n-ээр дарж бичигдэж (4, 6, 8) нийлбэр хуримтлагдахгүй байна: total = total + n болгоно"
+      ],
+      "answer": 3,
+      "hint": "DEBUG мөрүүдийн `total`-ийг хар: давталт бүрд өсөж байна уу, эсвэл зүгээр л тухайн `n`-тэй тэнцүү байна уу? Нийлбэр хуримтлуулахын тулд шинэ утга өмнөх `total` дээр нэмэгдэх ёстой. `print` зөвхөн хэвлэдэг, утга өөрчилдөггүй."
+    },
+    {
+      "id": "b2-1-04-code",
+      "section": "B2.1.4",
+      "type": "coding",
+      "title": "Алдаатай программыг засах: 1-р сарын хүйтэн",
+      "prompt": "Улаанбаатарын 1-р сарын өдрүүдийн температурыг шинжлэх программ бичжээ. Эхлэлийн код (starter code) **4 алдаатай**: 1 нь ажиллах үеийн алдаа (runtime error), 3 нь логик алдаа (logic error). Мөшгих хүснэгт эсвэл түр `print` мөрөөр бүгдийг нь олж зас. Бүтцийг нь бүү өөрчил — зөвхөн алдаатай мөрүүдийг зас. Илгээхээсээ өмнө түр `print`-ээ устгаарай.\n\n**Оролт:** 1-р мөрөнд өдрийн тоо N (1–31), дараагийн N мөр бүрт тухайн өдрийн температур (°C, бүхэл тоо, сөрөг байж болно).\n\n**Гаралт:** 3 мөр:\n\n- `Average:`, нэг зай, **бүх N өдрийн** дундаж температур — `round(average, 1)`-ээр аравны нэг орон хүртэл бөөрөнхийлсөн;\n- `Warmest:`, нэг зай, хамгийн дулаан (хамгийн их) температур;\n- `Cold days:`, нэг зай, −20 °C **буюу түүнээс хүйтэн** өдрийн тоо (яг −20 °C-ийн өдөр тоологдоно).\n\n```text\nОролт:      Гаралт:\n4           Average: -21.5\n-18         Warmest: -18\n-25         Cold days: 3\n-20\n-23\n```\n\n(−18 − 25 − 20 − 23) / 4 = −21.5. −25, −20, −23 гурав нь −20 °C буюу түүнээс хүйтэн.\n\n```text\nОролт:      Гаралт:\n3           Average: -21.0\n-10         Warmest: -10\n-22         Cold days: 2\n-31\n```\n\nЭхлээд эхлэлийн кодыг өөрчлөлгүй ажиллуулж, ямар алдааны мэдэгдэл гарахыг хар.",
+      "xp": 20,
+      "starter_code": "n = int(input())\ntemps = []\nfor i in range(n):\n    temps.append(int(input()))\n\ntotal = 0\nwarmest = 0\ncold_days = 0\nfor i in range(1, n):\n    total = total + temps[i]\n    if temps[i] > warmest:\n        warmest = temps[i]\n    if temps[i] < -20:\n        cold_days = cold_days + 1\n\naverage = total / n\nprint(\"Average:\", round(average, 1))\nprint(\"Warmest:\", warmest)\nprint(\"Cold days: \" + cold_days)\n",
+      "tests": [
+        {
+          "input": "4\n-18\n-25\n-20\n-23",
+          "output": "Average: -21.5\nWarmest: -18\nCold days: 3"
+        },
+        {
+          "input": "3\n-10\n-22\n-31",
+          "output": "Average: -21.0\nWarmest: -10\nCold days: 2"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "1\n-20",
+          "output": "Average: -20.0\nWarmest: -20\nCold days: 1"
+        },
+        {
+          "input": "5\n-15\n-19\n-21\n-12\n-30",
+          "output": "Average: -19.4\nWarmest: -12\nCold days: 2"
+        },
+        {
+          "input": "3\n2\n-5\n7",
+          "output": "Average: 1.3\nWarmest: 7\nCold days: 0"
+        },
+        {
+          "input": "6\n-35\n-28\n-20\n-20\n-19\n-26",
+          "output": "Average: -24.7\nWarmest: -19\nCold days: 5"
+        },
+        {
+          "input": "2\n-3\n-40",
+          "output": "Average: -21.5\nWarmest: -3\nCold days: 1"
+        },
+        {
+          "input": "3\n-20\n-20\n-20",
+          "output": "Average: -20.0\nWarmest: -20\nCold days: 3"
+        }
+      ],
+      "solution": "n = int(input())\ntemps = []\nfor i in range(n):\n    temps.append(int(input()))\n\ntotal = 0\nwarmest = temps[0]\ncold_days = 0\nfor i in range(n):\n    total = total + temps[i]\n    if temps[i] > warmest:\n        warmest = temps[i]\n    if temps[i] <= -20:\n        cold_days = cold_days + 1\n\naverage = total / n\nprint(\"Average:\", round(average, 1))\nprint(\"Warmest:\", warmest)\nprint(\"Cold days:\", cold_days)\n",
+      "hint": "Эхлээд алдааны мэдэгдлийн сүүлийн мөрийг унш — энэ бол ажиллах үеийн алдаа (`+` хоёр талдаа string шаарддаг). Дараа нь жишээ оролтоор `i`, `temps[i]`, `total`, `warmest`, `cold_days` баганатай мөшгих хүснэгт зур. Логик алдааны сэжүүр: давталт аль индексээс эхэлж байна вэ? Бүх температур сөрөг бол `warmest = 0` юу болох вэ? −20 °C-ийн өдөр тоологдож байна уу?"
+    },
+    {
+      "id": "b2-1-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: алдааны гурван төрөл",
+      "prompt": "**Explain the difference between syntax, runtime and logic errors.** [3]\n\nIB-ийн шалгалтын хэв маягийн асуулт. Алдааны төрөл бүрийн хувьд юу буруу байдаг, **хэзээ, яаж** илэрдэг, программд юу болдгийг бич; тус бүрд жижиг жишээ өгвөл илүү тодорхой болно. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Syntax error (синтакс алдаа): код хэлний дүрмийг зөрчсөн (жишээ нь `:` эсвэл хаалт дутуу); хөрвүүлэгч (translator) тэр мөрийг ажиллуулахаас ӨМНӨ илрүүлдэг — компилятор ба Python-д юу ч ажиллахаас өмнө (программ огт ажиллахгүй), мөр мөрөөр хөрвүүлдэг интерпретатор тэр мөрт хүрэхэд зогсоно [1]\n• Runtime error (ажиллах үеийн алдаа): код дүрмийн хувьд зөв, гэхдээ ажиллаж байх ҮЕД гүйцэтгэх боломжгүй үйлдэл гарна (жишээ нь 0-д хуваах, `int(\"abc\")`, файл олдохгүй); онцгой тохиолдол үүсч, зохицуулаагүй бол программ тэр мөрөнд зогсоно [1]\n• Logic error (логик алдаа): программ алдааны мэдэгдэлгүйгээр ажиллана, гэхдээ алгоритм буруу тул буруу үр дүн гаргана эсвэл буруу ажиллана (жишээ нь `>=`-ийн оронд `>`, 3-ын оронд 2-т хуваах, хэзээ ч дуусахгүй давталт); Python мэдэгддэггүй тул зөвхөн тест, мөшгих хүснэгт, debugging-ээр илэрнэ [1]\n(Дээд тал нь 3 оноо: төрөл бүрт 1. Оноо авахын тулд тухайн төрлийг бусдаас ялгах шинж — хэзээ, яаж илэрдэг, программд юу болдог — бичигдсэн байх ёстой. Зөвхөн нэр эсвэл жишээ бичвэл оноо авахгүй.)",
+      "hint": "Төрөл бүрт гурван асуулт: юу буруу вэ? Хэзээ илрэх вэ — тухайн мөр ажиллахаас өмнө (компилятор, Python-д бүр юу ч ажиллахаас өмнө), ажиллах үед, эсвэл хэзээ ч мэдэгдэхгүй? Программд юу болох вэ — ажиллахгүй, зогсох, эсвэл буруу хариу өгөх?"
+    }
+  ]
+}

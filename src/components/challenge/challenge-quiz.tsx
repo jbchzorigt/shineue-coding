@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { ChallengeType } from "@/lib/types";
+import type { NavItem } from "@/lib/challenge-nav";
+import { NextChallengeButton } from "@/components/challenge/challenge-nav";
 
 interface QuizResponse {
   passed: boolean;
@@ -31,12 +33,17 @@ export function ChallengeQuiz({
   options,
   alreadyPassed,
   initialAnswer,
+  next,
+  moduleId,
 }: {
   challengeId: string;
   type: Exclude<ChallengeType, "coding" | "logic">;
   options?: string[];
   alreadyPassed: boolean;
   initialAnswer: string;
+  /** The module's next challenge, or null after the last one. */
+  next: NavItem | null;
+  moduleId: string;
 }) {
   const [selectedIndex, setSelectedIndex] = useState<string | null>(null);
   const [answer, setAnswer] = useState(initialAnswer);
@@ -212,6 +219,10 @@ export function ChallengeQuiz({
             нээгдлээ 🎉
           </p>
         </div>
+      )}
+
+      {(passed || (alreadyPassed && !response)) && (
+        <NextChallengeButton next={next} moduleId={moduleId} />
       )}
     </div>
   );

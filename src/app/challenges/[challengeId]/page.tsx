@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { auth } from "@/auth";
-import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
+import { getChallenge, getChallengePrivate, listChallengesByModule } from "@/lib/db/challenges";
 import { getUserProfile } from "@/lib/db/users";
 import { getSubmission } from "@/lib/db/submissions";
 import type { Challenge } from "@/lib/types";
 import { canOpenModule } from "@/lib/progression";
+import { challengeNav, type ChallengeNav } from "@/lib/challenge-nav";
 import { parseCircuit } from "@/lib/logic/circuit";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { UserMenu } from "@/components/user-menu";
@@ -14,6 +15,7 @@ import { SiteHeader } from "@/components/site-header";
 import { ChallengeWorkspace } from "@/components/challenge/challenge-workspace";
 import { ChallengeQuiz } from "@/components/challenge/challenge-quiz";
 import { LogicWorkspace } from "@/components/logic/logic-workspace";
+import { ChallengeNavArrows } from "@/components/challenge/challenge-nav";
 import { Button } from "@/components/ui/button";
 
 export default async function ChallengePage({
@@ -31,7 +33,14 @@ export default async function ChallengePage({
   const profile = await getUserProfile(session.user.id).catch(() => null);
   if (!(await canOpenModule(profile, challenge.module_id))) redirect(`/modules/${challenge.module_id}`);
 
-  const submission = await getSubmission(session.user.id, challengeId);
+  const [submission, siblings] = await Promise.all([
+    getSubmission(session.user.id, challengeId),
+    listChallengesByModule(challenge.module_id),
+  ]);
+  const nav = challengeNav(
+    siblings.map((c) => ({ id: c.id, title: c.title })),
+    challenge.id
+  );
 
   if (challenge.type === "logic") {
     const spec = challenge.logic_spec;
@@ -42,7 +51,7 @@ export default async function ChallengePage({
     const saved = submission?.code_snapshot ? parseCircuit(submission.code_snapshot) : null;
     return (
       <div className="flex h-screen flex-col overflow-hidden max-lg:h-auto max-lg:overflow-visible">
-        <WorkspaceHeader challenge={challenge} />
+        <WorkspaceHeader challenge={challenge} nav={nav} />
         {spec ? (
           <LogicWorkspace
             challengeId={challenge.id}
@@ -52,6 +61,8 @@ export default async function ChallengePage({
             alreadyPassed={submission?.passed ?? false}
             hasHint={challenge.has_hint ?? false}
             hintAlreadyUsed={submission?.hint_used ?? false}
+            next={nav.next}
+            moduleId={challenge.module_id}
             description={
               <>
                 <h1>{challenge.title}</h1>
@@ -82,10 +93,13 @@ export default async function ChallengePage({
               <ArrowLeft className="size-4" />
               Хичээл рүү буцах
             </Button>
-            <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-              <Trophy className="size-4" />
-              {challenge.xp_reward} XP
-            </span>
+            <div className="flex items-center gap-3">
+              <ChallengeNavArrows nav={nav} />
+              <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                <Trophy className="size-4" />
+                {challenge.xp_reward} XP
+              </span>
+            </div>
           </div>
 
           <div className="rounded-xl border bg-background p-6">
@@ -103,6 +117,8 @@ export default async function ChallengePage({
             initialAnswer={
               challenge.type === "mcq" ? "" : (submission?.code_snapshot ?? "")
             }
+            next={nav.next}
+            moduleId={challenge.module_id}
           />
         </main>
       </div>
@@ -111,7 +127,7 @@ export default async function ChallengePage({
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <WorkspaceHeader challenge={challenge} />
+      <WorkspaceHeader challenge={challenge} nav={nav} />
 
       <ChallengeWorkspace
         challengeId={challenge.id}
@@ -119,6 +135,8 @@ export default async function ChallengePage({
         alreadyPassed={submission?.passed ?? false}
         hasHint={challenge.has_hint ?? false}
         hintAlreadyUsed={submission?.hint_used ?? false}
+        next={nav.next}
+        moduleId={challenge.module_id}
         description={
           <>
             <h1>{challenge.title}</h1>
@@ -130,7 +148,7 @@ export default async function ChallengePage({
   );
 }
 
-function WorkspaceHeader({ challenge }: { challenge: Challenge }) {
+function WorkspaceHeader({ challenge, nav }: { challenge: Challenge; nav: ChallengeNav }) {
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b bg-background px-3">
       <div className="flex min-w-0 items-center gap-2">
@@ -146,7 +164,8 @@ function WorkspaceHeader({ challenge }: { challenge: Challenge }) {
         <span className="truncate font-semibold">{challenge.title}</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+        <ChallengeNavArrows nav={nav} />
+        <span className="flex items-center gap-1 text-sm font-medium text-muted-foreground max-sm:hidden">
           <Trophy className="size-4" />
           {challenge.xp_reward} XP
         </span>

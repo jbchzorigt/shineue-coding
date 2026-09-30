@@ -13,7 +13,7 @@
     "piston:setup": "tsx --env-file=.env.local scripts/piston-setup.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
-    "db:seed": "npm run script -- scripts/import-content.ts && npm run script -- scripts/seed-challenges.ts && npm run script -- scripts/seed-data-analyst.ts && npm run script -- scripts/seed-logic.ts",
+    "db:seed": "npm run script -- scripts/import-content.ts && npm run script -- scripts/seed-challenges.ts && npm run script -- scripts/seed-data-analyst.ts && npm run script -- scripts/seed-logic.ts && npm run script -- scripts/import-ibdp.ts",
     "test": "tsx --env-file=.env.local scripts/migrate.ts --test && tsx --env-file=.env.local --conditions=react-server --test --test-concurrency=1 src/lib/**/*.test.ts"
   },
   "dependencies": {

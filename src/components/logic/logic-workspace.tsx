@@ -7,6 +7,8 @@ import { HintBox } from "@/components/challenge/hint-box";
 import { LogicConstraints } from "@/components/logic/logic-constraints";
 import { LogicSolver } from "@/components/logic/logic-solver";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { NextChallengeButton } from "@/components/challenge/challenge-nav";
+import type { NavItem } from "@/lib/challenge-nav";
 
 /** Module challenge layout: prompt and hint on the left, the circuit on the right. */
 export function LogicWorkspace({
@@ -17,6 +19,8 @@ export function LogicWorkspace({
   alreadyPassed,
   hasHint,
   hintAlreadyUsed,
+  next,
+  moduleId,
   description,
 }: {
   challengeId: string;
@@ -26,10 +30,14 @@ export function LogicWorkspace({
   alreadyPassed: boolean;
   hasHint: boolean;
   hintAlreadyUsed: boolean;
+  /** The module's next challenge, or null after the last one. */
+  next: NavItem | null;
+  moduleId: string;
   /** Server-rendered MDX prompt. */
   description: ReactNode;
 }) {
   const [hintError, setHintError] = useState<string | null>(null);
+  const [solved, setSolved] = useState(alreadyPassed);
 
   // Phones: stack the prompt over the circuit in a tall block and let the
   // page scroll (the group's inline height/direction need the ! overrides).
@@ -51,6 +59,11 @@ export function LogicWorkspace({
             />
           )}
           {hintError && <p className="mt-2 text-sm text-destructive">{hintError}</p>}
+          {solved && (
+            <div className="mt-6">
+              <NextChallengeButton next={next} moduleId={moduleId} />
+            </div>
+          )}
         </div>
       </ResizablePanel>
 
@@ -62,6 +75,7 @@ export function LogicWorkspace({
           expected={expected}
           initialCircuit={initialCircuit}
           target={{ kind: "challenge", challengeId, alreadyPassed }}
+          onSolved={() => setSolved(true)}
         />
       </ResizablePanel>
     </ResizablePanelGroup>

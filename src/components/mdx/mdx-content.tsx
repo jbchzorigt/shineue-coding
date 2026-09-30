@@ -12,10 +12,20 @@ function Gate({ type }: { type: GateType }) {
   return <GateSymbol type={type} className="inline-block h-8 w-12 align-middle" />;
 }
 
+/** "HL" label after an HL-only section title: `## A1.3.5 … <HL />` */
+function HL() {
+  return (
+    <span className="not-prose ml-2 inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 align-middle text-xs font-semibold text-violet-800 dark:bg-violet-950 dark:text-violet-300">
+      HL
+    </span>
+  );
+}
+
 const components = {
   Callout,
   Gate,
   GateTable,
+  HL,
 };
 
 /**

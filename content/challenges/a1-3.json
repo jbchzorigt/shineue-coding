@@ -1,0 +1,196 @@
+{
+  "module_id": "a1-3",
+  "challenges": [
+    {
+      "id": "a1-3-01-mcq",
+      "section": "A1.3.1",
+      "type": "mcq",
+      "title": "Хэн нарийн ширийнийг мэддэг вэ?",
+      "prompt": "Программист Python дээр `open(\"essay.txt\", \"w\")` гэж бичихэд файл SSD-ийн яг аль блокт бичигдэхийг огт мэдэх шаардлагагүй. Энэ нь үйлдлийн системийн аль үүргийг хамгийн сайн харуулж байна вэ?",
+      "xp": 10,
+      "options": [
+        "GUI — OS бол цонх, дүрс тэмдэгтэй дэлгэц тул файлын байршлыг дэлгэцэнд харуулдаг",
+        "Python программ өөрөө SSD-г шууд удирддаг тул энд OS огт оролцдоггүй",
+        "Хийсвэрлэл (abstraction) — OS hardware-ийн нарийн ширийнийг энгийн үйлчилгээний ард нуудаг",
+        "Virtual memory — RAM дүүрэхэд OS дискийг нэмэлт санах ой мэт ашигладаг"
+      ],
+      "answer": 2,
+      "hint": "Хэрэглэгч, программист «юу» хийхийг хэлдэг. Харин «яаж» гэдгийг хэн шийддэг вэ?"
+    },
+    {
+      "id": "a1-3-01-trace",
+      "section": "A1.3.1",
+      "type": "tracing",
+      "title": "OS нөөцийн менежер: RAM хуваарилах",
+      "prompt": "OS бол программуудад RAM хуваарилдаг **нөөцийн менежер**. Доорх программ 4 GB сул RAM-тай компьютер дээр дөрвөн апп ээлж дараалан санах ой хүсэхийг загварчилна (virtual memory-гүй энгийн загвар). RAM хүрэлцэхгүй бол апп хүлээнэ (`WAIT`). Программ юу хэвлэх вэ?\n\n```python\nram_free = 4          # 4 GB of RAM is free\nrequests = [(\"Chrome\", 2), (\"Spotify\", 1), (\"Game\", 3), (\"Notes\", 1)]\n\nfor app, need in requests:\n    if need <= ram_free:\n        ram_free = ram_free - need\n        print(app, \"OK\", ram_free)\n    else:\n        print(app, \"WAIT\", ram_free)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "Chrome OK 2\nSpotify OK 1\nGame WAIT 1\nNotes OK 0",
+      "hint": "Мөр бүрийн дараа `ram_free`-ийн утгыг тэмдэглэ. Game 3 GB хүсэх үед хэдэн GB үлдсэн байна вэ? Хүлээсэн апп RAM авдаггүй тул `ram_free` өөрчлөгдөхгүй."
+    },
+    {
+      "id": "a1-3-02-mcq",
+      "section": "A1.3.2",
+      "type": "mcq",
+      "title": "Буфер, кэш үү, спүүл үү?",
+      "prompt": "Сургуулийн цахим системд анх ороход лого, зургууд удаан ачаалагдсан. Маргааш нь дахин ороход тэдгээр шууд гарч ирлээ, учир нь браузер өмнөх удаагаас хойш тэднийг хурдан хадгалах газарт үлдээсэн байв. Энэ ямар арга вэ?",
+      "xp": 10,
+      "options": [
+        "Буферлэх (buffering)",
+        "Кэшлэх (caching)",
+        "Спүүлинг (spooling)",
+        "Virtual memory"
+      ],
+      "answer": 1,
+      "hint": "Санах арга: буфер = урсгалыг жигдлэх, кэш = дахин хэрэглэхээ хадгалах, спүүл = дараалалдаа хүлээх."
+    },
+    {
+      "id": "a1-3-02-trace",
+      "section": "A1.3.2",
+      "type": "tracing",
+      "title": "Virtual memory: хэн диск рүү очих вэ?",
+      "prompt": "Энэ хичээлийн хялбаршуулсан загварт RAM дүүрэхэд OS хамгийн бага priority-тай процессыг диск (virtual memory) рүү шилжүүлнэ (бодит OS ихэвчлэн хамгийн удаан хэрэглэгдээгүйг нь шилжүүлдэг). Доорх программд RAM-д ердөө 3 процесс багтана. Priority-ийн тоо том байх тусам процесс чухал. Программ юу хэвлэх вэ?\n\n```python\nRAM_SLOTS = 3\npriority = {\"Word\": 2, \"Music\": 1, \"Browser\": 3, \"Game\": 4, \"Zoom\": 3}\nram = []      # processes in RAM\ndisk = []     # processes moved to virtual memory on the SSD\n\nfor name in [\"Word\", \"Music\", \"Browser\", \"Game\", \"Zoom\"]:\n    if len(ram) == RAM_SLOTS:\n        lowest = ram[0]\n        for p in ram:\n            if priority[p] < priority[lowest]:\n                lowest = p\n        ram.remove(lowest)      # RAM is full: move the lowest priority to disk\n        disk.append(lowest)\n    ram.append(name)\n\nprint(\"RAM:\", \" \".join(ram))\nprint(\"Disk:\", \" \".join(disk))\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "RAM: Browser Game Zoom\nDisk: Music Word",
+      "hint": "Game ирэхэд RAM-д Word (2), Music (1), Browser (3) байна — хамгийн бага нь аль вэ? Zoom ирэхэд RAM-д юу байгааг дахин шалга."
+    },
+    {
+      "id": "a1-3-03-mcq",
+      "section": "A1.3.3",
+      "type": "mcq",
+      "title": "FCFS ба round robin-ийг харьцуулах",
+      "prompt": "FCFS ба round robin (RR) хуваарь гаргах аргуудыг **зөв** харьцуулсан өгүүлбэр аль нь вэ?",
+      "xp": 10,
+      "options": [
+        "FCFS нь pre-emptive, харин RR нь non-pre-emptive тул RR-д context switch огт гардаггүй",
+        "RR-ийн quantum-ыг аль болох жижиг болговол overhead нэмэгдэхгүйгээр үргэлж хурдан болно",
+        "FCFS-д процесс өлсгөлөнд (starvation) орж болдог бол RR-д процесс бүр ээлжээ авдаг",
+        "Хоёулаа өлсгөлөнгүй, харин RR тасалдуулдаг тул хариу нь хурдан ч context switch-ийн зардалтай"
+      ],
+      "answer": 3,
+      "hint": "Pre-emptive гэж юу вэ? FCFS-д процесс эцэст нь ээлжээ авдаг уу? Context switch үнэгүй юу?"
+    },
+    {
+      "id": "a1-3-03-trace",
+      "section": "A1.3.3",
+      "type": "tracing",
+      "title": "Round robin: хэн түрүүлж дуусах вэ?",
+      "prompt": "Дөрвөн процесс бүгд 0-д ирсэн бөгөөд ready queue-д A, B, C, D дарааллаар байна. `[\"A\", 5]` гэдэг нь A процесс дуусахад дахиад 5 нэгж CPU-ийн хугацаа хэрэгтэй гэсэн үг. Round robin (quantum = 2) ажиллаж, процесс дуусах бүрд нэр ба дууссан хугацааг хэвлэнэ. Программ юу хэвлэх вэ?\n\n```python\nqueue = [[\"A\", 5], [\"B\", 2], [\"C\", 4], [\"D\", 1]]   # [name, burst time left]\nQUANTUM = 2\nclock = 0\n\nwhile queue:\n    job = queue.pop(0)              # take the process at the front\n    run = min(QUANTUM, job[1])      # one quantum, or less if it finishes\n    clock = clock + run\n    job[1] = job[1] - run\n    if job[1] > 0:\n        queue.append(job)           # not finished: back of the queue\n    else:\n        print(job[0], clock)        # finished: name and finish time\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "B 4\nD 7\nC 11\nA 12",
+      "hint": "Цаг ба дарааллыг хүснэгтээр мөшгө: 0–2 A ажиллаад 3 үлдэнэ, дарааллын АРД очно. 2–4 B … Дуусаагүй процесс үргэлж дарааллын ард очдогийг санаарай."
+    },
+    {
+      "id": "a1-3-04-mcq",
+      "section": "A1.3.4",
+      "type": "mcq",
+      "title": "Хүлэмжийн температур: interrupt уу, polling уу?",
+      "prompt": "Хүлэмжийн температурыг 10 секунд тутамд хэмжиж, халаагуурыг удирддаг систем цахилгааны сүлжээнд (mains) залгаатай. Температур удаан, тогтмол өөрчлөгддөг. Аль үнэлгээ нь хамгийн зөв бэ?",
+      "xp": 10,
+      "options": [
+        "Polling — үйл явдал тогтмол, урьдчилан таамаглах боломжтой, тэжээл нь сүлжээнийх тул шалгах зардал асуудалгүй",
+        "Interrupt — interrupt үргэлж polling-оос хурдан тул ямар ч системд илүү сайн",
+        "Polling — polling батарейг хамгийн их хэмнэдэг тул ямар ч системд тохиромжтой",
+        "Interrupt — polling-ийн хоцрогдол урьдчилан мэдэгдэхгүй, байнга хэлбэлздэг учраас"
+      ],
+      "answer": 0,
+      "hint": "Зургаан шалгуурыг сана: давтамж, overhead, тэжээл, урьдчилан таамаглах байдал, хоцрогдол, аюулгүй байдал. «Үргэлж» гэдэг үгэнд болгоомжтой хандаарай."
+    },
+    {
+      "id": "a1-3-04-trace",
+      "section": "A1.3.4",
+      "type": "tracing",
+      "title": "Polling ба interrupt: CPU-ийн зардал",
+      "prompt": "Хялбаршуулсан загвар: 100 tick-ийн турш polling 10 tick тутамд 1 tick зарцуулж шалгана. Тасалдал бүр 2 tick зарцуулна (төлөв хадгалах → ISR → сэргээх). Үйл явдлын тоо 3, 5, 12 үед аль арга бага CPU зарцуулахыг программ хэвлэнэ. Юу хэвлэх вэ?\n\n```python\nticks = 100\npoll_every = 10      # the CPU checks the device every 10 ticks\nswitch_cost = 2      # each interrupt costs 2 ticks (save state, ISR, restore)\n\nfor events in [3, 5, 12]:\n    polling = ticks // poll_every        # checks happen even if nothing happened\n    interrupts = events * switch_cost    # one context switch per event\n    if polling < interrupts:\n        winner = \"polling\"\n    elif interrupts < polling:\n        winner = \"interrupts\"\n    else:\n        winner = \"tie\"\n    print(events, polling, interrupts, winner)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "3 10 6 interrupts\n5 10 10 tie\n12 10 24 polling",
+      "hint": "`polling` нь үйл явдлын тооноос хамаардаггүй — үргэлж 100 // 10. `interrupts` = үйл явдлын тоо × 2. Тэнцвэл tie гэж хэвлэнэ."
+    },
+    {
+      "id": "a1-3-05-mcq",
+      "section": "A1.3.5",
+      "type": "mcq",
+      "title": "Deadlock-оос хэрхэн сэргийлэх вэ?",
+      "prompt": "X процесс сканнер барьж принтер хүлээж, Y процесс принтер барьж сканнер хүлээж байгаад deadlock үүсчээ. Үүний дараа OS «процесс бүр нөөцөө үргэлж ижил дарааллаар — эхлээд сканнер, дараа нь принтер — хүсэх ёстой» гэсэн дүрэм тогтоожээ. Энэ аль стратеги вэ?",
+      "xp": 10,
+      "options": [
+        "Зайлсхийх (avoidance) — нөөц олгох бүрдээ систем аюулгүй төлөвт үлдэх эсэхийг Banker's algorithm-аар шалгана",
+        "Илрүүлэх (detection) — хүлээлтийн тойрогт гацсан процессуудыг тогтмол хайна",
+        "Урьдчилан сэргийлэх (prevention) — системийг deadlock гарах боломжгүйгээр зохион байгуулна",
+        "Сэргээх (recovery) — нэг процессыг зогсоож, нөөцийг нь буцааж авна"
+      ],
+      "answer": 2,
+      "hint": "Prevention нь deadlock-ийн нөхцөлийг дизайнаар нь эвддэг, avoidance нь хүсэлт бүрт шалгадаг, detection ба recovery нь deadlock гарсны ДАРАА ажилладаг."
+    },
+    {
+      "id": "a1-3-05-trace",
+      "section": "A1.3.5",
+      "type": "tracing",
+      "title": "Race condition: алдагдсан мөнгө",
+      "prompt": "A, B хоёр процесс нэг дансанд зэрэг мөнгө хийнэ. Процесс бүр эхлээд үлдэгдлийг уншаад (read), дараа нь уншсан утга дээрээ өөрийн дүнг нэмж бичнэ (write). Доорх программ OS-ийн ажиллуулсан нэгэн дарааллыг thread-гүйгээр загварчилна. Программ юу хэвлэх вэ?\n\n```python\nbalance = 100                      # shared data: the account balance\namount = {\"A\": 50, \"B\": 30}        # A and B both deposit money\nseen = {}                          # the value each process has read\n\n# The order in which the OS happens to run the steps:\nsteps = [(\"A\", \"read\"), (\"B\", \"read\"), (\"A\", \"write\"), (\"B\", \"write\")]\n\nfor proc, action in steps:\n    if action == \"read\":\n        seen[proc] = balance\n    else:\n        balance = seen[proc] + amount[proc]\n    print(proc, action, balance)\n```\n\nДараа нь бодоорой: эцсийн үлдэгдэл яагаад 180 биш вэ? Mutual exclusion энд юуг өөрчлөх байсан бэ?\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "A read 100\nB read 100\nA write 150\nB write 130",
+      "hint": "B уншихад A хараахан бичээгүй байна — тэгэхээр B ямар утга уншсан бэ? B бичихдээ A-гийн бичсэн утгыг бус, өөрийн уншсан утгыг ашигладаг."
+    },
+    {
+      "id": "a1-3-06-mcq",
+      "section": "A1.3.6",
+      "type": "mcq",
+      "title": "Cruise control-ын хүрдэн",
+      "prompt": "Cruise control машины хурдыг 90 км/ц-т барих ёстой. Өгсүүрт гарахад хурдны мэдрэгч 84 км/ц гэж хэмжлээ. Хүрдийг аль тайлбар нь зөв дүрсэлсэн бэ?",
+      "xp": 10,
+      "options": [
+        "Мэдрэгч хурдыг хэмжинэ → хянагч алдаа 90 − 84 = +6-г олно → actuator хөдөлгүүрийн хүчийг нэмнэ → дахин хэмжинэ",
+        "Actuator хурдыг хэмжинэ → мэдрэгч хөдөлгүүрийн хүчийг нэмнэ → хянагч тохируулсан утгыг хадгална",
+        "Хянагч тохируулсан 90-ийг уншина → хөдөлгүүрт тогтмол хүч илгээнэ → хурдыг дахин хэмждэггүй",
+        "Мэдрэгч хурдыг хэмжинэ → хянагч алдаа 84 − 90 = −6-г олно → actuator хурдасгуурыг сулруулна"
+      ],
+      "answer": 0,
+      "hint": "Алдаа = setpoint − хэмжсэн утга. Мэдрэгч хэмждэг, хянагч харьцуулж шийддэг, actuator физик үйлдэл хийдэг."
+    },
+    {
+      "id": "a1-3-06-trace",
+      "section": "A1.3.6",
+      "type": "tracing",
+      "title": "Эргэх холбоо: ачаа нэмэгдэхэд",
+      "prompt": "Туузан дамжуулгын моторын хурдыг closed-loop удирдана. t = 2 үед хүнд хайрцаг унаж, хурдыг 20-оор удаашруулна. Хянагч алдааны талыг (`error // 2`) команд дээр нэмнэ. Мөр бүрд цаг, хэмжсэн хурд, алдааг хэвлэнэ. Программ юу хэвлэх вэ?\n\n```python\ntarget = 100                      # setpoint: the speed we want\ncommand = 100                     # power sent to the motor (actuator)\nload = [0, 0, 20, 20, 20]         # a heavy box lands on the belt at t=2\n\nfor t in range(5):\n    speed = command - load[t]         # sensor measures the real speed\n    error = target - speed            # controller compares with the setpoint\n    command = command + error // 2    # adjust the actuator\n    print(t, speed, error)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "0 100 0\n1 100 0\n2 80 20\n3 90 10\n4 95 5",
+      "hint": "Давталт бүрд эхлээд `speed`, дараа нь `error`, хамгийн сүүлд `command`-ыг шинэчил. Шинэ `command` дараагийн давталтын `speed`-д нөлөөлнө."
+    },
+    {
+      "id": "a1-3-07-mcq",
+      "section": "A1.3.7",
+      "type": "mcq",
+      "title": "«Автомат» гэдэг closed-loop гэсэн үг үү?",
+      "prompt": "Доорх «автомат» системүүдийн аль нь **open-loop** вэ?",
+      "xp": 10,
+      "options": [
+        "Хөрсний чийгийн мэдрэгчээр хэзээ услахаа шийддэг усалгааны систем",
+        "Өрөөний температурыг хэмжиж, 21 °C хүрмэгц халаагуурыг унтраадаг термостат",
+        "Давхрын байрлал, хурдны мэдрэгчээр давхартаа яг зогсдог лифт",
+        "Өглөө бүр 06:00-д 20 минут усалдаг, ямар ч мэдрэгчгүй усалгааны систем"
+      ],
+      "answer": 3,
+      "hint": "Системийн үр дүнг хэмжиж, хянагч руу буцааж мэдээлдэг мэдрэгч байгаа эсэхийг шалга."
+    },
+    {
+      "id": "a1-3-07-trace",
+      "section": "A1.3.7",
+      "type": "tracing",
+      "title": "Гэрлэн дохионы state machine",
+      "prompt": "Гэрлэн дохио 5 с ногоон (G), 2 с шар (Y), 5 с улаан (R) асна. Явган зорчигчийн товч 2 ба 7-р секундэд дарагдана. Товч зөвхөн гэрэл ногоон үед нөлөөлж, ногоон гэрлийг эрт дуусгана. Программ эхний 16 секундын төлөвийг нэг мөрөнд хэвлэнэ. Юу хэвлэх вэ?\n\n```python\nGREEN, YELLOW, RED = 5, 2, 5      # how many seconds each light lasts\nbutton_presses = [2, 7]           # seconds when a pedestrian presses the button\n\nstate = \"G\"\ntime_in_state = 0\ntimeline = \"\"\n\nfor t in range(16):\n    timeline = timeline + state\n    time_in_state = time_in_state + 1\n    pressed = t in button_presses                  # read (poll) the sensor\n    if state == \"G\" and (pressed or time_in_state >= GREEN):\n        state, time_in_state = \"Y\", 0\n    elif state == \"Y\" and time_in_state >= YELLOW:\n        state, time_in_state = \"R\", 0\n    elif state == \"R\" and time_in_state >= RED:\n        state, time_in_state = \"G\", 0\n\nprint(timeline)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "GGGYYRRRRRGGGGGY",
+      "hint": "Секунд бүрд эхлээд одоогийн төлөвийг `timeline`-д нэмээд, дараа нь шилжих эсэхийг шалгана. 7-р секундэд гэрэл ямар өнгөтэй байна вэ?"
+    },
+    {
+      "id": "a1-3-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: тасалдлыг боловсруулах",
+      "prompt": "**Explain how an interrupt is handled by the processor.** [4]\n\nIB-ийн шалгалтын хэв маягийн асуулт. Процессор тасалдал хүлээн авснаас эхлээд үндсэн ажлаа үргэлжлүүлэх хүртэлх алхмуудыг дарааллаар нь, алхам бүр **яагаад** хэрэгтэйг тайлбарлан бичээрэй. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Төхөөрөмж (эсвэл таймер, программ) процессорт тасалдлын дохио (interrupt signal) илгээнэ [1]\n• Процессор одоогийн командаа гүйцээгээд тасалдлыг хүлээн авна (шаардлагатай бол түүний priority-г одоогийн ажилтай харьцуулна) [1]\n• Одоогийн төлөвийг — регистрүүд, program counter-ийг — хадгална (жишээ нь stack-д), ингэснээр дараа нь үргэлжлүүлж чадна [1]\n• Тухайн тасалдалд тохирох тасалдлын үйлчилгээний дэд программ (ISR) ачаалагдаж, ажиллан үйл явдлыг боловсруулна [1]\n• ISR дууссаны дараа хадгалсан төлөвийг сэргээж, тасалдсан программаа яг зогссон газраас нь үргэлжлүүлнэ [1]\n(Дээд тал нь 4 оноо.)",
+      "hint": "Хаалганы хонхны жишээг сана: хонх дуугарна → ажлаа хаана хүртэл хийснээ тэмдэглэнэ → хаалгаа онгойлгоно → буцаж ирээд тэмдэглэснээсээ үргэлжлүүлнэ."
+    }
+  ]
+}
