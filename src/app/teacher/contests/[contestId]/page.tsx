@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Pencil, Plus, Star, Trophy } from "lucide-react";
+import { ArrowLeft, ListChecks, Pencil, Plus, Star, Trophy } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
@@ -48,7 +48,16 @@ export default async function EditContestPage({
           <Card>
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base">Бодлогууд</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  render={<Link href={`/teacher/contests/${contestId}/submissions`} />}
+                  nativeButton={false}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ListChecks className="size-3.5" />
+                  Илгээлтүүд
+                </Button>
                 <Button
                   render={<Link href={`/contests/${contestId}/leaderboard`} />}
                   nativeButton={false}

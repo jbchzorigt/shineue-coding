@@ -4,11 +4,13 @@ import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { listPassedChallengeIds } from "@/lib/db/submissions";
 import { listNews } from "@/lib/db/news";
-import { getCourseProgress, levelFromXp } from "@/lib/progression";
+import { categoryFromParam } from "@/lib/news-categories";
+import { getCourseProgress, levelFromXp, openModules } from "@/lib/progression";
 import { isStaff, type UserProfile } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { NavCards, type NavLink } from "@/components/nav-cards";
 import { NewsList } from "@/components/news/news-list";
+import { NewsCategoryFilter } from "@/components/news/news-category";
 import { HeroStencilTitle } from "@/components/landing/hero-stencil-title";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +22,18 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string | string[] }>;
+}) {
   const session = await auth();
+  const category = categoryFromParam((await searchParams).category);
+  const emptyText = category ? "Энэ ангилалд мэдээ алга." : undefined;
 
   // Public landing for visitors: hero + news + sign-in.
   if (!session?.user?.id) {
-    const posts = (await listNews().catch(() => [])).slice(0, 5);
+    const posts = await listNews({ category, limit: 5 }).catch(() => []);
     return (
       <div className="min-h-screen bg-muted/40">
         <SiteHeader />
@@ -47,7 +55,8 @@ export default async function HomePage() {
               <Newspaper className="size-5" />
               Мэдээ, зарлал
             </h2>
-            <NewsList posts={posts} />
+            <NewsCategoryFilter active={category} basePath="/" />
+            <NewsList posts={posts} emptyText={emptyText} />
           </section>
         </main>
       </div>
@@ -56,6 +65,7 @@ export default async function HomePage() {
 
   let profile: UserProfile | null = null;
   let passedCount = 0;
+  let openCount = 0;
   let courseComplete = false;
   let profileError = false;
   if (session?.user?.id) {
@@ -67,6 +77,11 @@ export default async function HomePage() {
       ]);
       profile = p;
       passedCount = passedIds.size;
+      openCount = p
+        ? isStaff(p.role)
+          ? p.unlocked_modules.length
+          : (await openModules(p.uid, p.unlocked_modules)).length
+        : 0;
       courseComplete = progress.complete;
     } catch (err) {
       console.error("Failed to load user profile:", err);
@@ -74,7 +89,7 @@ export default async function HomePage() {
     }
   }
 
-  const latestNews = (await listNews().catch(() => [])).slice(0, 3);
+  const latestNews = await listNews({ category, limit: 3 }).catch(() => []);
 
   const xp = profile?.total_xp ?? 0;
   const { level, progress, nextLevelXp } = levelFromXp(xp);
@@ -158,7 +173,7 @@ export default async function HomePage() {
             <CardHeader>
               <CardDescription>Нээгдсэн модуль</CardDescription>
               <CardTitle className="text-3xl">
-                {profile?.unlocked_modules.length ?? "—"}
+                {profile ? openCount : "—"}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -186,14 +201,15 @@ export default async function HomePage() {
               Мэдээ, зарлал
             </h2>
             <Link
-              href="/news"
+              href={category ? `/news?category=${category}` : "/news"}
               className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Бүх мэдээ
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
-          <NewsList posts={latestNews} />
+          <NewsCategoryFilter active={category} basePath="/" />
+          <NewsList posts={latestNews} emptyText={emptyText} />
         </section>
       </main>
     </div>

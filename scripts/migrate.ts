@@ -7,7 +7,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 async function main() {
-  const target = process.argv.includes("--test") ? "TEST_DATABASE_URL" : "DATABASE_URL";
+  // Neon (Vercel) also sets DATABASE_URL_UNPOOLED: DDL goes over the direct
+  // connection, not the transaction pooler.
+  const target = process.argv.includes("--test")
+    ? "TEST_DATABASE_URL"
+    : process.env.DATABASE_URL_UNPOOLED
+      ? "DATABASE_URL_UNPOOLED"
+      : "DATABASE_URL";
   const url = process.env[target];
   if (!url) throw new Error(`${target} is not set (see .env.example).`);
 

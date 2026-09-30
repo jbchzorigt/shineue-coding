@@ -4,7 +4,7 @@ import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
 import { getUserProfile } from "@/lib/db/users";
 import { getSubmission, recordSubmission } from "@/lib/db/submissions";
 import { NotFoundError } from "@/lib/errors";
-import { maybeUnlockNextModule } from "@/lib/progression";
+import { newlyOpenedModule, openModules } from "@/lib/progression";
 import { gradePython, normalizeOutput } from "@/lib/piston";
 import { gradeLogic } from "@/lib/logic/grade";
 import type { LogicError } from "@/lib/logic/evaluate";
@@ -96,10 +96,9 @@ export async function POST(
 
   // The module gate applies to submissions too, not just the lesson UI.
   const profile = await getUserProfile(uid);
-  const isUnlocked =
-    isStaff(profile?.role) ||
-    (profile?.unlocked_modules ?? []).includes(challenge.module_id);
-  if (!isUnlocked) {
+  const staff = isStaff(profile?.role);
+  const openBefore = profile && !staff ? await openModules(uid, profile.unlocked_modules) : [];
+  if (!staff && !openBefore.some((m) => m.id === challenge.module_id)) {
     return NextResponse.json(
       { message: "Энэ модуль танд түгжээтэй байна." },
       { status: 403 }
@@ -155,13 +154,8 @@ export async function POST(
     throw err;
   }
 
-  const unlockedModule = graded.passed
-    ? await maybeUnlockNextModule(
-        uid,
-        challenge.module_id,
-        profile?.unlocked_modules ?? []
-      )
-    : null;
+  const unlockedModule =
+    graded.passed && !staff ? await newlyOpenedModule(uid, openBefore) : null;
 
   return NextResponse.json({
     passed: graded.passed,

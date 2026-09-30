@@ -14,6 +14,7 @@ import {
   ensureUserProfile,
   getUserProfile,
   isEmailTakenByAnotherUser,
+  setUserClass,
   unlockModule,
   updateUserRole,
 } from "@/lib/db/users";
@@ -33,6 +34,7 @@ test("first sign-in creates a student with 0 XP and the first module unlocked", 
     role: "student",
     total_xp: 0,
     unlocked_modules: ["module-01"],
+    class_name: null,
   });
 });
 
@@ -57,6 +59,7 @@ test("later sign-ins refresh name/photo but never progress or role", async () =>
     role: "teacher",
     total_xp: 120,
     unlocked_modules: ["module-01", "module-02"],
+    class_name: null,
   });
 });
 
@@ -128,4 +131,13 @@ test("deleteUserCascade removes the user and all their data", async () => {
   assert.equal((await db.select().from(certificates)).length, 0);
   assert.equal((await db.select().from(contestParticipants)).length, 0);
   assert.equal((await db.select().from(contestSubmissions)).length, 0);
+});
+
+test("setUserClass sets and clears a class; the profile carries it", async () => {
+  await addUser("u1");
+  assert.equal((await getUserProfile("u1"))?.class_name, null);
+  await setUserClass("u1", "11A");
+  assert.equal((await getUserProfile("u1"))?.class_name, "11A");
+  await setUserClass("u1", null);
+  assert.equal((await getUserProfile("u1"))?.class_name, null);
 });

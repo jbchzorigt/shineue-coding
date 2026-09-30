@@ -1,3 +1,4 @@
+import { CLASS_ERROR, parseClassName } from "@/lib/class-name";
 import { ALLOWED_DOMAIN } from "@/lib/constants";
 
 export const MAX_USERS_PER_PASTE = 200;
@@ -5,6 +6,8 @@ export const MAX_USERS_PER_PASTE = 200;
 export interface ParsedUser {
   email: string;
   name: string;
+  /** Optional third column, e.g. "11A"; null when blank. */
+  class_name: string | null;
 }
 
 export interface UserListError {
@@ -24,7 +27,7 @@ export function normalizeEmail(raw: string): string {
 }
 
 /**
- * Parses "email, name" rows pasted from a spreadsheet (tab, comma or
+ * Parses "email, name, class" rows pasted from a spreadsheet (tab, comma or
  * semicolon separated). All-or-nothing: one bad row rejects the list,
  * so a teacher never ends up with half a class created.
  */
@@ -56,15 +59,22 @@ export function parseUserList(text: string): ParseResult {
   const seen = new Set<string>();
   for (const { line, cells } of rows) {
     const email = normalizeEmail(cells[0]);
+    const klass = parseClassName(cells[2]);
     if (!EMAIL_RE.test(email)) {
       errors.push({ line, message: `${line}-р мөр: «${cells[0].trim()}» нь имэйл хаяг биш байна.` });
     } else if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) {
       errors.push({ line, message: `${line}-р мөр: зөвхөн @${ALLOWED_DOMAIN} хаяг зөвшөөрөгдөнө.` });
     } else if (seen.has(email)) {
       errors.push({ line, message: `${line}-р мөр: ${email} жагсаалтад давхардсан байна.` });
+    } else if (!klass.ok) {
+      errors.push({ line, message: `${line}-р мөр: «${(cells[2] ?? "").trim()}» — ${CLASS_ERROR}` });
     } else {
       seen.add(email);
-      users.push({ email, name: (cells[1] ?? "").trim() || email.split("@")[0] });
+      users.push({
+        email,
+        name: (cells[1] ?? "").trim() || email.split("@")[0],
+        class_name: klass.value,
+      });
     }
   }
   return errors.length > 0 ? { ok: false, errors } : { ok: true, users };

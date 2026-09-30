@@ -7,6 +7,7 @@ import { getUserProfile } from "@/lib/db/users";
 import { UserError, userMessage } from "@/lib/errors";
 import { isAllowedMediaUrl } from "@/lib/media";
 import { mdxError, normalizeMdx } from "@/lib/mdx-check";
+import { isNewsCategory } from "@/lib/news-categories";
 import { isStaff } from "@/lib/types";
 import {
   createNews,
@@ -52,7 +53,9 @@ export async function saveNews(
     const id = str(form, "id"); // empty = create
     const title = str(form, "title");
     const body = normalizeMdx(str(form, "body_mdx"));
+    const category = str(form, "category");
     if (!title) return { error: "Гарчиг хоосон байна." };
+    if (!isNewsCategory(category)) return { error: "Мэдээний ангиллаа сонгоно уу." };
     if (body.length < 10) return { error: "Мэдээний агуулга хэт богино байна." };
     const mdxProblem = await mdxError(body);
     if (mdxProblem) return { error: mdxProblem };
@@ -60,6 +63,7 @@ export async function saveNews(
     const data = {
       title,
       body_mdx: body,
+      category,
       image_url: urlOrNull(form, "image_url", "Нүүр зургийн холбоос"),
       video_url: urlOrNull(form, "video_url", "Видео холбоос"),
       audio_url: urlOrNull(form, "audio_url", "Дууны холбоос"),

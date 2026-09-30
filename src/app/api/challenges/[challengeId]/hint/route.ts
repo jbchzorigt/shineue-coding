@@ -4,7 +4,7 @@ import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
 import { getUserProfile } from "@/lib/db/users";
 import { getSubmission, markHintUsed } from "@/lib/db/submissions";
 import { NotFoundError } from "@/lib/errors";
-import { isStaff } from "@/lib/types";
+import { canOpenModule } from "@/lib/progression";
 
 export async function POST(
   _req: NextRequest,
@@ -23,10 +23,7 @@ export async function POST(
   }
 
   const profile = await getUserProfile(uid);
-  const isUnlocked =
-    isStaff(profile?.role) ||
-    (profile?.unlocked_modules ?? []).includes(challenge.module_id);
-  if (!isUnlocked) {
+  if (!(await canOpenModule(profile, challenge.module_id))) {
     return NextResponse.json({ message: "Энэ модуль танд түгжээтэй байна." }, { status: 403 });
   }
 

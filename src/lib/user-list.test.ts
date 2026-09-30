@@ -8,28 +8,28 @@ test("tab, comma and semicolon separated rows all parse (CRLF too)", () => {
     {
       ok: true,
       users: [
-        { email: "a@shineue.edu.mn", name: "Бат Болд" },
-        { email: "b@shineue.edu.mn", name: "Сараа" },
-        { email: "c@shineue.edu.mn", name: "Дорж" },
+        { email: "a@shineue.edu.mn", name: "Бат Болд", class_name: null },
+        { email: "b@shineue.edu.mn", name: "Сараа", class_name: null },
+        { email: "c@shineue.edu.mn", name: "Дорж", class_name: null },
       ],
     }
   );
 });
 
 test("emails are trimmed and lower-cased; a missing name falls back to the address", () => {
-  assert.deepEqual(parseUserList("  Bat.Bold@Shineue.edu.mn  \n\n   \nsaraa@shineue.edu.mn\t\t10А анги"), {
+  assert.deepEqual(parseUserList("  Bat.Bold@Shineue.edu.mn  \n\n   \nsaraa@shineue.edu.mn\t\t10А"), {
     ok: true,
     users: [
-      { email: "bat.bold@shineue.edu.mn", name: "bat.bold" },
-      { email: "saraa@shineue.edu.mn", name: "saraa" },
+      { email: "bat.bold@shineue.edu.mn", name: "bat.bold", class_name: null },
+      { email: "saraa@shineue.edu.mn", name: "saraa", class_name: "10A" },
     ],
   });
 });
 
 test("a spreadsheet header row is skipped", () => {
-  assert.deepEqual(parseUserList("Имэйл\tНэр\na@shineue.edu.mn\tБат"), {
+  assert.deepEqual(parseUserList("Имэйл\tНэр\tАнги\na@shineue.edu.mn\tБат"), {
     ok: true,
-    users: [{ email: "a@shineue.edu.mn", name: "Бат" }],
+    users: [{ email: "a@shineue.edu.mn", name: "Бат", class_name: null }],
   });
 });
 
@@ -57,4 +57,23 @@ test("an empty list and an over-long list are refused", () => {
   const r = parseUserList(many);
   assert.equal(r.ok, false);
   assert.match(r.ok ? "" : r.errors[0].message, /200/);
+});
+
+test("a third column is the class, in its one spelling", () => {
+  assert.deepEqual(parseUserList("a@shineue.edu.mn\tБат\t11а\nb@shineue.edu.mn, Сараа, 12 B\nc@shineue.edu.mn;Дорж"), {
+    ok: true,
+    users: [
+      { email: "a@shineue.edu.mn", name: "Бат", class_name: "11A" },
+      { email: "b@shineue.edu.mn", name: "Сараа", class_name: "12B" },
+      { email: "c@shineue.edu.mn", name: "Дорж", class_name: null },
+    ],
+  });
+});
+
+test("a malformed class rejects the list with its line number", () => {
+  const r = parseUserList("a@shineue.edu.mn\tБат\t11A\nb@shineue.edu.mn\tСараа\t11A!!");
+  assert.equal(r.ok, false);
+  const errors = r.ok ? [] : r.errors;
+  assert.deepEqual(errors.map((e) => e.line), [2]);
+  assert.match(errors[0].message, /^2-р мөр: «11A!!» — Анги нь/);
 });

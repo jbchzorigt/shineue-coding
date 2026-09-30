@@ -59,6 +59,11 @@ export async function listChallengesByModule(moduleId: string): Promise<Challeng
   return rows.map(toChallenge);
 }
 
+/** Every challenge's id and module — enough to work out module progress. */
+export async function listChallengeModules(): Promise<{ id: string; module_id: string }[]> {
+  return getDb().select({ id: challenges.id, module_id: challenges.module_id }).from(challenges);
+}
+
 /**
  * Writes public + private parts together (teacher content editor, seeds).
  * Replaces the whole challenge: optional fields left out are cleared.

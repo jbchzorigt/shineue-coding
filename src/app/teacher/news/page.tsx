@@ -6,6 +6,7 @@ import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
 import { listNews } from "@/lib/db/news";
 import { formatDate } from "@/components/news/news-media";
+import { NewsCategoryBadge } from "@/components/news/news-category";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,7 +48,8 @@ export default async function TeacherNewsPage() {
         {posts.map((p) => (
           <Card key={p.id}>
             <CardContent className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
+              <div className="min-w-0 space-y-1">
+                <NewsCategoryBadge category={p.category} />
                 <h2 className="font-semibold">{p.title}</h2>
                 <p className="text-sm text-muted-foreground">
                   {p.author_name ?? "Багш"} · {formatDate(p.published_at)}

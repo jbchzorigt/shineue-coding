@@ -12,7 +12,7 @@ test("listStudentOverviews aggregates per student, highest XP first", async () =
   await addModule("module-01", 1);
   await addChallenge("ch-1", "module-01");
   await addChallenge("ch-2", "module-01", { order: 2 });
-  await addUser("s1", { total_xp: 10, unlocked_modules: ["module-01"] });
+  await addUser("s1", { total_xp: 10, unlocked_modules: ["module-01"], class_name: "11A" });
   await addUser("s2", { total_xp: 30, unlocked_modules: ["module-01", "module-02"] });
   await addUser("t1", { role: "teacher", total_xp: 99 });
   await getDb().insert(submissions).values([
@@ -30,6 +30,7 @@ test("listStudentOverviews aggregates per student, highest XP first", async () =
       uid: "s1",
       name: "s1",
       email: "s1@shineue.edu.mn",
+      class_name: "11A",
       role: "student",
       total_xp: 10,
       unlocked_count: 1,

@@ -16,6 +16,7 @@ import {
 // outside Next, so it must not pull in "server-only" or path aliases.
 import type { ChallengeType, PublicTestCase, UserRole } from "../types";
 import type { LogicSpec, TruthTable } from "../logic/spec";
+import type { NewsCategory } from "../news-categories";
 
 /*
  * TS keys mirror the SQL column names (snake_case) so rows line up with
@@ -31,6 +32,8 @@ export const users = pgTable(
     uid: text("uid").primaryKey(),
     email: text("email").notNull().unique(),
     name: text("name"),
+    /** Canonical class, e.g. "11A" (src/lib/class-name.ts); null for staff or unknown. */
+    class_name: text("class_name"),
     photo_url: text("photo_url"),
     role: text("role").$type<UserRole>().notNull().default("student"),
     total_xp: integer("total_xp").notNull().default(0),
@@ -127,18 +130,29 @@ export const certificates = pgTable("certificates", {
   issued_at: timestamp("issued_at", tz).notNull().defaultNow(),
 });
 
-export const news = pgTable("news", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  body_mdx: text("body_mdx").notNull(),
-  image_url: text("image_url"),
-  video_url: text("video_url"),
-  audio_url: text("audio_url"),
-  author_name: text("author_name"),
-  // No FK: a post outlives its author's account.
-  author_uid: text("author_uid").notNull(),
-  published_at: timestamp("published_at", tz).notNull().defaultNow(),
-});
+export const news = pgTable(
+  "news",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    body_mdx: text("body_mdx").notNull(),
+    image_url: text("image_url"),
+    video_url: text("video_url"),
+    audio_url: text("audio_url"),
+    author_name: text("author_name"),
+    // No FK: a post outlives its author's account.
+    author_uid: text("author_uid").notNull(),
+    published_at: timestamp("published_at", tz).notNull().defaultNow(),
+    // The fixed list in src/lib/news-categories.ts.
+    category: text("category").$type<NewsCategory>().notNull().default("announcement"),
+  },
+  (t) => [
+    check(
+      "news_category_check",
+      sql`${t.category} in ('announcement', 'contest', 'lesson', 'achievement', 'event')`
+    ),
+  ]
+);
 
 export const contests = pgTable("contests", {
   id: text("id").primaryKey(),

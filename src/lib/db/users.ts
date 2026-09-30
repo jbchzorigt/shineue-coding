@@ -20,6 +20,7 @@ function toProfile(r: typeof users.$inferSelect): UserProfile {
     role: r.role,
     total_xp: r.total_xp,
     unlocked_modules: r.unlocked_modules,
+    class_name: r.class_name,
   };
 }
 
@@ -101,6 +102,11 @@ export async function updateUserRole(uid: string, role: UserRole): Promise<void>
  */
 export async function deleteUserCascade(uid: string): Promise<void> {
   await getDb().delete(users).where(eq(users.uid, uid));
+}
+
+/** `className` must already be canonical (parseClassName); null clears it. */
+export async function setUserClass(uid: string, className: string | null): Promise<void> {
+  await getDb().update(users).set({ class_name: className }).where(eq(users.uid, uid));
 }
 
 /** Adds a module to the user's unlocked list; a no-op if already there. */

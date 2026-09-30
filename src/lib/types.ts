@@ -26,6 +26,8 @@ export interface UserProfile {
   role: UserRole;
   total_xp: number;
   unlocked_modules: string[];
+  /** e.g. "11A"; null for staff or when not set. */
+  class_name: string | null;
 }
 
 export type ChallengeType = "mcq" | "tracing" | "coding" | "theory" | "logic";

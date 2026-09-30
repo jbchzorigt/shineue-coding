@@ -117,6 +117,7 @@ test("registerParticipant is idempotent", async () => {
     uid: "s1",
     name: "Бат",
     email: "s1@shineue.edu.mn",
+    class_name: null,
     scores: {},
     total: 0,
     last_improved_at: null,
@@ -185,6 +186,16 @@ test("participants rank by total, then earliest improvement; never-improved last
     { contest_id: contest.id, uid: "d", email: "d", total: 0, last_improved_at: null },
   ]);
   assert.deepEqual((await listParticipants(contest.id)).map((p) => p.uid), ["b", "a", "c", "d"]);
+});
+
+test("participants carry their current class from the user account", async () => {
+  await upsertContest(contest);
+  await addUser("a", { class_name: "11A" });
+  await addUser("b");
+  await registerParticipant(contest.id, { uid: "a", name: "А", email: "a@x" });
+  await registerParticipant(contest.id, { uid: "b", name: "Б", email: "b@x" });
+  const byUid = Object.fromEntries((await listParticipants(contest.id)).map((p) => [p.uid, p.class_name]));
+  assert.deepEqual(byUid, { a: "11A", b: null });
 });
 
 test("deleteContest removes problems, answers, participants and attempts", async () => {

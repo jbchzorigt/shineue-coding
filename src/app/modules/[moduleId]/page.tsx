@@ -6,7 +6,7 @@ import { getUserProfile } from "@/lib/db/users";
 import { listChallengesByModule } from "@/lib/db/challenges";
 import { listPassedChallengeIds } from "@/lib/db/submissions";
 import { getModule } from "@/lib/db/modules";
-import { isStaff } from "@/lib/types";
+import { canOpenModule } from "@/lib/progression";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,7 @@ export default async function ModuleLessonPage({
   if (!session?.user?.id) redirect("/login");
 
   const profile = await getUserProfile(session.user.id).catch(() => null);
-  const isUnlocked =
-    isStaff(profile?.role) ||
-    (profile?.unlocked_modules ?? []).includes(moduleId);
+  const isUnlocked = await canOpenModule(profile, moduleId);
 
   const [challenges, passedIds] = isUnlocked
     ? await Promise.all([

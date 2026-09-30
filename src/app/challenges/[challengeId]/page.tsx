@@ -5,7 +5,8 @@ import { auth } from "@/auth";
 import { getChallenge, getChallengePrivate } from "@/lib/db/challenges";
 import { getUserProfile } from "@/lib/db/users";
 import { getSubmission } from "@/lib/db/submissions";
-import { isStaff, type Challenge } from "@/lib/types";
+import type { Challenge } from "@/lib/types";
+import { canOpenModule } from "@/lib/progression";
 import { parseCircuit } from "@/lib/logic/circuit";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { UserMenu } from "@/components/user-menu";
@@ -28,10 +29,7 @@ export default async function ChallengePage({
   if (!challenge) notFound();
 
   const profile = await getUserProfile(session.user.id).catch(() => null);
-  const isUnlocked =
-    isStaff(profile?.role) ||
-    (profile?.unlocked_modules ?? []).includes(challenge.module_id);
-  if (!isUnlocked) redirect(`/modules/${challenge.module_id}`);
+  if (!(await canOpenModule(profile, challenge.module_id))) redirect(`/modules/${challenge.module_id}`);
 
   const submission = await getSubmission(session.user.id, challengeId);
 

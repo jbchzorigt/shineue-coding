@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const EXAMPLE = "bat.bold@shineue.edu.mn\tБат Болд\nsaraa.d@shineue.edu.mn\tСараа Дорж";
+const EXAMPLE = "bat.bold@shineue.edu.mn\tБат Болд\t11A\nsaraa.d@shineue.edu.mn\tСараа Дорж\t11B";
 
 export function CreateUsersForm({ isAdmin, siteUrl }: { isAdmin: boolean; siteUrl: string }) {
   const [state, action, pending] = useActionState<CreateUsersState, FormData>(createUsersAction, {
@@ -27,7 +27,7 @@ export function CreateUsersForm({ isAdmin, siteUrl }: { isAdmin: boolean; siteUr
       <div className="space-y-6 print:hidden">
         <form action={action} className="space-y-4 rounded-xl border bg-background p-4">
           <div className="space-y-1.5">
-            <Label htmlFor="list">Жагсаалт — мөр бүрт «имэйл, нэр»</Label>
+            <Label htmlFor="list">Жагсаалт — мөр бүрт «имэйл, нэр, анги»</Label>
             <Textarea
               id="list"
               name="list"
@@ -38,8 +38,9 @@ export function CreateUsersForm({ isAdmin, siteUrl }: { isAdmin: boolean; siteUr
               className="font-mono"
             />
             <p className="text-xs text-muted-foreground">
-              Excel эсвэл Google Sheets-ээс имэйл, нэр гэсэн хоёр баганаа хуулж буулгана. Таслал
-              эсвэл цэг таслалаар тусгаарласан мөр ч болно. Нэг удаад 200 хүртэл.
+              Excel эсвэл Google Sheets-ээс имэйл, нэр, анги гэсэн баганаа хуулж буулгана (анги заавал
+              биш, жишээ нь 11A). Таслал эсвэл цэг таслалаар тусгаарласан мөр ч болно. Нэг удаад 200
+              хүртэл.
             </p>
           </div>
           {isAdmin && (

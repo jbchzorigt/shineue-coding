@@ -8,6 +8,7 @@ import {
   contestProblems,
   contests,
   contestSubmissions,
+  users,
 } from "@/lib/db/schema";
 import { ACCOUNT_MISSING, NotFoundError, UserError } from "@/lib/errors";
 import type { LogicSpec, TruthTable } from "@/lib/logic/spec";
@@ -55,6 +56,8 @@ export interface Participant {
   uid: string;
   name: string | null;
   email: string;
+  /** From the user account (current), not frozen at registration. */
+  class_name: string | null;
   /** problem id → best score */
   scores: Record<string, number>;
   total: number;
@@ -216,11 +219,15 @@ export async function deleteProblem(contestId: string, problemId: string): Promi
 
 /* ----------------------------- participants ---------------------------- */
 
-function toParticipant(r: typeof contestParticipants.$inferSelect): Participant {
+function toParticipant(
+  r: typeof contestParticipants.$inferSelect,
+  class_name: string | null
+): Participant {
   return {
     uid: r.uid,
     name: r.name,
     email: r.email,
+    class_name,
     scores: r.scores,
     total: r.total,
     last_improved_at: r.last_improved_at?.getTime() ?? null,
@@ -233,25 +240,27 @@ function participantKey(contestId: string, uid: string) {
 
 export async function getParticipant(contestId: string, uid: string): Promise<Participant | null> {
   const [row] = await getDb()
-    .select()
+    .select({ p: contestParticipants, class_name: users.class_name })
     .from(contestParticipants)
+    .leftJoin(users, eq(users.uid, contestParticipants.uid))
     .where(participantKey(contestId, uid))
     .limit(1);
-  return row ? toParticipant(row) : null;
+  return row ? toParticipant(row.p, row.class_name) : null;
 }
 
 /** Ranked: total desc, earlier improvement wins ties (never-improved last). */
 export async function listParticipants(contestId: string): Promise<Participant[]> {
   const rows = await getDb()
-    .select()
+    .select({ p: contestParticipants, class_name: users.class_name })
     .from(contestParticipants)
+    .leftJoin(users, eq(users.uid, contestParticipants.uid))
     .where(eq(contestParticipants.contest_id, contestId))
     .orderBy(
       desc(contestParticipants.total),
       sql`${contestParticipants.last_improved_at} asc nulls last`,
       asc(contestParticipants.registered_at)
     );
-  return rows.map(toParticipant);
+  return rows.map((r) => toParticipant(r.p, r.class_name));
 }
 
 export async function registerParticipant(

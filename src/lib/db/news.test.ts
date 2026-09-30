@@ -16,6 +16,7 @@ const post = {
   audio_url: null,
   author_name: "Багш",
   author_uid: "t1",
+  category: "announcement" as const,
 };
 
 test("createNews stores a post under a random id, published now", async () => {
@@ -48,4 +49,31 @@ test("updateNews changes only the given fields; deleteNews removes the post", as
 
 test("getNews rejects malformed ids", async () => {
   assert.equal(await getNews("bad-id!"), null);
+});
+
+test("listNews filters by category and limits the count", async () => {
+  await getDb().insert(news).values([
+    { id: "a", ...post, category: "contest", published_at: new Date("2026-01-01T00:00:00Z") },
+    { id: "b", ...post, category: "lesson", published_at: new Date("2026-01-02T00:00:00Z") },
+    { id: "c", ...post, category: "contest", published_at: new Date("2026-01-03T00:00:00Z") },
+  ]);
+  assert.deepEqual((await listNews({ category: "contest" })).map((p) => p.id), ["c", "a"]);
+  assert.deepEqual((await listNews({ limit: 2 })).map((p) => p.id), ["c", "b"]);
+  assert.deepEqual((await listNews({ category: "achievement" })).map((p) => p.id), []);
+});
+
+test("posts saved without a category are announcements; unknown ones are refused", async () => {
+  const legacy: Partial<typeof post> = { ...post };
+  delete legacy.category;
+  await getDb().insert(news).values({ id: "legacy", ...(legacy as Omit<typeof post, "category">) });
+  assert.equal((await getNews("legacy"))?.category, "announcement");
+  await assert.rejects(
+    getDb().insert(news).values({ id: "bad", ...post, category: "gossip" as never })
+  );
+});
+
+test("updateNews can move a post to another category", async () => {
+  const id = await createNews(post);
+  await updateNews(id, { category: "achievement" });
+  assert.equal((await getNews(id))?.category, "achievement");
 });

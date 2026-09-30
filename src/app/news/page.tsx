@@ -1,11 +1,18 @@
 import { Newspaper, Plus } from "lucide-react";
 import { listNews } from "@/lib/db/news";
+import { categoryFromParam } from "@/lib/news-categories";
+import { NewsCategoryFilter } from "@/components/news/news-category";
 import { NewsList } from "@/components/news/news-list";
 import { SiteHeader } from "@/components/site-header";
 import { StaffLink } from "@/components/staff-link";
 
-export default async function NewsPage() {
-  const posts = await listNews();
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string | string[] }>;
+}) {
+  const category = categoryFromParam((await searchParams).category);
+  const posts = await listNews({ category });
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -24,7 +31,11 @@ export default async function NewsPage() {
             Шинэ мэдээ
           </StaffLink>
         </div>
-        <NewsList posts={posts} />
+        <NewsCategoryFilter active={category} basePath="/news" />
+        <NewsList
+          posts={posts}
+          emptyText={category ? "Энэ ангилалд мэдээ алга." : undefined}
+        />
       </main>
     </div>
   );

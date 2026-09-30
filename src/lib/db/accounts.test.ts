@@ -44,8 +44,8 @@ async function addPasswordUser(
 test("createUsers creates students who must change their temporary password", async () => {
   const { created, skipped } = await createUsers(
     [
-      { email: "a@shineue.edu.mn", name: "А" },
-      { email: "b@shineue.edu.mn", name: "Б" },
+      { email: "a@shineue.edu.mn", name: "А", class_name: "11A" },
+      { email: "b@shineue.edu.mn", name: "Б", class_name: null },
     ],
     "student"
   );
@@ -54,6 +54,8 @@ test("createUsers creates students who must change their temporary password", as
   const a = await byEmail("a@shineue.edu.mn");
   assert.equal(a.role, "student");
   assert.equal(a.name, "А");
+  assert.equal(a.class_name, "11A");
+  assert.equal((await byEmail("b@shineue.edu.mn")).class_name, null);
   assert.equal(a.must_change_password, true);
   assert.deepEqual(a.unlocked_modules, ["module-01"]);
   assert.match(a.uid, /^[A-Za-z0-9]{20}$/);
@@ -64,8 +66,8 @@ test("createUsers skips existing emails without touching them, and can create te
   await addUser("old", { email: "a@shineue.edu.mn", name: "Хуучин" });
   const r = await createUsers(
     [
-      { email: "a@shineue.edu.mn", name: "А" },
-      { email: "t@shineue.edu.mn", name: "Т" },
+      { email: "a@shineue.edu.mn", name: "А", class_name: null },
+      { email: "t@shineue.edu.mn", name: "Т", class_name: null },
     ],
     "teacher"
   );

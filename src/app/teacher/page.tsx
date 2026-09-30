@@ -7,6 +7,7 @@ import { canManageAccount, isStaff } from "@/lib/types";
 import { listStudentOverviews } from "@/lib/db/teacher";
 import { setUserRole } from "@/lib/teacher-actions";
 import { DeleteUserButton } from "@/components/teacher/delete-user-button";
+import { ClassCell } from "@/components/teacher/class-cell";
 import { ResetPasswordButton } from "@/components/teacher/reset-password-button";
 import { levelFromXp } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
@@ -102,6 +103,7 @@ export default async function TeacherPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Сурагч</TableHead>
+                <TableHead>Анги</TableHead>
                 <TableHead className="text-right">XP</TableHead>
                 <TableHead className="text-right">Түвшин</TableHead>
                 <TableHead className="text-right">Модуль</TableHead>
@@ -120,7 +122,7 @@ export default async function TeacherPage() {
             <TableBody>
               {allUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                     Бүртгэлтэй хэрэглэгч алга.
                   </TableCell>
                 </TableRow>
@@ -141,6 +143,13 @@ export default async function TeacherPage() {
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">{s.email}</p>
+                  </TableCell>
+                  <TableCell>
+                    {s.role === "student" && canManageAccount(profile?.role, s.role) ? (
+                      <ClassCell uid={s.uid} name={s.name ?? s.email} value={s.class_name} />
+                    ) : (
+                      <span className="text-muted-foreground">{s.class_name ?? "—"}</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-medium">{s.total_xp}</TableCell>
                   <TableCell className="text-right">{levelFromXp(s.total_xp).level}</TableCell>

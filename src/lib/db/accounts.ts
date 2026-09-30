@@ -59,6 +59,7 @@ export async function createUsers(
             uid: newId(),
             email: p.email,
             name: p.name,
+            class_name: p.class_name,
             role,
             unlocked_modules: [firstModule],
             password_hash: p.hash,

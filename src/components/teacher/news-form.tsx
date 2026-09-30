@@ -5,6 +5,8 @@ import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { saveNews, deleteNews } from "@/lib/news-actions";
 import type { ActionState } from "@/lib/teacher-actions";
 import { mediaLimitError } from "@/lib/media";
+import { DEFAULT_NEWS_CATEGORY, NEWS_CATEGORIES, type NewsCategory } from "@/lib/news-categories";
+import { cn } from "@/lib/utils";
 import { MediaUploadField } from "@/components/teacher/media-upload-field";
 import { ACCEPT, uploadMedia, type MediaStore } from "@/components/teacher/upload-file";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,7 @@ export function NewsForm({ post, store }: { post: NewsPost | null; store: MediaS
   const [title, setTitle] = useState(post?.title ?? "");
   const [body, setBody] = useState(post?.body_mdx ?? "");
   const [video, setVideo] = useState(post?.video_url ?? "");
+  const [category, setCategory] = useState<NewsCategory>(post?.category ?? DEFAULT_NEWS_CATEGORY);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [inlineProgress, setInlineProgress] = useState<number | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -59,6 +62,33 @@ export function NewsForm({ post, store }: { post: NewsPost | null; store: MediaS
         <Label htmlFor="title">Гарчиг</Label>
         <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
       </div>
+
+      <fieldset className="space-y-1.5">
+        <legend className="text-sm font-medium">Ангилал</legend>
+        <div className="flex flex-wrap gap-2">
+          {NEWS_CATEGORIES.map((c) => (
+            <label
+              key={c.id}
+              className={cn(
+                "cursor-pointer rounded-full border px-3 py-1 text-sm font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                category === c.id
+                  ? cn("border-transparent", c.className)
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <input
+                type="radio"
+                name="category"
+                value={c.id}
+                checked={category === c.id}
+                onChange={() => setCategory(c.id)}
+                className="sr-only"
+              />
+              {c.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">

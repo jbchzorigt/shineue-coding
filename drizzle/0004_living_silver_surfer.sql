@@ -1,0 +1,2 @@
+ALTER TABLE "news" ADD COLUMN "category" text DEFAULT 'announcement' NOT NULL;--> statement-breakpoint
+ALTER TABLE "news" ADD CONSTRAINT "news_category_check" CHECK ("news"."category" in ('announcement', 'contest', 'lesson', 'achievement', 'event'));

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { createUsers, resetPassword, type CreatedUser } from "@/lib/db/accounts";
-import { getUserProfile } from "@/lib/db/users";
+import { getUserProfile, setUserClass } from "@/lib/db/users";
+import { CLASS_ERROR, parseClassName } from "@/lib/class-name";
 import { UserError, userMessage } from "@/lib/errors";
 import { parseUserList } from "@/lib/user-list";
 import { canManageAccount, type UserRole } from "@/lib/types";
@@ -64,5 +65,30 @@ export async function resetPasswordAction(uid: string): Promise<ResetPasswordSta
     return { tempPassword, error: null };
   } catch (err) {
     return { tempPassword: null, error: userMessage(err) };
+  }
+}
+
+export interface SetClassResult {
+  /** The class now stored (canonical spelling), or the old one after an error. */
+  value: string | null;
+  error: string | null;
+}
+
+/** Staff set a student's class from the /teacher table. */
+export async function setClassAction(uid: string, raw: string): Promise<SetClassResult> {
+  try {
+    const target = await getUserProfile(uid);
+    if (!target) throw new UserError("Хэрэглэгч олдсонгүй.");
+    if (!canManageAccount(await actorRole(), target.role)) {
+      throw new UserError("Танд энэ хэрэглэгчийн ангийг засах эрх алга.");
+    }
+    const parsed = parseClassName(raw);
+    if (!parsed.ok) return { value: target.class_name, error: CLASS_ERROR };
+    await setUserClass(uid, parsed.value);
+    revalidatePath("/teacher");
+    revalidatePath("/leaderboard");
+    return { value: parsed.value, error: null };
+  } catch (err) {
+    return { value: null, error: userMessage(err) };
   }
 }

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { listModules } from "@/lib/db/modules";
 import { isStaff } from "@/lib/types";
+import { openModules } from "@/lib/progression";
 import { SiteHeader } from "@/components/site-header";
 import { StaffLink } from "@/components/staff-link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +18,11 @@ export default async function ModulesPage() {
 
   const lessons = await listModules();
   const isTeacher = isStaff(profile?.role);
-  const unlocked = new Set(profile?.unlocked_modules ?? []);
+  const unlocked = new Set(
+    profile && !isTeacher
+      ? (await openModules(profile.uid, profile.unlocked_modules)).map((m) => m.id)
+      : []
+  );
 
   return (
     <div className="min-h-screen bg-muted/40">

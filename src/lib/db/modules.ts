@@ -19,6 +19,16 @@ export async function listModules(): Promise<ModuleDoc[]> {
   return getDb().select().from(modules).orderBy(asc(modules.order), asc(modules.id));
 }
 
+export type ModuleOutline = Pick<ModuleDoc, "id" | "title" | "order">;
+
+/** The course sequence without lesson bodies. */
+export async function listModuleOutlines(): Promise<ModuleOutline[]> {
+  return getDb()
+    .select({ id: modules.id, title: modules.title, order: modules.order })
+    .from(modules)
+    .orderBy(asc(modules.order), asc(modules.id));
+}
+
 export async function getModule(id: string): Promise<ModuleDoc | null> {
   if (!/^[a-z0-9-]+$/.test(id)) return null;
   const [row] = await getDb().select().from(modules).where(eq(modules.id, id)).limit(1);

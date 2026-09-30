@@ -9,6 +9,7 @@ import {
   NewsVideo,
   formatDate,
 } from "@/components/news/news-media";
+import { NewsCategoryBadge } from "@/components/news/news-category";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 
@@ -31,9 +32,10 @@ export default async function NewsArticlePage({
         </Button>
 
         <article className="space-y-5 rounded-xl border bg-background p-6 sm:p-8">
-          <div>
+          <div className="space-y-2">
+            <NewsCategoryBadge category={post.category} />
             <h1 className="text-2xl font-bold">{post.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {post.author_name ?? "Багш"} · {formatDate(post.published_at)}
             </p>
           </div>

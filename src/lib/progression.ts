@@ -1,9 +1,11 @@
 import "server-only";
 
-import { listChallengesByModule } from "@/lib/db/challenges";
+import { listChallengeModules, listChallengesByModule } from "@/lib/db/challenges";
 import { listPassedChallengeIds } from "@/lib/db/submissions";
-import { listModules } from "@/lib/db/modules";
+import { listModuleOutlines, listModules, type ModuleOutline } from "@/lib/db/modules";
 import { unlockModule } from "@/lib/db/users";
+import { isStaff, type UserProfile } from "@/lib/types";
+import { computeUnlocked } from "@/lib/unlock";
 
 /** 100 XP per level, level 1 at 0 XP. */
 export function levelFromXp(totalXp: number): {
@@ -44,29 +46,54 @@ export async function getCourseProgress(uid: string): Promise<CourseProgress> {
 }
 
 /**
- * Called after a successful submission: if every challenge of the module
- * is now passed, unlocks the next module (by lesson order).
- * Returns the newly unlocked module, or null.
+ * The modules this student may open, in course order (rules in unlock.ts).
+ * Any the rules open that the profile doesn't list yet are saved, so they
+ * stay open even if the course changes again.
  */
-export async function maybeUnlockNextModule(
+export async function openModules(
   uid: string,
-  moduleId: string,
-  alreadyUnlocked: string[]
-): Promise<{ id: string; title: string } | null> {
-  const [challenges, passedIds] = await Promise.all([
-    listChallengesByModule(moduleId),
+  stored: readonly string[]
+): Promise<ModuleOutline[]> {
+  const [lessons, refs, passed] = await Promise.all([
+    listModuleOutlines(),
+    listChallengeModules(),
     listPassedChallengeIds(uid),
   ]);
-  if (challenges.length === 0) return null;
-  if (!challenges.every((ch) => passedIds.has(ch.id))) return null;
+  const byModule = new Map<string, string[]>();
+  for (const ref of refs) {
+    byModule.set(ref.module_id, [...(byModule.get(ref.module_id) ?? []), ref.id]);
+  }
 
-  const lessons = await listModules();
-  const currentIdx = lessons.findIndex((l) => l.id === moduleId);
-  if (currentIdx === -1) return null;
-  const next = lessons[currentIdx + 1];
-  if (!next || alreadyUnlocked.includes(next.id)) return null;
+  const open = new Set(
+    computeUnlocked(
+      lessons.map((l) => ({ id: l.id, order: l.order, challengeIds: byModule.get(l.id) ?? [] })),
+      passed,
+      stored
+    )
+  );
+  for (const id of open) {
+    if (!stored.includes(id)) await unlockModule(uid, id);
+  }
+  return lessons.filter((l) => open.has(l.id));
+}
 
-  await unlockModule(uid, next.id);
+/** Staff open every module; a student only those openModules allows. */
+export async function canOpenModule(
+  profile: UserProfile | null,
+  moduleId: string
+): Promise<boolean> {
+  if (!profile) return false;
+  if (isStaff(profile.role)) return true;
+  const open = await openModules(profile.uid, profile.unlocked_modules);
+  return open.some((m) => m.id === moduleId);
+}
 
-  return { id: next.id, title: next.title };
+/** After a passed submission: the first module that has just opened, if any. */
+export async function newlyOpenedModule(
+  uid: string,
+  before: readonly ModuleOutline[]
+): Promise<{ id: string; title: string } | null> {
+  const wasOpen = new Set(before.map((m) => m.id));
+  const next = (await openModules(uid, [...wasOpen])).find((m) => !wasOpen.has(m.id));
+  return next ? { id: next.id, title: next.title } : null;
 }

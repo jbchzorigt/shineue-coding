@@ -29,6 +29,20 @@
       "when": 1790781069590,
       "tag": "0003_faithful_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790802207095,
+      "tag": "0004_living_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790807832527,
+      "tag": "0005_gifted_gladiator",
+      "breakpoints": true
     }
   ]
 }

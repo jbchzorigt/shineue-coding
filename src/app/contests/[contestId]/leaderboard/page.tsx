@@ -8,6 +8,8 @@ import {
   listParticipants,
   listProblems,
 } from "@/lib/db/contests";
+import { classFromParam, classOptions } from "@/lib/class-name";
+import { ClassFilter, ClassTag } from "@/components/class-filter";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
 import { ContestStatusBadge, formatTime, formatWindow } from "@/components/contest/contest-status-badge";
@@ -26,8 +28,10 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default async function ContestLeaderboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ contestId: string }>;
+  searchParams: Promise<{ class?: string | string[] }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -36,10 +40,14 @@ export default async function ContestLeaderboardPage({
   const contest = await getContest(contestId);
   if (!contest) notFound();
 
-  const [problems, participants] = await Promise.all([
+  const [problems, everyone] = await Promise.all([
     listProblems(contestId),
     listParticipants(contestId),
   ]);
+  // Ranked already; a class filter keeps that order and renumbers.
+  const classes = classOptions(everyone.map((p) => p.class_name));
+  const active = classFromParam((await searchParams).class, classes);
+  const participants = active ? everyone.filter((p) => p.class_name === active) : everyone;
   const maxTotal = problems.reduce((s, p) => s + p.points, 0);
 
   return (
@@ -61,6 +69,8 @@ export default async function ContestLeaderboardPage({
         </div>
 
         <ContestTabs contestId={contestId} active="leaderboard" />
+
+        <ClassFilter options={classes} active={active} basePath={`/contests/${contestId}/leaderboard`} />
 
         <div className="overflow-x-auto rounded-xl border bg-background">
           <Table>
@@ -107,6 +117,7 @@ export default async function ContestLeaderboardPage({
                     </TableCell>
                     <TableCell>
                       <span className="font-medium">{p.name ?? "Оролцогч"}</span>
+                      <ClassTag value={p.class_name} />
                       {isMe && (
                         <span className="ml-2 rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           Та

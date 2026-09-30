@@ -9,6 +9,7 @@ export interface StudentOverview {
   uid: string;
   name: string | null;
   email: string;
+  class_name: string | null;
   role: UserRole;
   total_xp: number;
   unlocked_count: number;
@@ -30,6 +31,7 @@ export async function listStudentOverviews(includeStaff = false): Promise<Studen
       uid: users.uid,
       name: users.name,
       email: users.email,
+      class_name: users.class_name,
       role: users.role,
       total_xp: users.total_xp,
       last_login_at: users.last_login_at,

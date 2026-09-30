@@ -3,6 +3,8 @@ import { Trophy } from "lucide-react";
 import { auth } from "@/auth";
 import { listStudentOverviews } from "@/lib/db/teacher";
 import { levelFromXp } from "@/lib/progression";
+import { classFromParam, classOptions } from "@/lib/class-name";
+import { ClassFilter, ClassTag } from "@/components/class-filter";
 import { SiteHeader } from "@/components/site-header";
 import {
   Table,
@@ -16,13 +18,21 @@ import { cn } from "@/lib/utils";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-export default async function LeaderboardPage() {
+export default async function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ class?: string | string[] }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // Already sorted by XP descending.
-  const students = await listStudentOverviews();
+  // Already sorted by XP descending; a class filter keeps that order.
+  const everyone = await listStudentOverviews();
+  const classes = classOptions(everyone.map((s) => s.class_name));
+  const active = classFromParam((await searchParams).class, classes);
+  const students = active ? everyone.filter((s) => s.class_name === active) : everyone;
   const myRank = students.findIndex((s) => s.uid === session.user.id) + 1;
+  const group = active ? `${active} ангийн ` : "";
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -35,10 +45,14 @@ export default async function LeaderboardPage() {
           </h1>
           <p className="text-muted-foreground">
             {myRank > 0
-              ? `Та ${students.length} сурагчаас ${myRank}-р байранд байна.`
-              : "Ангийн нийт ранк."}
+              ? `Та ${group}${students.length} сурагчаас ${myRank}-р байранд байна.`
+              : active
+                ? `${active} ангийн ранк.`
+                : "Ангийн нийт ранк."}
           </p>
         </div>
+
+        <ClassFilter options={classes} active={active} basePath="/leaderboard" />
 
         <div className="rounded-xl border bg-background">
           <Table>
@@ -71,6 +85,7 @@ export default async function LeaderboardPage() {
                     </TableCell>
                     <TableCell>
                       <span className="font-medium">{s.name ?? "Сурагч"}</span>
+                      <ClassTag value={s.class_name} />
                       {isMe && (
                         <span className="ml-2 rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           Та
