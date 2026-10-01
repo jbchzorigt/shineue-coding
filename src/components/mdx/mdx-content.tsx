@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import rehypePrettyCode from "rehype-pretty-code";
@@ -21,11 +22,21 @@ function HL() {
   );
 }
 
+/** A wide table scrolls in its own box instead of widening the page on phones. */
+function Table(props: ComponentProps<"table">) {
+  return (
+    <div className="overflow-x-auto">
+      <table {...props} />
+    </div>
+  );
+}
+
 const components = {
   Callout,
   Gate,
   GateTable,
   HL,
+  table: Table,
 };
 
 /**

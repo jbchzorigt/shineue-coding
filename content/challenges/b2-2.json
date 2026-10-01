@@ -1,0 +1,274 @@
+{
+  "module_id": "b2-2",
+  "challenges": [
+    {
+      "id": "b2-2-01-mcq",
+      "section": "B2.2.1",
+      "type": "mcq",
+      "title": "Бүлгийн чатын мессежийг юунд хадгалах вэ?",
+      "prompt": "Сургуулийн чат апп бүлгийн мессежүүдийг санах ойд хадгална. Бүлэгт хэдэн мессеж бичигдэхийг урьдчилан мэдэхгүй, өдөр бүр шинэ мессеж нэмэгддэг. Аль сонголт **үндэслэлтэйгээ хамт** зөв бэ?",
+      "xp": 10,
+      "options": [
+        "Статик массив — индексээр шууд хандах тул шинэ мессежийг үргэлж хурдан нэмнэ, хэзээ ч дүүрэхгүй",
+        "Динамик бүтэц — мессеж ирэх бүрт программ ажиллах явцад зай нэмж авдаг тул хэмжээг таах хэрэггүй",
+        "Статик массив — эхэнд нь нэг удаа хуваарилсан санах ой хэзээ ч дэмий үрэгддэггүй тул хамгийн хэмнэлттэй",
+        "Динамик бүтэц — холбоост жагсаалтын зангилаанууд залгаа байрладаг тул 500 дахь мессежид шууд хүрнэ"
+      ],
+      "answer": 1,
+      "hint": "Хоёр зүйлийг шалга: (1) мессежийн тоо мэдэгдэхгүй бөгөөд өсдөг бол тогтмол хэмжээтэй бүтэц юу болох вэ? (2) Үндэслэл бүр үнэн үү — статик массив ашиглагдаагүй нүдэндээ ч санах ой эзэлдэг үү, холбоост жагсаалтын зангилаанууд санах ойд хаана байрладаг вэ?"
+    },
+    {
+      "id": "b2-2-01-code",
+      "section": "B2.2.1",
+      "type": "coding",
+      "title": "Автобусны суудал: тогтмол хэмжээтэй массив",
+      "prompt": "Сургуулийн аяллын автобус яг C суудалтай — аяллын үеэр суудлын тоо өөрчлөгдөхгүй, яг статик массив шиг. Бүртгүүлсэн сурагчдыг ирсэн ээлжээр нь суудалд суулгана. Харин бүртгэлийн хуудас (энгийн Python жагсаалт) бүртгүүлэх гэсэн хүн бүрийг, суудалгүй үлдсэнийг ч хадгална.\n\n**Дүрэм:**\n\n1. Статик массивыг хичээлийн загвараар дуурай: `[None] * C` гэж **нэг удаа** үүсгээд, түүнд хэзээ ч `append` хийхгүй. Хэдэн нүд эзлэгдсэнийг тоолуураар хянана.\n2. Нэр бүрийг ээлжээр нь нэм: тоолуур C-тэй тэнцүү бол (массив дүүрэн) `OVERFLOW: cannot add <нэр>, array is full (<C>)` гэж **тэр даруй** хэвлэ. Эс бөгөөс нэрийг тоолуурын индекст хадгалаад, тоолуурыг 1-ээр нэм.\n3. Нэр бүрийг (суудал авсан ч, аваагүй ч) динамик жагсаалтад `append`-ээр нэм.\n4. Бүх нэрийн дараа 3 мөр хэвлэ: `Static:` ба массив (хоосон нүд нь `None` гэж харагдана), `Free slots:` ба хоосон нүдний тоо, `Dynamic:` ба жагсаалт. Массив, жагсаалтыг `print(\"Static:\", seats)` шиг шууд хэвлэ.\n\n**Оролт:** 1-р мөрөнд C (1–20), 2-р мөрөнд нэрийн тоо n (0–30), дараагийн n мөр бүрт нэг нэр.\n\n**Гаралт:** OVERFLOW мөрүүд (гарсан ээлжээрээ), дараа нь дээрх 3 мөр.\n\n```text\nОролт:\n3\n4\nAnu\nBat\nSaraa\nTuya\n\nГаралт:\nOVERFLOW: cannot add Tuya, array is full (3)\nStatic: ['Anu', 'Bat', 'Saraa']\nFree slots: 0\nDynamic: ['Anu', 'Bat', 'Saraa', 'Tuya']\n```\n\n```text\nОролт:\n4\n2\nBold\nZaya\n\nГаралт:\nStatic: ['Bold', 'Zaya', None, None]\nFree slots: 2\nDynamic: ['Bold', 'Zaya']\n```\n\nХоёр дахь жишээнд массив дүүрээгүй тул OVERFLOW мөр байхгүй, хоосон хоёр нүд нь `None`.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "capacity = int(input())\nn = int(input())\n\nseats = [None] * capacity   # the static array: made once, never append to it\ncount = 0                   # how many seats are taken\neveryone = []               # a normal (dynamic) Python list\n\nfor i in range(n):\n    name = input()\n    # full? print the OVERFLOW message\n    # otherwise store the name at index count and add 1 to count\n    # in both cases, append the name to everyone\n\n# print the three lines: Static, Free slots, Dynamic\n",
+      "tests": [
+        {
+          "input": "3\n4\nAnu\nBat\nSaraa\nTuya",
+          "output": "OVERFLOW: cannot add Tuya, array is full (3)\nStatic: ['Anu', 'Bat', 'Saraa']\nFree slots: 0\nDynamic: ['Anu', 'Bat', 'Saraa', 'Tuya']"
+        },
+        {
+          "input": "4\n2\nBold\nZaya",
+          "output": "Static: ['Bold', 'Zaya', None, None]\nFree slots: 2\nDynamic: ['Bold', 'Zaya']"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "2\n2\nTemuulen\nNomin",
+          "output": "Static: ['Temuulen', 'Nomin']\nFree slots: 0\nDynamic: ['Temuulen', 'Nomin']"
+        },
+        {
+          "input": "1\n4\nAnu\nBat\nSaraa\nTuya",
+          "output": "OVERFLOW: cannot add Bat, array is full (1)\nOVERFLOW: cannot add Saraa, array is full (1)\nOVERFLOW: cannot add Tuya, array is full (1)\nStatic: ['Anu']\nFree slots: 0\nDynamic: ['Anu', 'Bat', 'Saraa', 'Tuya']"
+        },
+        {
+          "input": "3\n0",
+          "output": "Static: [None, None, None]\nFree slots: 3\nDynamic: []"
+        },
+        {
+          "input": "5\n6\nA\nB\nC\nD\nE\nB",
+          "output": "OVERFLOW: cannot add B, array is full (5)\nStatic: ['A', 'B', 'C', 'D', 'E']\nFree slots: 0\nDynamic: ['A', 'B', 'C', 'D', 'E', 'B']"
+        },
+        {
+          "input": "2\n5\nOyun Erdene\nBat\nDorj\nZaya\nEnkh",
+          "output": "OVERFLOW: cannot add Dorj, array is full (2)\nOVERFLOW: cannot add Zaya, array is full (2)\nOVERFLOW: cannot add Enkh, array is full (2)\nStatic: ['Oyun Erdene', 'Bat']\nFree slots: 0\nDynamic: ['Oyun Erdene', 'Bat', 'Dorj', 'Zaya', 'Enkh']"
+        },
+        {
+          "input": "20\n3\nX\nY\nZ",
+          "output": "Static: ['X', 'Y', 'Z', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]\nFree slots: 17\nDynamic: ['X', 'Y', 'Z']"
+        }
+      ],
+      "solution": "capacity = int(input())\nn = int(input())\n\nseats = [None] * capacity\ncount = 0\neveryone = []\n\nfor i in range(n):\n    name = input()\n    if count == capacity:\n        print(f\"OVERFLOW: cannot add {name}, array is full ({capacity})\")\n    else:\n        seats[count] = name\n        count += 1\n    everyone.append(name)\n\nprint(\"Static:\", seats)\nprint(\"Free slots:\", capacity - count)\nprint(\"Dynamic:\", everyone)\n",
+      "hint": "Массив дүүрсэн эсэхийг `count == capacity`-аар шалга — `count > capacity` гэвэл нэг алхам хоцорч `IndexError` гарна. Нэрийг `seats[count]`-д хадгалаад `count`-ийг нэм. `everyone.append(name)` нь `if`-ийн гадна байх ёстой: суудал аваагүй хүн ч бүртгэлд орно. Хоосон нүдний тоо = `capacity - count`."
+    },
+    {
+      "id": "b2-2-02-trace",
+      "section": "B2.2.2",
+      "type": "tracing",
+      "title": "Жагсаалтын методууд ба 2D индексийг мөшгих",
+      "prompt": "Программ юу хэвлэх вэ? Метод бүрийн дараа жагсаалт ямар болсныг цаасан дээр бичиж яв. Сануулга: `insert(i, x)` эхлээд индекс, дараа нь утга авна; `pop(i)` индексээр, `remove(x)` утгаар устгана; 2D жагсаалтад эхлээд мөр, дараа нь багана.\n\n```python\nscores = [70, 85, 60]\nscores.append(90)\nscores.insert(1, 55)\nprint(scores)\ngone = scores.pop(3)\nscores.remove(90)\nprint(gone, scores, len(scores))\ntable = [[1, 2, 3], [4, 5, 6]]\ntable[0][2] = scores[-1]\nprint(table[1][0] + table[0][2])\ntotal = 0\nfor r in range(len(table)):\n    total += table[r][1]\nprint(total)\nbad = [[0] * 2] * 2\nbad[1][0] = 7\nprint(table, bad)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "[70, 55, 85, 60, 90]\n60 [70, 55, 85] 3\n89\n7\n[[1, 2, 85], [4, 5, 6]] [[7, 0], [7, 0]]",
+      "hint": "`insert(1, 55)` нь 55-ыг 1-р индекст оруулж, араас нь байсныг нэг байр хойш шилжүүлнэ. `pop(3)` нь 3-р индексийн элементийг авна (3 гэсэн утгыг биш). `table[r][1]` нь r-р мөрийн 1-р багана. `[[0] * 2] * 2` нэг мөрийг хоёр удаа заадаг."
+    },
+    {
+      "id": "b2-2-02-code",
+      "section": "B2.2.2",
+      "type": "coding",
+      "title": "Цайны газрын борлуулалт: мөр ба баганын нийлбэр",
+      "prompt": "Сургуулийн цайны газар өдөр бүр хэдэн төрлийн хоол хэдэн ширхэг зарсныг 2D жагсаалтад хадгалдаг: **мөр = өдөр, багана = хоолны төрөл**. `sales[1][2]` нь 1-р өдөр 2-р хоол хэдэн ширхэг зарагдсаныг заана. Тогоочид өдөр бүрийн нийт (мөрийн нийлбэр), хоол бүрийн нийт (баганын нийлбэр) ба бүх борлуулалтын нийлбэр хэрэгтэй.\n\n**Оролт:** 1-р мөрөнд мөрийн тоо R ба баганын тоо C, зайгаар тусгаарласан (1–10). Дараагийн R мөр бүрт 0 ба түүнээс их C бүхэл тоо, зайгаар тусгаарласан. Хүснэгт квадрат байх албагүй: R ба C ялгаатай байж болно.\n\n**Гаралт:**\n\n- эхлээд мөр бүрт: `Row`, зай, мөрийн индекс (0-ээс), `:`, зай, тэр мөрийн нийлбэр — жишээ нь `Row 0: 12`;\n- дараа нь багана бүрт ижил хэлбэрээр: `Col 0: 8`;\n- төгсгөлд нь `Total:`, зай, бүх нүдний нийлбэр.\n\n```text\nОролт:      Гаралт:\n2 3         Row 0: 12\n5 0 7       Row 1: 8\n3 4 1       Col 0: 8\n            Col 1: 4\n            Col 2: 8\n            Total: 20\n```\n\n```text\nОролт:      Гаралт:\n3 3         Row 0: 6\n1 2 3       Row 1: 15\n4 5 6       Row 2: 24\n7 8 9       Col 0: 12\n            Col 1: 15\n            Col 2: 18\n            Total: 45\n```\n\nf-мөр хэрэглэвэл хэлбэржүүлэхэд амар: `print(f\"Row {r}: {row_sum}\")`.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "first = input().split()\nrows = int(first[0])\ncols = int(first[1])\n\nsales = []\nfor r in range(rows):\n    line = input().split()                  # e.g. ['5', '0', '7']\n    sales.append([int(x) for x in line])    # one row as a list of numbers\n\n# 1. print the sum of each row\n# 2. print the sum of each column: fix the column, the row is the INNER loop\n# 3. print the total of all cells\n",
+      "tests": [
+        {
+          "input": "2 3\n5 0 7\n3 4 1",
+          "output": "Row 0: 12\nRow 1: 8\nCol 0: 8\nCol 1: 4\nCol 2: 8\nTotal: 20"
+        },
+        {
+          "input": "3 3\n1 2 3\n4 5 6\n7 8 9",
+          "output": "Row 0: 6\nRow 1: 15\nRow 2: 24\nCol 0: 12\nCol 1: 15\nCol 2: 18\nTotal: 45"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "1 1\n7",
+          "output": "Row 0: 7\nCol 0: 7\nTotal: 7"
+        },
+        {
+          "input": "1 4\n1 2 3 4",
+          "output": "Row 0: 10\nCol 0: 1\nCol 1: 2\nCol 2: 3\nCol 3: 4\nTotal: 10"
+        },
+        {
+          "input": "4 1\n5\n0\n2\n9",
+          "output": "Row 0: 5\nRow 1: 0\nRow 2: 2\nRow 3: 9\nCol 0: 16\nTotal: 16"
+        },
+        {
+          "input": "3 2\n1 2\n3 4\n5 6",
+          "output": "Row 0: 3\nRow 1: 7\nRow 2: 11\nCol 0: 9\nCol 1: 12\nTotal: 21"
+        },
+        {
+          "input": "2 4\n0 0 0 0\n10 20 30 40",
+          "output": "Row 0: 0\nRow 1: 100\nCol 0: 10\nCol 1: 20\nCol 2: 30\nCol 3: 40\nTotal: 100"
+        },
+        {
+          "input": "2 2\n0 0\n0 0",
+          "output": "Row 0: 0\nRow 1: 0\nCol 0: 0\nCol 1: 0\nTotal: 0"
+        }
+      ],
+      "solution": "first = input().split()\nrows = int(first[0])\ncols = int(first[1])\n\nsales = []\nfor r in range(rows):\n    line = input().split()\n    sales.append([int(x) for x in line])\n\ntotal = 0\nfor r in range(rows):\n    row_sum = 0\n    for c in range(cols):\n        row_sum += sales[r][c]\n    print(f\"Row {r}: {row_sum}\")\n    total += row_sum\n\nfor c in range(cols):\n    col_sum = 0\n    for r in range(rows):\n        col_sum += sales[r][c]\n    print(f\"Col {c}: {col_sum}\")\n\nprint(f\"Total: {total}\")\n",
+      "hint": "Мөрийн нийлбэр: гаднах давталт нь мөр (`r`), доторх нь багана (`c`). Баганын нийлбэрт эсрэгээр: гаднах нь багана, доторх нь мөр — гэхдээ индекс нь `sales[r][c]` хэвээр (эхлээд мөр). Мөрийн тоо `rows` (= `len(sales)`), баганын тоо `cols` (= `len(sales[0])`) — квадрат биш хүснэгтэд эдгээрийг сольж болохгүй. `Total`-ийг мөрийн нийлбэрүүдийг нэмж олж болно."
+    },
+    {
+      "id": "b2-2-03-trace",
+      "section": "B2.2.3",
+      "type": "tracing",
+      "title": "Push, pop, peek мөшгих: overflow ба underflow",
+      "prompt": "Python жагсаалтыг стек болгон ашиглаж байна: жагсаалтын **төгсгөл = стекийн дээд**. `append` = push, `pop()` = pop, `stack[-1]` = peek. Стекэд хамгийн ихдээ `MAX_SIZE` элемент багтана. Программ юу хэвлэх вэ? Үйлдэл бүрийн дараа стекийг доороос дээш бичиж яв.\n\n```python\nstack = []\nMAX_SIZE = 3\nops = [\"push 4\", \"push 7\", \"pop\", \"push 1\", \"push 9\", \"push 6\",\n       \"peek\", \"pop\", \"pop\", \"pop\", \"pop\", \"push 5\", \"push 3\"]\nfor op in ops:\n    parts = op.split()\n    if parts[0] == \"push\":\n        if len(stack) == MAX_SIZE:\n            print(\"overflow\", parts[1])\n        else:\n            stack.append(int(parts[1]))\n    elif parts[0] == \"pop\":\n        if len(stack) == 0:\n            print(\"underflow\")\n        else:\n            print(\"pop\", stack.pop())\n    else:\n        print(\"peek\", stack[-1])\nprint(\"final\", stack)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "pop 7\noverflow 6\npeek 9\npop 9\npop 1\npop 4\nunderflow\nfinal [5, 3]",
+      "hint": "Стекийг цаасан дээр босоо зур. `push` нь стек дүүрэн (3 элементтэй) үед `overflow` хэвлээд юу ч нэмэхгүй. `pop` хамгийн сүүлд нэмэгдсэнийг авна; стек хоосон бол `underflow`. `peek` дээд элементийг харуулна, хасахгүй."
+    },
+    {
+      "id": "b2-2-03-code",
+      "section": "B2.2.3",
+      "type": "coding",
+      "title": "Хаалт шалгагч: стекээр",
+      "prompt": "Python `print((2 + 3)` гэсэн мөрийг ажиллуулахаас өмнө хаалт хаагдаагүйг олдог, код засварлагч хосолсон хаалтыг ижил өнгөөр будаж харуулдаг. Тэд **стек** ашигладаг: нээх хаалт бүрийг push хийж, хаах хаалт ирэхэд стекийн дээд элементтэй тулгадаг.\n\nНэг мөр кодыг шалгадаг программ бич. Хаалтын гурван төрөл бий: `(` ба `)`, `[` ба `]`, `{` ба `}`. Бусад тэмдэгтийг тоохгүй. Тэмдэгтийн индекс 0-ээс эхэлнэ (зай ч тоологдоно).\n\n**Дүрэм:** мөрийг зүүнээс баруун тийш тэмдэгт тэмдэгтээр уншина.\n\n1. Нээх хаалт → түүнийг индекстэй нь стекэд push.\n2. Хаах хаалт → стек хоосон, эсвэл стекийн дээд элемент нь **ижил төрлийн** нээх хаалт биш бол (жишээ нь дээр нь `(` байхад `]` ирвэл) `Error: unexpected <хаалт> at index <индекс>` гэж хэвлээд **тэр даруй** зогсоно — өөр юу ч хэвлэхгүй. Эс бөгөөс pop.\n3. Мөр дуусахад стек хоосон биш бол **стекийн дээд** элементийн (хамгийн сүүлд нээгдээд хаагдаагүй хаалтын) тухай `Error: <хаалт> at index <индекс> is never closed` гэж хэвлэ.\n4. Алдаа гараагүй бол `Balanced`.\n\n**Оролт:** нэг мөр. Хоосон биш, хашилтын тэмдэгт агуулахгүй.\n\n**Гаралт:** нэг мөр.\n\n```text\nОролт:\nprint(len([1, 2]))\nГаралт:\nBalanced\n```\n\n```text\nОролт:\nx = (a[0] + b)]\nГаралт:\nError: unexpected ] at index 14\n```\n\n`(` 4-т, `[` 6-д нээгдэж, 8 ба 13-т хаагдсан. 14 дэх `]` ирэхэд стек хоосон.\n\n```text\nОролт:\nif (a > b and [c:\nГаралт:\nError: [ at index 14 is never closed\n```\n\n`(` (индекс 3) ба `[` (индекс 14) хоёулаа хаагдаагүй; стекийн дээд нь `[`.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "line = input()\nopening = \"([{\"\nclosing = \")]}\"          # closing[k] matches opening[k]\nstack = []               # each item is [bracket, index]\n\nfor i in range(len(line)):\n    ch = line[i]\n    # opening bracket: push [ch, i]\n    # closing bracket: the stack must not be empty and its top must match,\n    #                  otherwise print the error and stop\n\n# after the loop: is anything never closed? otherwise Balanced\n",
+      "tests": [
+        {
+          "input": "print(len([1, 2]))",
+          "output": "Balanced"
+        },
+        {
+          "input": "x = (a[0] + b)]",
+          "output": "Error: unexpected ] at index 14"
+        },
+        {
+          "input": "if (a > b and [c:",
+          "output": "Error: [ at index 14 is never closed"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "{[()()]}",
+          "output": "Balanced"
+        },
+        {
+          "input": "(]",
+          "output": "Error: unexpected ] at index 1"
+        },
+        {
+          "input": ")(",
+          "output": "Error: unexpected ) at index 0"
+        },
+        {
+          "input": "{(})",
+          "output": "Error: unexpected } at index 2"
+        },
+        {
+          "input": "([{}",
+          "output": "Error: [ at index 1 is never closed"
+        },
+        {
+          "input": "a)(b",
+          "output": "Error: unexpected ) at index 1"
+        },
+        {
+          "input": "f(x)) + g(y))",
+          "output": "Error: unexpected ) at index 4"
+        },
+        {
+          "input": "total = 5 + 3",
+          "output": "Balanced"
+        },
+        {
+          "input": "d = {k: [1, (2)]}",
+          "output": "Balanced"
+        }
+      ],
+      "solution": "line = input()\nopening = \"([{\"\nclosing = \")]}\"\nstack = []\nerror = False\n\nfor i in range(len(line)):\n    ch = line[i]\n    if ch in opening:\n        stack.append([ch, i])\n    elif ch in closing:\n        match = opening[closing.find(ch)]\n        if len(stack) == 0 or stack[-1][0] != match:\n            print(f\"Error: unexpected {ch} at index {i}\")\n            error = True\n            break\n        stack.pop()\n\nif not error:\n    if len(stack) > 0:\n        bracket, index = stack[-1]\n        print(f\"Error: {bracket} at index {index} is never closed\")\n    else:\n        print(\"Balanced\")\n",
+      "hint": "Стекийн элемент бүрт хаалт ба индексийг хамт хадгал: `stack.append([ch, i])`. Хаах хаалтын хос нь `opening[closing.find(ch)]`. Эхлээд `len(stack) == 0`-ийг шалга — хоосон стекийн `stack[-1]` нь `IndexError`. Алдаа олдмогц `break` хийж, `error = True` гэх мэт тэмдгээр давталтын дараах шалгалтыг алгас. Хаагдаагүй хаалт олон байвал `stack[-1]` — дээд нь."
+    },
+    {
+      "id": "b2-2-04-mcq",
+      "section": "B2.2.4",
+      "type": "mcq",
+      "title": "6 нүдтэй шугаман дараалал: G яагаад татгалзагдав?",
+      "prompt": "6 нүдтэй (индекс 0–5) **шугаман** массив дараалал. Шугаман дараалалд front ба rear заагч зөвхөн урагш (индекс өсөх зүг) хөдөлдөг. A, B, C, D, E, F-ийг enqueue хийгээд, дараа нь 2 удаа dequeue хийв. Одоо `enqueue G` татгалзагдлаа. Аль тайлбар зөв бэ?",
+      "xp": 10,
+      "options": [
+        "Дараалалд 6 элемент байгаа тул үнэхээр дүүрэн: dequeue нь урд талын элементийг зөвхөн уншдаг, дарааллаас огт хасдаггүй",
+        "Dequeue бүр үлдсэн элементүүдийг зүүн тийш шилжүүлсэн тул rear одоо 3-р нүдэнд байгаа; G-г татгалзсан нь underflow",
+        "Rear сүүлийн 5-р нүдэнд хүрсэн; шугаман дараалал 0, 1-р нүдийг дахин ашигладаггүй, тойрог дараалалд rear 0 руу эргэнэ",
+        "G-г 0-р нүдэнд бичих ёстой байсан; тэгвэл G дарааллын урд талд орж, C-ээс өмнө үйлчлүүлэх тул FIFO зарчим хадгалагдана"
+      ],
+      "answer": 2,
+      "hint": "Хоёр dequeue-ийн дараа дараалалд хэдэн элемент үлдсэн бэ? front ба rear хаана байна вэ? Шугаман дараалалд rear сүүлийн нүдэнд хүрвэл юу болдгийг сана. Мөн тойрог дараалалд шинэ элемент 0-р нүдэнд орсон ч ээлжээрээ хаана зогсох вэ?"
+    },
+    {
+      "id": "b2-2-04-code",
+      "section": "B2.2.4",
+      "type": "coding",
+      "title": "Цайны газрын дараалал: JOIN, SERVE, FRONT",
+      "prompt": "Цайны газрын хоол олгох цэгийн өмнөх зайд ердөө C сурагч багтана — энэ бол тогтмол хэмжээтэй (статик) дараалал. Сурагчид ирсэн ээлжээрээ үйлчлүүлнэ (FIFO). Тушаалуудыг уншиж, дарааллыг загварчил.\n\n**Тушаалууд:**\n\n- `JOIN <нэр>` — сурагч дарааллын ард нэмэгдэнэ (enqueue). Амжилттай бол юу ч хэвлэхгүй. Дараалал дүүрэн (C сурагчтай) бол `Queue full: <нэр> rejected`.\n- `SERVE` — урд талын сурагч хоолоо аваад гарна (dequeue): `Served: <нэр>`. Дараалал хоосон бол `Queue empty`.\n- `FRONT` — урд талын сурагчийг дарааллаас **гаргалгүйгээр** харуулна: `Front: <нэр>`. Хоосон бол `Queue empty`.\n\nSERVE-ээр гарсан сурагчийн зай чөлөөлөгдөж, дараагийн JOIN-д ашиглагдана. Бүх тушаалын дараа сүүлийн мөрөнд `Waiting:`, зай, дараалалд үлдсэн нэрсийг урдаас нь ар хүртэл `, `-ээр тусгаарлан хэвлэ. Дараалал хоосон бол `Waiting: none`.\n\n**Оролт:** 1-р мөрөнд C (1–10), 2-р мөрөнд тушаалын тоо n (0–50), дараагийн n мөр бүрт нэг тушаал. Нэр зайгүй, тушаал үргэлж зөв бичигдсэн.\n\n```text\nОролт:        Гаралт:\n3             Front: Anu\n7             Served: Anu\nJOIN Anu      Queue full: Dorj rejected\nJOIN Bat      Waiting: Bat, Saraa, Tuya\nFRONT\nSERVE\nJOIN Saraa\nJOIN Tuya\nJOIN Dorj\n```\n\n```text\nОролт:        Гаралт:\n2             Queue empty\n4             Served: Bold\nSERVE         Queue empty\nJOIN Bold     Waiting: none\nSERVE\nFRONT\n```\n\nЭнгийн жагсаалт эсвэл `collections.deque` ашиглаад хэмжээг `len()`-ээр шалгавал хамгийн амар. Хичээлийн `CircularQueue`-г ашиглавал түүний `print` мөрүүд энэ даалгаврын мэдэгдлээс өөр тул тэдгээрийг устгаад, `is_full()`/`is_empty()`-ээр шалгаж мэдэгдлээ өөрөө хэвлэ. `\", \".join(names)` нь жагсаалтын нэрсийг `, `-ээр холбосон нэг мөр болгоно.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "capacity = int(input())\nn = int(input())\n\nqueue = []     # the front of the queue is index 0, the rear is the end\n\nfor i in range(n):\n    parts = input().split()\n    command = parts[0]\n    if command == \"JOIN\":\n        name = parts[1]\n        # full? otherwise enqueue at the rear\n    elif command == \"SERVE\":\n        pass   # empty? otherwise dequeue from the front\n    elif command == \"FRONT\":\n        pass   # empty? otherwise show the front without removing it\n\n# print the Waiting line\n",
+      "tests": [
+        {
+          "input": "3\n7\nJOIN Anu\nJOIN Bat\nFRONT\nSERVE\nJOIN Saraa\nJOIN Tuya\nJOIN Dorj",
+          "output": "Front: Anu\nServed: Anu\nQueue full: Dorj rejected\nWaiting: Bat, Saraa, Tuya"
+        },
+        {
+          "input": "2\n4\nSERVE\nJOIN Bold\nSERVE\nFRONT",
+          "output": "Queue empty\nServed: Bold\nQueue empty\nWaiting: none"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "3\n10\nJOIN A\nJOIN B\nJOIN C\nSERVE\nSERVE\nJOIN D\nJOIN E\nJOIN F\nSERVE\nSERVE",
+          "output": "Served: A\nServed: B\nQueue full: F rejected\nServed: C\nServed: D\nWaiting: E"
+        },
+        {
+          "input": "2\n5\nJOIN Anu\nFRONT\nFRONT\nSERVE\nFRONT",
+          "output": "Front: Anu\nFront: Anu\nServed: Anu\nQueue empty\nWaiting: none"
+        },
+        {
+          "input": "2\n2\nJOIN X\nJOIN Y",
+          "output": "Waiting: X, Y"
+        },
+        {
+          "input": "1\n5\nJOIN A\nJOIN B\nSERVE\nJOIN B\nFRONT",
+          "output": "Queue full: B rejected\nServed: A\nFront: B\nWaiting: B"
+        },
+        {
+          "input": "2\n0",
+          "output": "Waiting: none"
+        },
+        {
+          "input": "4\n7\nJOIN Nomin\nJOIN Bat\nJOIN Zaya\nSERVE\nJOIN Enkh\nSERVE\nSERVE",
+          "output": "Served: Nomin\nServed: Bat\nServed: Zaya\nWaiting: Enkh"
+        },
+        {
+          "input": "3\n4\nJOIN Saraa\nSERVE\nSERVE\nSERVE",
+          "output": "Served: Saraa\nQueue empty\nQueue empty\nWaiting: none"
+        }
+      ],
+      "solution": "from collections import deque\n\ncapacity = int(input())\nn = int(input())\nqueue = deque()\n\nfor i in range(n):\n    parts = input().split()\n    command = parts[0]\n    if command == \"JOIN\":\n        name = parts[1]\n        if len(queue) == capacity:\n            print(f\"Queue full: {name} rejected\")\n        else:\n            queue.append(name)\n    elif command == \"SERVE\":\n        if len(queue) == 0:\n            print(\"Queue empty\")\n        else:\n            print(f\"Served: {queue.popleft()}\")\n    elif command == \"FRONT\":\n        if len(queue) == 0:\n            print(\"Queue empty\")\n        else:\n            print(f\"Front: {queue[0]}\")\n\nif len(queue) == 0:\n    print(\"Waiting: none\")\nelse:\n    print(\"Waiting: \" + \", \".join(queue))\n",
+      "hint": "JOIN бүрт дараалал дүүрэн эсэхийг `len(queue) == capacity`-аар шалга. SERVE урд талын (индекс 0) сурагчийг авна: `pop()` биш, `pop(0)` эсвэл `deque`-ийн `popleft()` — `pop()` хамгийн сүүлд ирснийг авдаг тул стек болчихно. FRONT нь `queue[0]`-ийг зөвхөн хэвлэнэ, хасахгүй. Сүүлийн мөр: `\"Waiting: \" + \", \".join(queue)`, хоосон бол `Waiting: none`."
+    },
+    {
+      "id": "b2-2-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: Undo ба стек",
+      "prompt": "**Explain why a stack is suitable for an undo feature.** [4]\n\nIB-ийн шалгалтын хэв маягийн асуулт. Undo-тэй программ (текст засварлагч, тоглоом) стекийг хэрхэн ашигладгийг үйлдлүүдээр нь тайлбарлаж, стекийн шинж чанар яагаад undo-д тохирдгийг шалтгаантай нь бич. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Хэрэглэгч үйлдэл хийх бүрт тэр үйлдлийг (эсвэл өөрчлөлтийн өмнөх төлөвийг) стекийн дээр push хийнэ — хамгийн сүүлийн үйлдэл үргэлж дээд талд байна [1]\n• Undo хамгийн сүүлд хийсэн үйлдлийг хамгийн түрүүнд цуцлах ёстой — энэ нь стекийн LIFO (last in, first out: сүүлд орсон нь эхэлж гарна) зарчимтай яг таарна [1]\n• Undo дарахад дээд үйлдлийг pop хийж цуцална; дахин дарвал түүний өмнөх үйлдэл дээд болж pop хийгдэнэ — үйлдлүүд хийгдсэн ээлжийн эсрэгээр цуцлагдана [1]\n• Зөвхөн дээд элементэд ханддаг тул push, pop нь стек хэр том байхаас үл хамааран тогтмол хугацаа (O(1)) — хайх, шилжүүлэх шаардлагагүй [1]\n• Undo-гийн өмнө isEmpty-ээр шалгана: стек хоосон бол цуцлах үйлдэл үлдээгүй тул Undo-г идэвхгүй болгоно (underflow-оос сэргийлнэ) [1]\n(Дээд тал нь 4 оноо. Зөвхөн «a stack is used for undo» гэж нэрлэвэл оноо авахгүй — push ба pop-ийг undo-тэй холбож, LIFO яагаад тохирдгийг тайлбарласан байх ёстой. Дараалал (FIFO) хамгийн эртний үйлдлийг цуцлах байсныг харьцуулж тайлбарласан бол 2-р заалтад тооцно.)",
+      "hint": "Гурван асуулт: хэрэглэгч үйлдэл хийх бүрт стекэд юу хийх вэ? Undo дарахад юу хийх вэ, яагаад тэр нь хамгийн сүүлийн үйлдэл байх ёстой вэ? Стек хоосон бол юу болох вэ, push/pop хэр хурдан бэ?"
+    }
+  ]
+}
