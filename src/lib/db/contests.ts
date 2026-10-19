@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, isForeignKeyViolation } from "@/lib/db/client";
 import {
   contestParticipants,
@@ -21,6 +21,8 @@ export interface Contest {
   /** epoch ms */
   starts_at: number;
   ends_at: number;
+  /** «Оролцох» files a request that a teacher/admin approves. */
+  requires_approval: boolean;
 }
 
 export type ContestStatus = "upcoming" | "running" | "finished";
@@ -52,7 +54,10 @@ export interface ContestProblemPrivate {
   expected_table?: TruthTable;
 }
 
+export type ParticipantStatus = "pending" | "approved" | "rejected";
+
 export interface Participant {
+  status: ParticipantStatus;
   uid: string;
   name: string | null;
   email: string;
@@ -63,6 +68,19 @@ export interface Participant {
   total: number;
   /** epoch ms of the submission that last improved the total (tiebreak). */
   last_improved_at: number | null;
+  /** epoch ms — when «Оролцох» was pressed. */
+  registered_at: number;
+}
+
+/** A request still waiting for, or turned down by, a teacher. */
+export interface ContestRequest {
+  uid: string;
+  name: string | null;
+  email: string;
+  class_name: string | null;
+  status: "pending" | "rejected";
+  /** epoch ms */
+  requested_at: number;
 }
 
 /* ------------------------------- contests ------------------------------ */
@@ -74,6 +92,7 @@ function toContest(r: typeof contests.$inferSelect): Contest {
     description: r.description,
     starts_at: r.starts_at.getTime(),
     ends_at: r.ends_at.getTime(),
+    requires_approval: r.requires_approval,
   };
 }
 
@@ -94,6 +113,7 @@ export async function upsertContest(contest: Contest): Promise<void> {
     description: contest.description,
     starts_at: new Date(contest.starts_at),
     ends_at: new Date(contest.ends_at),
+    requires_approval: contest.requires_approval,
   };
   await getDb()
     .insert(contests)
@@ -224,6 +244,7 @@ function toParticipant(
   class_name: string | null
 ): Participant {
   return {
+    status: r.status,
     uid: r.uid,
     name: r.name,
     email: r.email,
@@ -231,6 +252,7 @@ function toParticipant(
     scores: r.scores,
     total: r.total,
     last_improved_at: r.last_improved_at?.getTime() ?? null,
+    registered_at: r.registered_at.getTime(),
   };
 }
 
@@ -248,13 +270,18 @@ export async function getParticipant(contestId: string, uid: string): Promise<Pa
   return row ? toParticipant(row.p, row.class_name) : null;
 }
 
-/** Ranked: total desc, earlier improvement wins ties (never-improved last). */
+/**
+ * Approved participants only — the leaderboard, counts, CSV and filters all
+ * read this. Ranked: total desc, earlier improvement wins ties (never-improved last).
+ */
 export async function listParticipants(contestId: string): Promise<Participant[]> {
   const rows = await getDb()
     .select({ p: contestParticipants, class_name: users.class_name })
     .from(contestParticipants)
     .leftJoin(users, eq(users.uid, contestParticipants.uid))
-    .where(eq(contestParticipants.contest_id, contestId))
+    .where(
+      and(eq(contestParticipants.contest_id, contestId), eq(contestParticipants.status, "approved"))
+    )
     .orderBy(
       desc(contestParticipants.total),
       sql`${contestParticipants.last_improved_at} asc nulls last`,
@@ -263,15 +290,39 @@ export async function listParticipants(contestId: string): Promise<Participant[]
   return rows.map((r) => toParticipant(r.p, r.class_name));
 }
 
+/**
+ * «Оролцох»: a pending request when the contest needs approval, otherwise an
+ * approved participant. Pressing it again never changes an existing row
+ * (a rejected student stays rejected). Returns the row's status.
+ */
 export async function registerParticipant(
   contestId: string,
   user: { uid: string; name: string | null; email: string }
-): Promise<void> {
+): Promise<ParticipantStatus> {
   try {
-    await getDb()
-      .insert(contestParticipants)
-      .values({ contest_id: contestId, uid: user.uid, name: user.name, email: user.email })
-      .onConflictDoNothing();
+    return await getDb().transaction(async (tx) => {
+      const [contest] = await tx
+        .select({ requires_approval: contests.requires_approval })
+        .from(contests)
+        .where(eq(contests.id, contestId))
+        .limit(1);
+      if (!contest) throw new NotFoundError("Тэмцээн олдсонгүй.");
+      await tx
+        .insert(contestParticipants)
+        .values({
+          contest_id: contestId,
+          uid: user.uid,
+          name: user.name,
+          email: user.email,
+          status: contest.requires_approval ? "pending" : "approved",
+        })
+        .onConflictDoNothing();
+      const [row] = await tx
+        .select({ status: contestParticipants.status })
+        .from(contestParticipants)
+        .where(participantKey(contestId, user.uid));
+      return row.status;
+    });
   } catch (err) {
     if (isForeignKeyViolation(err, "contest_participants_uid_users_uid_fk")) {
       throw new NotFoundError(ACCOUNT_MISSING);
@@ -279,6 +330,72 @@ export async function registerParticipant(
     if (isForeignKeyViolation(err)) throw new NotFoundError("Тэмцээн олдсонгүй.");
     throw err;
   }
+}
+
+/** Pending and rejected requests, oldest first, with the student's current class. */
+export async function listRequests(contestId: string): Promise<ContestRequest[]> {
+  const rows = await getDb()
+    .select({ p: contestParticipants, class_name: users.class_name })
+    .from(contestParticipants)
+    .leftJoin(users, eq(users.uid, contestParticipants.uid))
+    .where(
+      and(
+        eq(contestParticipants.contest_id, contestId),
+        inArray(contestParticipants.status, ["pending", "rejected"])
+      )
+    )
+    .orderBy(asc(contestParticipants.registered_at), asc(contestParticipants.uid));
+  return rows.map(({ p, class_name }) => ({
+    uid: p.uid,
+    name: p.name,
+    email: p.email,
+    class_name,
+    status: p.status as "pending" | "rejected",
+    requested_at: p.registered_at.getTime(),
+  }));
+}
+
+/** contest id → number of pending requests; contests with none are absent. */
+export async function countPending(contestIds: string[]): Promise<Map<string, number>> {
+  if (contestIds.length === 0) return new Map();
+  const rows = await getDb()
+    .select({ contest_id: contestParticipants.contest_id, n: count() })
+    .from(contestParticipants)
+    .where(
+      and(
+        inArray(contestParticipants.contest_id, contestIds),
+        eq(contestParticipants.status, "pending")
+      )
+    )
+    .groupBy(contestParticipants.contest_id);
+  return new Map(rows.map((r) => [r.contest_id, r.n]));
+}
+
+/**
+ * A teacher's decision on some of this contest's requests. Approving takes
+ * pending and rejected rows; rejecting takes pending rows only, so it never
+ * demotes someone another teacher already approved. Returns rows changed.
+ */
+export async function decideRequests(
+  contestId: string,
+  uids: string[],
+  decision: "approved" | "rejected",
+  staffUid: string
+): Promise<number> {
+  if (uids.length === 0) return 0;
+  const from: ParticipantStatus[] = decision === "approved" ? ["pending", "rejected"] : ["pending"];
+  const changed = await getDb()
+    .update(contestParticipants)
+    .set({ status: decision, decided_by: staffUid, decided_at: sql`now()` })
+    .where(
+      and(
+        eq(contestParticipants.contest_id, contestId),
+        inArray(contestParticipants.uid, uids),
+        inArray(contestParticipants.status, from)
+      )
+    )
+    .returning({ uid: contestParticipants.uid });
+  return changed.length;
 }
 
 /**
@@ -301,6 +418,9 @@ export async function applySubmissionScore(params: {
     // neither can overwrite the other's score.
     const [participant] = await tx.select().from(contestParticipants).where(key).for("update");
     if (!participant) throw new NotFoundError("Оролцогч бүртгэлгүй байна.");
+    if (participant.status !== "approved") {
+      throw new NotFoundError("Багш таны хүсэлтийг зөвшөөрөөгүй байна.");
+    }
 
     // Attempt audit trail (append-only). Written after the check — it
     // references the participant row.

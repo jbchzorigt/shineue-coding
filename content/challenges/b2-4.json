@@ -1,0 +1,325 @@
+{
+  "module_id": "b2-4",
+  "challenges": [
+    {
+      "id": "b2-4-01-mcq",
+      "section": "B2.4.1",
+      "type": "mcq",
+      "title": "Цахим дэвтрийн кодын Big O",
+      "prompt": "Сургуулийн цахим дэвтэр n сурагчийн оноог `scores` жагсаалтад хадгалдаг. Доорх кодын хугацааны нарийн төвөгшил n өсөхөд аль нь вэ?\n\n```python\ntotal = 0\nfor i in range(n):\n    total = total + scores[i]\nfor i in range(n):\n    for k in range(5):\n        total = total + i * k\nprint(total)\n```",
+      "xp": 10,
+      "options": [
+        "O(n²) — давталт дотор давталт байгаа тул ажил нь квадратаар өснө",
+        "O(n) — нийтдээ 6n орчим алхам хийнэ; тогтмол 6-г хаяхад n үлдэнэ",
+        "O(1) — доторх давталт n-ээс үл хамааран ердөө 5 удаа давтагдана",
+        "O(n³) — гурван for давталт байгаа тул n-ийг гурван удаа үржүүлнэ"
+      ],
+      "answer": 1,
+      "hint": "Давталт бүр хэдэн удаа ажиллахыг n-ээр бич: эхний давталт, дараа нь гаднах ба доторх давталт. Доторх давталтын тоо n-ээс хамаарч байна уу? Дараалсан хэсгүүдийн алхмыг нэмж, давхар давталтынхыг үржүүлээд, тогтмол үржвэрийг хая."
+    },
+    {
+      "id": "b2-4-01-code",
+      "section": "B2.4.1",
+      "type": "coding",
+      "title": "Давхар санал: харьцуулалтыг тоол",
+      "prompt": "Сурагчдын зөвлөлийн сонгуульд сурагч бүр нэг л удаа санал өгөх ёстой. Санал хураах программ сурагчдын дугаарыг (ID) жагсаалтад хадгалдаг. Нэг ID хоёр удаа орсон эсэхийг **хос бүрийг харьцуулах** энгийн аргаар шалгаж, хэдэн харьцуулалт хийснийг тоол.\n\n**Алгоритм** (харьцуулалтын тоо яг таарахын тулд энэ ээлжээр):\n\n- гаднах давталт: `i` нь 0-ээс n − 1 хүртэл; доторх давталт: `j` нь i + 1-ээс n − 1 хүртэл;\n- `ids[i]`-ийг `ids[j]`-тэй харьцуулах бүрт харьцуулалтын тоолуурыг 1-ээр нэмнэ;\n- тэнцүү хос олдмогц **хоёр давталтыг хоёуланг нь** зогсооно.\n\n**Гаралт** (2 мөр):\n\n1. олдвол `Duplicate <ID> at <i> and <j>`, олдохгүй бол `No duplicates`;\n2. `Comparisons: <харьцуулалтын тоо>`.\n\n`i` ба `j` нь жагсаалтын индекс — 0-ээс эхэлнэ.\n\n**Оролт:** нэг мөрөнд 1–60 ID (бүхэл тоо) зайгаар тусгаарласан.\n\n```text\nОролт:          Гаралт:\n12 7 30 7 5     Duplicate 7 at 1 and 3\n                Comparisons: 6\n```\n\n```text\nОролт:          Гаралт:\n3 8 1 9         No duplicates\n                Comparisons: 6\n```\n\nЭхний жишээнд `i = 0` үед 4 харьцуулалт хийгээд олдохгүй, `i = 1` үед 30-тай, дараа нь 7-той харьцуулахад олдож, нийт 6 болно.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "ids = [int(x) for x in input().split()]   # e.g. [12, 7, 30, 7, 5]\nn = len(ids)\ncomparisons = 0\n\n# compare every pair: i = 0 .. n - 1 and, for each i, j = i + 1 .. n - 1\n# count every comparison and stop BOTH loops at the first equal pair\n",
+      "tests": [
+        {
+          "input": "12 7 30 7 5",
+          "output": "Duplicate 7 at 1 and 3\nComparisons: 6"
+        },
+        {
+          "input": "3 8 1 9",
+          "output": "No duplicates\nComparisons: 6"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "5",
+          "output": "No duplicates\nComparisons: 0"
+        },
+        {
+          "input": "4 4 9",
+          "output": "Duplicate 4 at 0 and 1\nComparisons: 1"
+        },
+        {
+          "input": "1 2 3 4 4",
+          "output": "Duplicate 4 at 3 and 4\nComparisons: 10"
+        },
+        {
+          "input": "5 9 9 5",
+          "output": "Duplicate 5 at 0 and 3\nComparisons: 3"
+        },
+        {
+          "input": "1 2",
+          "output": "No duplicates\nComparisons: 1"
+        },
+        {
+          "input": "7 7 7",
+          "output": "Duplicate 7 at 0 and 1\nComparisons: 1"
+        },
+        {
+          "input": "2 9 4 9 2",
+          "output": "Duplicate 2 at 0 and 4\nComparisons: 4"
+        },
+        {
+          "input": "7272 3991 4576 3741 4180 3775 2503 3478 5642 1208 8231 8663 2893 1461 9468 3763 9049 8277 5990 9188 2394 5160 3583 6355 6002 2220 9881 7012 1544 4501 6180 6553 2140 6091 2587 5030 3505 9020 5655 5364 5487 4245 2533 9100 3527 3344 6312 8856 4242 3152 8796 9281 5249 9336 4698 9717 4974 2384 3238 5275",
+          "output": "No duplicates\nComparisons: 1770"
+        }
+      ],
+      "solution": "def find_duplicate(ids):\n    comparisons = 0\n    for i in range(len(ids)):\n        for j in range(i + 1, len(ids)):\n            comparisons += 1\n            if ids[i] == ids[j]:\n                return i, j, comparisons      # return leaves BOTH loops at once\n    return -1, -1, comparisons\n\n\nids = [int(x) for x in input().split()]\ni, j, comparisons = find_duplicate(ids)\nif i == -1:\n    print(\"No duplicates\")\nelse:\n    print(f\"Duplicate {ids[i]} at {i} and {j}\")\nprint(f\"Comparisons: {comparisons}\")\n",
+      "hint": "Гаднах давталт `i`, доторх давталт `j` нь `i + 1`-ээс эхэлбэл хос бүр нэг л удаа харьцуулагдаж, элемент өөртэйгөө харьцуулагдахгүй. Тоолуурыг доторх давталт дотор, харьцуулах `if`-ийн **өмнө** нэм. `break` зөвхөн өөрийг нь агуулсан давталтаас гаргадаг (B2.3.3) — хоёр давталтыг зэрэг зогсоохын тулд хайлтыг функц болгоод `return` хэрэглэ, эсвэл «олдсон уу» гэдгийг Boolean хувьсагчаар сана. Сүүлд нь `5 9 9 5`-аар туршаад үз: хос бүрийг заасан ээлжээр шалгавал аль ID түрүүлж олдох вэ?"
+    },
+    {
+      "id": "b2-4-02-mcq",
+      "section": "B2.4.2",
+      "type": "mcq",
+      "title": "2 сая карт, ганц хайлт",
+      "prompt": "Хотын автобусны картын системд 2 сая картын дугаар бүртгэгдсэн ээлжээрээ — **эрэмбэлэгдээгүй** — хадгалагддаг; шинэ карт өдөр бүр нэмэгддэг. Ажилтан **ганцхан удаа** нэг картын дугаар хайх хэрэгтэй боллоо. Аль арга энэ нөхцөлд хамгийн үр ашигтай вэ?",
+      "xp": 10,
+      "options": [
+        "Хоёртын хайлт шууд — эрэмбэлээгүй ч дундаас нь эхэлбэл O(log n) хэвээр хурдан",
+        "Эхлээд эрэмбэлээд хоёртын хайлт — хайлт нь O(log n) тул нийт ажил хамгийн бага",
+        "Шугаман хайлт — гэхдээ эхлээд эрэмбэлэх ёстой, эс бөгөөс картыг алгасаж мэднэ",
+        "Шугаман хайлт шууд — өгөгдөл эрэмбэгүй, ганц хайлтад эрэмбэлэх зардал хэрэггүй"
+      ],
+      "answer": 3,
+      "hint": "Гурван асуулт: эрэмбэгүй жагсаалт дээр хоёртын хайлт зөв хариу өгөх үү (B2.4.2-ын анхаарах зүйлс)? Эрэмбэлэх өөрөө хэр их ажил вэ (B2.4.3) — нэг шугаман хайлтын n алхамтай харьцуул. Шугаман хайлт элементүүд ямар дарааллаар байхыг шаарддаг уу?"
+    },
+    {
+      "id": "b2-4-02-code",
+      "section": "B2.4.2",
+      "type": "coding",
+      "title": "Номын сангийн хайлт: хоёртын хайлтын харьцуулалт",
+      "prompt": "Сургуулийн номын сангийн систем номын дугааруудыг **өсөх эрэмбээр**, давхардалгүй хадгалдаг. Хайсан дугаар бүрийг хоёртын хайлтаар хайж, хэдэн харьцуулалт хийснийг (гаралтад `steps`) хэвлэ.\n\n**Алгоритм** (харьцуулалтын тоо яг таарахын тулд энэ дүрмээр):\n\n- `lower = 0`, `upper = n - 1` (сүүлийн индекс);\n- `lower <= upper` байх хооронд: `mid = (lower + upper) // 2`, харьцуулалтын тоолуурыг 1-ээр нэмж `numbers[mid]`-ийг харьцуул; таарахгүй бол `mid`-ийг оруулалгүйгээр хайх утга байж болох хагасыг үлдээ;\n- давталтын нэг дамжилт = нэг харьцуулалт (`==` ба `<`-ийг хоёуланг шалгасан ч), B2.4.2-ын адил.\n\n**Оролт:** 1-р мөрөнд номын дугаарууд (1–50 ширхэг, өсөх эрэмбээр, давхардалгүй бүхэл тоо), 2-р мөрөнд хайх дугаарууд (1–10 ширхэг), зайгаар тусгаарласан.\n\n**Гаралт:** хайх дугаар бүрт нэг мөр: олдвол `<дугаар>: found at <индекс>, steps <харьцуулалт>`, олдохгүй бол `<дугаар>: not found, steps <харьцуулалт>`. Индекс 0-ээс эхэлнэ.\n\n```text\nОролт:                 Гаралт:\n3 4 5 7 9 11 13        11: found at 5, steps 2\n11 8 3                 8: not found, steps 3\n                       3: found at 0, steps 3\n```\n\n```text\nОролт:                     Гаралт:\n2 4 6 8 10 12 14 16        16: found at 7, steps 4\n16 1 9                     1: not found, steps 3\n                           9: not found, steps 3\n```\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "def binary_search(numbers, key):\n    # return TWO values: the index (or -1) and the number of steps\n    lower = 0\n    upper = len(numbers) - 1\n    steps = 0\n    # repeat while the range is not empty: find mid, count one step, compare\n    return -1, steps\n\n\nnumbers = [int(x) for x in input().split()]\nkeys = [int(x) for x in input().split()]\nfor key in keys:\n    index, steps = binary_search(numbers, key)\n    # print one line in the required format\n",
+      "tests": [
+        {
+          "input": "3 4 5 7 9 11 13\n11 8 3",
+          "output": "11: found at 5, steps 2\n8: not found, steps 3\n3: found at 0, steps 3"
+        },
+        {
+          "input": "2 4 6 8 10 12 14 16\n16 1 9",
+          "output": "16: found at 7, steps 4\n1: not found, steps 3\n9: not found, steps 3"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "5\n5 1 9",
+          "output": "5: found at 0, steps 1\n1: not found, steps 1\n9: not found, steps 1"
+        },
+        {
+          "input": "10 20\n10 20 15 5 25",
+          "output": "10: found at 0, steps 1\n20: found at 1, steps 2\n15: not found, steps 2\n5: not found, steps 1\n25: not found, steps 2"
+        },
+        {
+          "input": "1 3 5 7 9 11 13 15 17 19 21 23 25 27 29\n1 29 15 30 0 2 27 7",
+          "output": "1: found at 0, steps 4\n29: found at 14, steps 4\n15: found at 7, steps 1\n30: not found, steps 4\n0: not found, steps 4\n2: not found, steps 4\n27: found at 13, steps 3\n7: found at 3, steps 2"
+        },
+        {
+          "input": "3 4 5 7 9 11 13\n20 13 9 4",
+          "output": "20: not found, steps 3\n13: found at 6, steps 3\n9: found at 4, steps 3\n4: found at 1, steps 2"
+        },
+        {
+          "input": "2 4 6 8 10 12 14 16\n2 8 10 14 17 7",
+          "output": "2: found at 0, steps 3\n8: found at 3, steps 1\n10: found at 4, steps 3\n14: found at 6, steps 3\n17: not found, steps 4\n7: not found, steps 3"
+        },
+        {
+          "input": "134 138 159 168 183 191 289 311 335 354 356 413 420 433 435 449 471 480 485 500 505 513 518 519 545 549 559 561 580 609 636 651 655 688 690 759 764 819 828 860 882 893 905 913 930 945 951 970 991 995\n134 995 545 819 99 1000 414",
+          "output": "134: found at 0, steps 5\n995: found at 49, steps 6\n545: found at 24, steps 1\n819: found at 37, steps 2\n99: not found, steps 5\n1000: not found, steps 6\n414: not found, steps 5"
+        }
+      ],
+      "solution": "def binary_search(numbers, key):\n    lower = 0\n    upper = len(numbers) - 1\n    steps = 0\n    while lower <= upper:\n        mid = (lower + upper) // 2\n        steps += 1\n        if numbers[mid] == key:\n            return mid, steps\n        elif numbers[mid] < key:\n            lower = mid + 1\n        else:\n            upper = mid - 1\n    return -1, steps\n\n\nnumbers = [int(x) for x in input().split()]\nkeys = [int(x) for x in input().split()]\nfor key in keys:\n    index, steps = binary_search(numbers, key)\n    if index == -1:\n        print(f\"{key}: not found, steps {steps}\")\n    else:\n        print(f\"{key}: found at {index}, steps {steps}\")\n",
+      "hint": "Эхлээд жишээ 1-ийн 8-ыг мөшгих хүснэгтээр хай: `lower`, `upper`, `mid` хэд хэд болох вэ? Харьцуулалтын тоолуурыг (`steps`) давталтын дамжилт бүрт нэг л удаа нэм. Бүхнээс их дугаар хайхад `IndexError` гарч байвал `upper`-ийн эхлэх утгыг шалга. Ганц дугаартай жагсаалтаар туршаад үз: `lower == upper` үед давталтын нөхцөл үнэн байх ёстой юу?"
+    },
+    {
+      "id": "b2-4-03-trace",
+      "section": "B2.4.3",
+      "type": "tracing",
+      "title": "Хөөсөн эрэмбэлэлтийн дамжилтуудыг мөшгих",
+      "prompt": "Программ юу хэвлэх вэ? Дамжилт бүрийн дараах `data`, мөн `comparisons`, `swaps`-ийн утгыг бичиж мөшги.\n\n```python\ndata = [4, 2, 7, 1, 8, 9]\ncomparisons = 0\nswaps = 0\nfor i in range(len(data) - 1):\n    swapped = False\n    for j in range(len(data) - 1 - i):\n        comparisons += 1\n        if data[j] > data[j + 1]:\n            data[j], data[j + 1] = data[j + 1], data[j]\n            swaps += 1\n            swapped = True\n    print(\"pass\", i + 1, data)\n    if not swapped:\n        break\nprint(\"comparisons:\", comparisons, \"swaps:\", swaps)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "pass 1 [2, 4, 1, 7, 8, 9]\npass 2 [2, 1, 4, 7, 8, 9]\npass 3 [1, 2, 4, 7, 8, 9]\npass 4 [1, 2, 4, 7, 8, 9]\ncomparisons: 14 swaps: 4",
+      "hint": "Гаднах давталтын дамжилт бүрт доторх `j` давталт `len(data) - 1 - i` удаа ажиллана. `print` ба `if not swapped: break`-ийн аль нь түрүүлж ажилладаг вэ? `swapped` дамжилт бүрийн эхэнд `False` болдгийг сана. Python жагсаалтыг `[1, 2, 4]` хэлбэрээр — таслал ба зайтай хэвлэдэг."
+    },
+    {
+      "id": "b2-4-03-code",
+      "section": "B2.4.3",
+      "type": "coding",
+      "title": "Онооны самбар: буурах хөөсөн эрэмбэлэлт",
+      "prompt": "Сургуулийн шатрын клубын онооны самбар оноог **ихээс бага руу** харуулдаг. Хөөсөн эрэмбэлэлтээр эрэмбэлж, дамжилт бүрийн дараах жагсаалтыг хэвлэ.\n\n**Дүрэм** (харьцуулалт, солилтын тоо яг таарахын тулд):\n\n- Дамжилт бүрт хөрш хоёр оноог зүүнээс баруун тийш харьцуулна: `scores[j] < scores[j + 1]` бол солино. Тэнцүү бол **солихгүй**.\n- Эхний дамжилт n − 1 харьцуулалт хийнэ; дараагийн дамжилт бүр өмнөхөөсөө **нэгээр цөөн** (төгсгөлийн оноонууд аль хэдийн байрандаа).\n- Дамжилт бүрийн дараа `Pass <k>: <оноонууд зайгаар>` хэвлэ (k нь 1-ээс эхэлнэ).\n- Нэг ч солилт хийгээгүй дамжилтыг **хэвлээд** зогсоно (эрт зогсолт). Тийм дамжилт гараагүй бол n − 1 дамжилтын дараа зогсоно.\n- Эцэст нь `Comparisons: <тоо>, swaps: <тоо>`.\n\n**Оролт:** нэг мөрөнд n оноо (2–15 бүхэл тоо, давхцаж болно) зайгаар тусгаарласан.\n\n```text\nОролт:            Гаралт:\n40 75 60 90 55    Pass 1: 75 60 90 55 40\n                  Pass 2: 75 90 60 55 40\n                  Pass 3: 90 75 60 55 40\n                  Pass 4: 90 75 60 55 40\n                  Comparisons: 10, swaps: 6\n```\n\n```text\nОролт:            Гаралт:\n90 80 85 70 60    Pass 1: 90 85 80 70 60\n                  Pass 2: 90 85 80 70 60\n                  Comparisons: 7, swaps: 1\n```\n\nХичээлийн 💻 дахь `bubble_sort` харьцуулалт ба солилтыг яг ингэж тоолдог. Түүнээс гурван зүйл өөр: эрэмбэ буурах (`<`), дамжилт бүрийн дараа жагсаалтыг хэвлэнэ, сүүлийн мөрийн формат. Эхлэлийн кодын `as_text` жагсаалтыг зайгаар тусгаарласан мөр болгоно.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "def as_text(scores):\n    # [75, 60, 90] -> \"75 60 90\"\n    return \" \".join(str(s) for s in scores)\n\n\nscores = [int(x) for x in input().split()]\nn = len(scores)\ncomparisons = 0\nswaps = 0\n\n# bubble sort, largest first; after each pass:\n# print(f\"Pass {i + 1}: {as_text(scores)}\")\n\nprint(f\"Comparisons: {comparisons}, swaps: {swaps}\")\n",
+      "tests": [
+        {
+          "input": "40 75 60 90 55",
+          "output": "Pass 1: 75 60 90 55 40\nPass 2: 75 90 60 55 40\nPass 3: 90 75 60 55 40\nPass 4: 90 75 60 55 40\nComparisons: 10, swaps: 6"
+        },
+        {
+          "input": "90 80 85 70 60",
+          "output": "Pass 1: 90 85 80 70 60\nPass 2: 90 85 80 70 60\nComparisons: 7, swaps: 1"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "100 90 80 70",
+          "output": "Pass 1: 100 90 80 70\nComparisons: 3, swaps: 0"
+        },
+        {
+          "input": "1 2 3 4 5",
+          "output": "Pass 1: 2 3 4 5 1\nPass 2: 3 4 5 2 1\nPass 3: 4 5 3 2 1\nPass 4: 5 4 3 2 1\nComparisons: 10, swaps: 10"
+        },
+        {
+          "input": "50 50 50",
+          "output": "Pass 1: 50 50 50\nComparisons: 2, swaps: 0"
+        },
+        {
+          "input": "30 70",
+          "output": "Pass 1: 70 30\nComparisons: 1, swaps: 1"
+        },
+        {
+          "input": "70 30",
+          "output": "Pass 1: 70 30\nComparisons: 1, swaps: 0"
+        },
+        {
+          "input": "60 80 60 90 80",
+          "output": "Pass 1: 80 60 90 80 60\nPass 2: 80 90 80 60 60\nPass 3: 90 80 80 60 60\nPass 4: 90 80 80 60 60\nComparisons: 10, swaps: 6"
+        },
+        {
+          "input": "45 45 90 30 90 10",
+          "output": "Pass 1: 45 90 45 90 30 10\nPass 2: 90 45 90 45 30 10\nPass 3: 90 90 45 45 30 10\nPass 4: 90 90 45 45 30 10\nComparisons: 14, swaps: 5"
+        },
+        {
+          "input": "70 75 75 80 75 60 80 55 40 75 95 40 85 85 85",
+          "output": "Pass 1: 75 75 80 75 70 80 60 55 75 95 40 85 85 85 40\nPass 2: 75 80 75 75 80 70 60 75 95 55 85 85 85 40 40\nPass 3: 80 75 75 80 75 70 75 95 60 85 85 85 55 40 40\nPass 4: 80 75 80 75 75 75 95 70 85 85 85 60 55 40 40\nPass 5: 80 80 75 75 75 95 75 85 85 85 70 60 55 40 40\nPass 6: 80 80 75 75 95 75 85 85 85 75 70 60 55 40 40\nPass 7: 80 80 75 95 75 85 85 85 75 75 70 60 55 40 40\nPass 8: 80 80 95 75 85 85 85 75 75 75 70 60 55 40 40\nPass 9: 80 95 80 85 85 85 75 75 75 75 70 60 55 40 40\nPass 10: 95 80 85 85 85 80 75 75 75 75 70 60 55 40 40\nPass 11: 95 85 85 85 80 80 75 75 75 75 70 60 55 40 40\nPass 12: 95 85 85 85 80 80 75 75 75 75 70 60 55 40 40\nComparisons: 102, swaps: 58"
+        }
+      ],
+      "solution": "def as_text(scores):\n    # [75, 60, 90] -> \"75 60 90\"\n    return \" \".join(str(s) for s in scores)\n\n\nscores = [int(x) for x in input().split()]\nn = len(scores)\ncomparisons = 0\nswaps = 0\nfor i in range(n - 1):\n    swapped = False\n    for j in range(n - 1 - i):\n        comparisons += 1\n        if scores[j] < scores[j + 1]:          # the smaller score moves right\n            scores[j], scores[j + 1] = scores[j + 1], scores[j]\n            swaps += 1\n            swapped = True\n    print(f\"Pass {i + 1}: {as_text(scores)}\")\n    if not swapped:\n        break\nprint(f\"Comparisons: {comparisons}, swaps: {swaps}\")\n",
+      "hint": "Хичээлийн хөөсөн эрэмбэлэлтээс эхэл: аль ганц харьцуулах операторыг солиход эрэмбэ буурах болох вэ? `swapped`-ийг дамжилт бүрийн эхэнд `False` болго. Дамжилтын төгсгөлд эхлээд хэвлэ, дараа нь зогсох эсэхээ шалга. Тэнцүү оноо байвал юу болох вэ — `<` ба `<=`-ийн алийг нь хэрэглэх вэ? `1 2 3 4 5`-аар туршвал хэдэн дамжилт хэвлэгдэх ёстой вэ?"
+    },
+    {
+      "id": "b2-4-04-mcq",
+      "section": "B2.4.4",
+      "type": "mcq",
+      "title": "Хоёроор буурах тоолол",
+      "prompt": "Сурагч пуужин хөөргөх тоолол бичжээ. Python-д `countdown(5)` дуудахад юу болох вэ?\n\n```python\ndef countdown(n):\n    if n == 0:\n        print(\"Go!\")\n    else:\n        print(n)\n        countdown(n - 2)\n\ncountdown(5)\n```",
+      "xp": 10,
+      "options": [
+        "5, 3, 1, Go! хэвлэнэ — n тэг рүү ойртож байгаа тул суурь тохиолдолд хүрнэ",
+        "5, 3, 1 хэвлэнэ — n сөрөг болмогц функц өөрөө дуусч, Go! хэвлэгдэхгүй",
+        "5, 3, 1, −1, −3… хэвлэгдсээр байгаад Python RecursionError гаргаж зогсооно",
+        "Сөрөг тоонууд хэвлэгдсээр, n хэзээ ч 0 болохгүй тул программ хэзээ ч зогсохгүй"
+      ],
+      "answer": 2,
+      "hint": "n-ийн утгуудыг дараалан бич: 5, 3, 1, дараа нь? `n == 0` хэзээ нэг үнэн болох уу? Дуудлага бүр дуудлагын стекэд фрейм нэмдэг — Python хэдэн фрейм хүртэл зөвшөөрдөг вэ (B2.4.4)?"
+    },
+    {
+      "id": "b2-4-04-code",
+      "section": "B2.4.4",
+      "type": "coding",
+      "title": "Ороох ба тайлах: sum_to-г хэвлэх",
+      "prompt": "`sum_to(n)` нь 1-ээс n хүртэлх тоонуудын нийлбэрийг **рекурсаар** бодно (`sum_to(0)` = 0). Дуудлага бүрийг хэвлэж, ороох (дуудлагууд гүнзгийрэх) ба тайлах (хариу буцах) үеийг харуул.\n\n**Дүрэм:**\n\n- Суурь тохиолдол: `n == 0` → 0. Ерөнхий тохиолдол: `n + sum_to(n - 1)`.\n- Дуудлага бүр эхэндээ `sum_to(<n>)` хэвлэнэ.\n- Суурь тохиолдол `base case -> 0` хэвлэнэ.\n- Ерөнхий тохиолдол рекурсив дуудлага буцсаны **дараа** `<n> + <рекурсын хариу> = <нийлбэр>` хэвлэнэ.\n- Догол: дуудлагын гүн бүрт **2 зай**. Эхний дуудлага 0 зайтай. Нэг дуудлагын бүх мөр ижил доголтой.\n\n**Оролт:** n (0–12 бүхэл тоо).\n\n**Жишээ 1.** Оролт: `3`. Гаралт:\n\n```text\nsum_to(3)\n  sum_to(2)\n    sum_to(1)\n      sum_to(0)\n      base case -> 0\n    1 + 0 = 1\n  2 + 1 = 3\n3 + 3 = 6\n```\n\n**Жишээ 2.** Оролт: `1`. Гаралт:\n\n```text\nsum_to(1)\n  sum_to(0)\n  base case -> 0\n1 + 0 = 1\n```\n\nB2.4.4-ийн 💻 дахь `factorial(n, depth)` шиг `depth` параметр ашигла. Түүнээс өөр нь: нийлбэр бодно, суурь тохиолдол `n == 0`, догол 2 зай, мөрүүдийн текст дээрх дүрмийнх.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "def sum_to(n, depth):\n    indent = \"  \" * depth          # 2 spaces for every level of depth\n    # the call line, the base case and the general case go here\n    pass  # pass means \"do nothing yet\" - replace it with your code\n\n\n# ---- main program: do not change ----\nn = int(input())\nsum_to(n, 0)\n",
+      "tests": [
+        {
+          "input": "3",
+          "output": "sum_to(3)\n  sum_to(2)\n    sum_to(1)\n      sum_to(0)\n      base case -> 0\n    1 + 0 = 1\n  2 + 1 = 3\n3 + 3 = 6"
+        },
+        {
+          "input": "1",
+          "output": "sum_to(1)\n  sum_to(0)\n  base case -> 0\n1 + 0 = 1"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "0",
+          "output": "sum_to(0)\nbase case -> 0"
+        },
+        {
+          "input": "2",
+          "output": "sum_to(2)\n  sum_to(1)\n    sum_to(0)\n    base case -> 0\n  1 + 0 = 1\n2 + 1 = 3"
+        },
+        {
+          "input": "5",
+          "output": "sum_to(5)\n  sum_to(4)\n    sum_to(3)\n      sum_to(2)\n        sum_to(1)\n          sum_to(0)\n          base case -> 0\n        1 + 0 = 1\n      2 + 1 = 3\n    3 + 3 = 6\n  4 + 6 = 10\n5 + 10 = 15"
+        },
+        {
+          "input": "12",
+          "output": "sum_to(12)\n  sum_to(11)\n    sum_to(10)\n      sum_to(9)\n        sum_to(8)\n          sum_to(7)\n            sum_to(6)\n              sum_to(5)\n                sum_to(4)\n                  sum_to(3)\n                    sum_to(2)\n                      sum_to(1)\n                        sum_to(0)\n                        base case -> 0\n                      1 + 0 = 1\n                    2 + 1 = 3\n                  3 + 3 = 6\n                4 + 6 = 10\n              5 + 10 = 15\n            6 + 15 = 21\n          7 + 21 = 28\n        8 + 28 = 36\n      9 + 36 = 45\n    10 + 45 = 55\n  11 + 55 = 66\n12 + 66 = 78"
+        },
+        {
+          "input": "4",
+          "output": "sum_to(4)\n  sum_to(3)\n    sum_to(2)\n      sum_to(1)\n        sum_to(0)\n        base case -> 0\n      1 + 0 = 1\n    2 + 1 = 3\n  3 + 3 = 6\n4 + 6 = 10"
+        }
+      ],
+      "solution": "def sum_to(n, depth):\n    indent = \"  \" * depth          # 2 spaces for every level of depth\n    print(f\"{indent}sum_to({n})\")\n    if n == 0:                     # base case\n        print(f\"{indent}base case -> 0\")\n        return 0\n    answer = sum_to(n - 1, depth + 1)\n    total = n + answer             # general case, on the way back\n    print(f\"{indent}{n} + {answer} = {total}\")\n    return total\n\n\n# ---- main program: do not change ----\nn = int(input())\nsum_to(n, 0)\n",
+      "hint": "Дуудлагын мөрийг функцийн хамгийн эхэнд хэвлэ — тэгвэл ороох үед дээрээс доош гарна. Суурь тохиолдлыг шалгаад `return 0`. Ерөнхий тохиолдолд эхлээд `sum_to`-г `depth + 1`-ээр дуудаж, буцсан хариуг хувьсагчид хадгал; нийлбэрийн мөрийг **үүний дараа** хэвлэвэл тайлах үед доороос дээш гарна. Нийлбэрээ `return` хийхээ бүү март. `0`-ээр туршаад үз: хэдэн мөр гарах ёстой вэ?"
+    },
+    {
+      "id": "b2-4-05-trace",
+      "section": "B2.4.5",
+      "type": "tracing",
+      "title": "Рекурсыг мөшгих: доош, дээш ба None",
+      "prompt": "Программ юу хэвлэх вэ? Дуудлага бүрийн `n`, хэвлэх мөр, буцах утгыг хүснэгтэд бичиж мөшги: эхлээд дуудлагуудыг доош, дараа нь буцах утгуудыг дээш.\n\n```python\ndef mix(n):\n    if n <= 1:\n        print(\"base\", n)\n        return 1\n    print(\"down\", n)\n    result = n + 2 * mix(n // 2)\n    print(\"up\", n, result)\n    return result\n\ndef broken(n):\n    if n == 0:\n        return \"done\"\n    broken(n - 1)\n\nprint(\"answer\", mix(13))\nprint(\"broken\", broken(3))\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "down 13\ndown 6\ndown 3\nbase 1\nup 3 5\nup 6 16\nup 13 45\nanswer 45\nbroken None",
+      "hint": "`print(\"answer\", mix(13))` эхлээд `mix(13)`-ийг бүтэн бодож дуусгана — тиймээс аль мөрүүд түрүүлж хэвлэгдэх вэ? `n // 2` бүхэл хэсгийг авна. `up` мөр рекурсив дуудлага **буцсаны дараа** хэвлэгдэнэ. `broken`-ийн сүүлийн мөрөнд `return` байхгүй — `return`-гүй функц юу буцаадаг вэ (B2.3.4)?"
+    },
+    {
+      "id": "b2-4-05-code",
+      "section": "B2.4.5",
+      "type": "coding",
+      "title": "Рекурсив хоёртын хайлт: дуудлага бүрийн муж",
+      "prompt": "Хоёртын хайлтыг **рекурсаар** бич. Номын дугаарууд **ихээс бага руу** (буурах эрэмбээр), давхардалгүй хадгалагддаг. Дуудлага бүр хайж буй мужаа хэвлэдэг тул хайлт хэрхэн хагасалж, хаана зогсохыг харна.\n\n**Эхлэлийн кодод бэлэн:**\n\n- `search(numbers, key, lower, upper)` эхний мөрөндөө ` (lower, upper)` хэвлэнэ. `print(..., end=\"\")` мөр шилжүүлдэггүй тул нэг хайлтын бүх дуудлага нэг мөрөнд гарна.\n- Үндсэн программ (бүү өөрчил) хайх утга бүрт `search`-ийг `(0, n - 1)` мужаар дуудаж, ` -> <хариу>` хэвлэнэ.\n\n**`search`-ийн үлдсэн хэсгийг бич:**\n\n- **Суурь тохиолдол 1:** `lower > upper` (муж хоосон) → `-1`.\n- `mid = (lower + upper) // 2`.\n- **Суурь тохиолдол 2:** `numbers[mid] == key` → `mid`.\n- **Ерөнхий тохиолдол:** хайх утга байж **болох** хагасыг (`mid`-ийг оруулахгүйгээр) рекурсаар хайж, тэр дуудлагын хариуг **буцаа**. Жагсаалт буурах эрэмбэтэй — бага утгууд аль талд байна вэ?\n\nB2.4.5-ын 💻 дахь `binary_search` өсөх эрэмбэд зориулагдсан тул шууд хуулбал буруу хагасыг хайна.\n\nОлдохгүй үед хоосон мужтай сүүлийн дуудлага — жишээ нь `(3, 2)` — ч хэвлэгдэнэ: тэр бол суурь тохиолдол 1.\n\n**Оролт:** 1-р мөрөнд буурах эрэмбэтэй, давхардалгүй бүхэл тоонууд (1–40 ширхэг), 2-р мөрөнд хайх утгууд (1–10 ширхэг), зайгаар тусгаарласан.\n\n```text\nОролт:              Гаралт:\n13 11 9 7 5 4 3     11: (0, 6) (0, 2) -> 1\n11 8 3              8: (0, 6) (0, 2) (2, 2) (3, 2) -> -1\n                    3: (0, 6) (4, 6) (6, 6) -> 6\n```\n\n```text\nОролт:                  Гаралт:\n16 14 12 10 8 6 4 2     16: (0, 7) (0, 2) (0, 0) -> 0\n16 1                    1: (0, 7) (4, 7) (6, 7) (7, 7) (8, 7) -> -1\n```\n\nЭхлэлийн кодыг өөрчлөлгүй ажиллуулбал эхний мөр нь `11: (0, 6) -> None` болно: функц одоогоор юу ч буцаахгүй байна.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "def search(numbers, key, lower, upper):\n    print(f\" ({lower}, {upper})\", end=\"\")    # end=\"\" stays on the same line\n    # write the two base cases and the general case here\n    pass  # pass means \"do nothing yet\" - replace it with your code\n\n\n# ---- main program: do not change anything below ----\nnumbers = [int(x) for x in input().split()]\nkeys = [int(x) for x in input().split()]\nfor key in keys:\n    print(f\"{key}:\", end=\"\")\n    result = search(numbers, key, 0, len(numbers) - 1)\n    print(\" ->\", result)\n",
+      "tests": [
+        {
+          "input": "13 11 9 7 5 4 3\n11 8 3",
+          "output": "11: (0, 6) (0, 2) -> 1\n8: (0, 6) (0, 2) (2, 2) (3, 2) -> -1\n3: (0, 6) (4, 6) (6, 6) -> 6"
+        },
+        {
+          "input": "16 14 12 10 8 6 4 2\n16 1",
+          "output": "16: (0, 7) (0, 2) (0, 0) -> 0\n1: (0, 7) (4, 7) (6, 7) (7, 7) (8, 7) -> -1"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "5\n5 1 9",
+          "output": "5: (0, 0) -> 0\n1: (0, 0) (1, 0) -> -1\n9: (0, 0) (0, -1) -> -1"
+        },
+        {
+          "input": "20 10\n20 15 5 10 25",
+          "output": "20: (0, 1) -> 0\n15: (0, 1) (1, 1) (1, 0) -> -1\n5: (0, 1) (1, 1) (2, 1) -> -1\n10: (0, 1) (1, 1) -> 1\n25: (0, 1) (0, -1) -> -1"
+        },
+        {
+          "input": "29 27 25 23 21 19 17 15 13 11 9 7 5 3 1\n29 1 15 30 0 16",
+          "output": "29: (0, 14) (0, 6) (0, 2) (0, 0) -> 0\n1: (0, 14) (8, 14) (12, 14) (14, 14) -> 14\n15: (0, 14) -> 7\n30: (0, 14) (0, 6) (0, 2) (0, 0) (0, -1) -> -1\n0: (0, 14) (8, 14) (12, 14) (14, 14) (15, 14) -> -1\n16: (0, 14) (0, 6) (4, 6) (6, 6) (7, 6) -> -1"
+        },
+        {
+          "input": "13 11 9 7 5 4 3\n13 20 6 7 3 2",
+          "output": "13: (0, 6) (0, 2) (0, 0) -> 0\n20: (0, 6) (0, 2) (0, 0) (0, -1) -> -1\n6: (0, 6) (4, 6) (4, 4) (4, 3) -> -1\n7: (0, 6) -> 3\n3: (0, 6) (4, 6) (6, 6) -> 6\n2: (0, 6) (4, 6) (6, 6) (7, 6) -> -1"
+        },
+        {
+          "input": "493 488 475 473 470 456 442 432 415 411 399 379 356 344 311 281 256 246 240 238 213 205 200 173 159 146 130 128 119 99 96 78 74 67 52 44 36 34 19 14\n493 14 238 96 5 600 433",
+          "output": "493: (0, 39) (0, 18) (0, 8) (0, 3) (0, 0) -> 0\n14: (0, 39) (20, 39) (30, 39) (35, 39) (38, 39) (39, 39) -> 39\n238: (0, 39) -> 19\n96: (0, 39) (20, 39) (30, 39) (30, 33) (30, 30) -> 30\n5: (0, 39) (20, 39) (30, 39) (35, 39) (38, 39) (39, 39) (40, 39) -> -1\n600: (0, 39) (0, 18) (0, 8) (0, 3) (0, 0) (0, -1) -> -1\n433: (0, 39) (0, 18) (0, 8) (5, 8) (7, 8) (7, 6) -> -1"
+        }
+      ],
+      "solution": "def search(numbers, key, lower, upper):\n    print(f\" ({lower}, {upper})\", end=\"\")    # end=\"\" stays on the same line\n    if lower > upper:                        # base case 1: the range is empty\n        return -1\n    mid = (lower + upper) // 2\n    if numbers[mid] == key:                  # base case 2: found\n        return mid\n    if numbers[mid] > key:                   # descending: smaller keys are to the RIGHT\n        return search(numbers, key, mid + 1, upper)\n    return search(numbers, key, lower, mid - 1)\n\n\n# ---- main program: do not change anything below ----\nnumbers = [int(x) for x in input().split()]\nkeys = [int(x) for x in input().split()]\nfor key in keys:\n    print(f\"{key}:\", end=\"\")\n    result = search(numbers, key, 0, len(numbers) - 1)\n    print(\" ->\", result)\n",
+      "hint": "Жишээ 1-ийн 11-ийг цаасан дээр мөшги: эхний дуудлагад `numbers[mid]` нь 7. Буурах жагсаалтад 7-оос том утгууд аль талд байдаг вэ? Ерөнхий тохиолдолд дуудлагын хариу дуудсан газартаа хүрэхийн тулд юу хэрэгтэй вэ — эс бөгөөс `None` эсвэл буруу хариу гарна. Шинэ муж `mid`-ийг дахин агуулбал хайлт жижгэрэхгүй байж болно."
+    },
+    {
+      "id": "b2-4-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: шугаман ба хоёртын хайлт",
+      "prompt": "**Compare linear search and binary search in terms of efficiency.** [4]\n\nIB-ийн шалгалтын хэв маягийн асуулт. **Compare** гэдэг нь ижил ба ялгаатай талыг **хоёуланг** нь бичихийг шаарддаг. Шинж бүр **яагаад** үүсдэгийг тайлбарла; тоон жишээгээр баталбал илүү. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Ижил тал: хоёулаа жагсаалтаас хайх утгын байрлалыг олдог (олдохгүй бол −1 гэх мэтээр мэдэгддэг) бөгөөд хоёулаа нэмэлт санах ой бараг шаарддаггүй — санах ойн нарийн төвөгшил O(1) [1]\n• Шугаман хайлт элемент бүрийг эхнээс нь нэг нэгээр шалгадаг тул хугацаа n-тэй пропорциональ өснө — O(n); хамгийн муу тохиолдолд (утга сүүлд эсвэл байхгүй) n харьцуулалт хийнэ [1]\n• Хоёртын хайлт харьцуулалт бүрт үлдсэн мужийг хагасалдаг тул O(log n); жишээ нь 1 000 000 элементэд хамгийн ихдээ 20 орчим харьцуулалт, шугаман хайлтад 1 000 000 хүртэл [1]\n• Харин хоёртын хайлт өгөгдлийг (хайж буй талбараар) эрэмбэлэгдсэн байхыг шаарддаг; эрэмбэлэх нь нэмэлт ажил (жишээ нь хөөсөн эрэмбэлэлт O(n²)) тул эрэмбэгүй өгөгдлөөс ганц удаа хайхад шугаман хайлт нийтдээ илүү үр ашигтай байж болно [1]\n• Шугаман хайлт ямар ч дараалалтай өгөгдөл дээр ажилладаг; жижиг жагсаалтад хоёр хайлтын ялгаа бараг мэдэгдэхгүй [1]\n• Том, эрэмбэлэгдсэн, олон удаа хайдаг өгөгдөлд хоёртын хайлт хамаагүй үр ашигтай: n өсөх тусам ялгаа улам ихэснэ (n хоёр дахин өсөхөд шугаман хайлтын ажил хоёр дахин, хоёртын хайлтынх ердөө нэг алхмаар нэмэгдэнэ) [1]\n(Дээд тал нь 4 оноо. Compare: ижил талыг огт дурдаагүй бол дээд тал нь 3. Big O-г нэрлээд зогсвол оноо авахгүй — элемент бүрийг шалгах эсвэл мужийг хагаслах гэсэн шалтгааныг тайлбарласан байх ёстой. Энэ схем IB-ийн албан ёсны markscheme биш, энэ хичээлийн санал болгосон хариулт.)",
+      "hint": "1 000 000 элементтэй жагсаалтад хайлт тус бүр хамгийн ихдээ хэдэн харьцуулалт хийх вэ, яагаад? Хоёртын хайлтад ямар урьдчилсан нөхцөл хэрэгтэй, тэр нь хэзээ шугаман хайлтыг давуу болгох вэ? Ижил талыг ч бүү март."
+    }
+  ]
+}

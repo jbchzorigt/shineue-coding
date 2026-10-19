@@ -87,6 +87,16 @@ export function ContestForm({ contest }: { contest: Contest | null }) {
         <DateTimeField name="ends_at_ms" label="Дуусах цаг" initialMs={contest?.ends_at ?? null} />
       </div>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="requires_approval"
+          defaultChecked={contest?.requires_approval ?? true}
+          className="size-4 accent-primary"
+        />
+        Оролцоход багшийн зөвшөөрөл шаардах
+      </label>
+
       {state.error && (
         <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {state.error}

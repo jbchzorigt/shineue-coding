@@ -5,12 +5,15 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import {
+  decideRequests,
   deleteContest as deleteContestDoc,
   deleteProblem as deleteProblemDoc,
+  listRequests,
   registerParticipant,
   upsertContest,
   upsertProblem,
 } from "@/lib/db/contests";
+import { requestUidsInScope } from "@/lib/contest-access";
 import { NotFoundError, UserError, userMessage } from "@/lib/errors";
 import { parseLogicSpecJson } from "@/lib/logic/spec";
 import { normalizeMdx } from "@/lib/mdx-check";
@@ -24,12 +27,15 @@ function str(form: FormData, key: string): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-async function requireStaff(): Promise<void> {
+/** Returns the staff member's uid. */
+async function requireStaff(): Promise<string> {
   const session = await auth();
-  const profile = session?.user?.id ? await getUserProfile(session.user.id) : null;
-  if (!isStaff(profile?.role)) {
+  const uid = session?.user?.id;
+  const profile = uid ? await getUserProfile(uid) : null;
+  if (!uid || !isStaff(profile?.role)) {
     throw new UserError("Зөвхөн багш энэ үйлдлийг хийх эрхтэй.");
   }
+  return uid;
 }
 
 /* ----------------------------- registration ---------------------------- */
@@ -53,6 +59,32 @@ export async function registerForContest(contestId: string): Promise<void> {
   revalidatePath("/contests");
   revalidatePath(`/contests/${contestId}`);
   redirect(`/contests/${contestId}`);
+}
+
+/**
+ * A teacher/admin approves or rejects requests: one or more `uid` fields, or a
+ * `scope` ("all" / "class:<анги>") that picks this contest's pending requests.
+ */
+export async function decideContestRequests(
+  contestId: string,
+  decision: "approved" | "rejected",
+  form: FormData
+): Promise<void> {
+  const staffUid = await requireStaff();
+  if (!ID_RE.test(contestId)) return;
+  if (decision !== "approved" && decision !== "rejected") return;
+
+  const scope = str(form, "scope");
+  const uids = scope
+    ? requestUidsInScope(await listRequests(contestId), scope)
+    : form.getAll("uid").filter((v): v is string => typeof v === "string");
+  await decideRequests(contestId, uids, decision, staffUid);
+
+  revalidatePath("/teacher/contests");
+  revalidatePath(`/teacher/contests/${contestId}`);
+  revalidatePath("/contests");
+  revalidatePath(`/contests/${contestId}`);
+  revalidatePath(`/contests/${contestId}/leaderboard`);
 }
 
 /* ------------------------------- contests ------------------------------ */
@@ -84,6 +116,7 @@ export async function saveContest(
       description: str(form, "description"),
       starts_at: starts,
       ends_at: ends,
+      requires_approval: form.get("requires_approval") === "on",
     });
   } catch (err) {
     return { error: userMessage(err) };

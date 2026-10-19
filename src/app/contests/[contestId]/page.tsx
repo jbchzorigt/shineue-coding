@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ChevronRight, Lock, Star } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, Lock, Star, XCircle } from "lucide-react";
 import { auth } from "@/auth";
 import {
   contestStatus,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/db/contests";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
+import { formatDateTime } from "@/lib/datetime";
 import { registerForContest } from "@/lib/contest-actions";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
@@ -36,7 +37,9 @@ export default async function ContestProblemsPage({
     listProblems(contestId),
   ]);
   const staff = isStaff(profile?.role);
-  const registered = !!participant;
+  // Only an approved registration lets a student in; pending and rejected
+  // requests get their own card.
+  const registered = participant?.status === "approved";
   // Problems stay hidden until the contest starts (staff can always see).
   const canViewProblems = staff || (registered && status !== "upcoming");
 
@@ -60,7 +63,7 @@ export default async function ContestProblemsPage({
 
         <ContestTabs contestId={contestId} active="problems" />
 
-        {!registered && !staff && (
+        {!participant && !staff && (
           <Card>
             <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
               <p className="text-muted-foreground">
@@ -71,6 +74,32 @@ export default async function ContestProblemsPage({
                   <Button type="submit">Оролцох</Button>
                 </form>
               )}
+              {status !== "finished" && contest.requires_approval && (
+                <p className="text-xs text-muted-foreground">Багш зөвшөөрсний дараа оролцоно</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {participant?.status === "pending" && !staff && (
+          <Card>
+            <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
+              <Clock className="size-6 text-amber-600" />
+              <p className="font-medium">Хүсэлт илгээсэн — багш зөвшөөрөхийг хүлээж байна</p>
+              <p className="text-sm text-muted-foreground">
+                Илгээсэн: {formatDateTime(participant.registered_at)}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {participant?.status === "rejected" && !staff && (
+          <Card>
+            <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
+              <XCircle className="size-6 text-muted-foreground" />
+              <p className="font-medium">
+                Таны хүсэлтийг татгалзсан. Асуух зүйл байвал багштайгаа ярина уу.
+              </p>
             </CardContent>
           </Card>
         )}

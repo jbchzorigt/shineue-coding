@@ -45,6 +45,8 @@ const person = (
   scores,
   total,
   last_improved_at: null,
+  status: "approved",
+  registered_at: 0,
 });
 
 test("results: one row per participant in leaderboard order; missing scores are 0; no name → email", () => {

@@ -1,0 +1,196 @@
+{
+  "module_id": "a3-2",
+  "challenges": [
+    {
+      "id": "a3-2-01-mcq",
+      "section": "A3.2.1",
+      "type": "mcq",
+      "title": "Гуанзны өгөгдлийн сангийн дөрвөн тэмдэглэл",
+      "prompt": "Сургуулийн гуанзны өгөгдлийн санг төлөвлөж буй багийн баримт бичигт дараах дөрвөн тэмдэглэл бий. Аль нь **логик схемд** хамаарах вэ?",
+      "xp": 10,
+      "options": [
+        "«Сурагч олон захиалга өгч болно; захиалга бүр нэг сурагч, нэг хоолтой холбогдоно»",
+        "«MenuItem: ItemID INTEGER [PK], ItemName VARCHAR, Price INTEGER; үнэ 0-ээс их»",
+        "«MySQL дээр ItemName баганад индекс үүсгэж, хүснэгтүүдийг SSD диск дээр хадгална»",
+        "«MenuItem хүснэгтийн нэг мөр: 1, Buuz, 2500 — өнөөдрийн цэсний эхний хоол»"
+      ],
+      "answer": 1,
+      "hint": "Түвшин бүр өөр асуултад хариулдаг: ямар өгөгдөл? яг ямар бүтэц? яг яаж хадгалах? Тэмдэглэлүүдийн аль нэг нь схем огт биш байж болох уу?"
+    },
+    {
+      "id": "a3-2-01-trace",
+      "section": "A3.2.1",
+      "type": "tracing",
+      "title": "Гуанзны схем: аль оруулалт хүлээн авагдах вэ?",
+      "prompt": "Сургуулийн гуанзны өгөгдлийн сангийн физик схемийг SQLite-д үүсгээд, цэсэнд хоол, дараа нь захиалга нэмэхийг оролдоно.\n\nУншихад туслах:\n\n- `PRAGMA foreign_keys = ON` — гадаад түлхүүрийн шалгалт асаалттай. Хязгаарлалт зөрчсөн `INSERT`-ийг өгөгдлийн сан татгалзаж, Python `sqlite3.IntegrityError` үүсгэнэ — тэр мөр нэмэгдэхгүй.\n- `NOT NULL` — хоосон байж болохгүй (Python-ий `None` нь SQL-ийн хоосон утга `NULL`); `UNIQUE` — давтагдахгүй; `CHECK (…)` — нөхцөл үнэн байх ёстой; `BETWEEN 1 AND 3` — 1-ээс 3 хүртэл, хоёр хил орно.\n- `JOIN … ON` хоёр хүснэгтийн тохирох мөрүүдийг нэг мөр болгоно; `ORDER BY CanteenOrder.OrderID` — захиалгын дугаараар өсөх дарааллаар.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.execute(\"PRAGMA foreign_keys = ON\")\ncon.executescript(\"\"\"\nCREATE TABLE MenuItem (\n    ItemID   INTEGER PRIMARY KEY,\n    ItemName VARCHAR(40) NOT NULL UNIQUE,\n    Price    INTEGER NOT NULL CHECK (Price > 0));\nCREATE TABLE CanteenOrder (\n    OrderID  INTEGER PRIMARY KEY,\n    ItemID   INTEGER NOT NULL REFERENCES MenuItem(ItemID),\n    Portions INTEGER NOT NULL CHECK (Portions BETWEEN 1 AND 3));\nINSERT INTO MenuItem VALUES (1, 'Buuz', 2500), (2, 'Tsuivan', 4000), (3, 'Salad', 1500);\n\"\"\")\n\nfor item in [(4, \"Buuz\", 3000), (5, \"Khuushuur\", 0), (6, \"Khuushuur\", 3500)]:\n    try:\n        con.execute(\"INSERT INTO MenuItem VALUES (?, ?, ?)\", item)\n    except sqlite3.IntegrityError:\n        print(\"rejected item\", item[0])\n\nfor order in [(10, 2, 1), (11, 7, 1), (12, 1, 3), (13, 3, 0), (14, 6, None), (15, 6, 2)]:\n    try:\n        con.execute(\"INSERT INTO CanteenOrder VALUES (?, ?, ?)\", order)\n    except sqlite3.IntegrityError:\n        print(\"rejected order\", order[0])\n\nrows = con.execute(\"\"\"SELECT CanteenOrder.OrderID, MenuItem.ItemName, CanteenOrder.Portions * MenuItem.Price\n                      FROM CanteenOrder JOIN MenuItem ON CanteenOrder.ItemID = MenuItem.ItemID\n                      ORDER BY CanteenOrder.OrderID\"\"\").fetchall()\nfor order_id, name, cost in rows:\n    print(order_id, name, cost)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "rejected item 4\nrejected item 5\nrejected order 11\nrejected order 13\nrejected order 14\n10 Tsuivan 4000\n12 Buuz 7500\n15 Khuushuur 7000",
+      "hint": "Оруулалт бүрийн өмнө дүрэм бүрийг шалга: нэр аль хэдийн байгаа юу, үнэ ба порц нөхцөлд таарч байна уу, хоосон утга бий юу, заасан хоол цэсэнд байгаа юу? Татгалзсан мөр өгөгдлийн санд огт ороогүй гэдгийг сана — энэ нь дараагийн оруулалтад нөлөөлнө."
+    },
+    {
+      "id": "a3-2-02-mcq",
+      "section": "A3.2.2",
+      "type": "mcq",
+      "title": "Тасаг ба өвчтөний шугамыг унших",
+      "prompt": "Аймгийн эмнэлгийн ER диаграмд дараах шугам байна. WARD — эмнэлгийн тасаг, PATIENT — хэвтэн эмчлүүлж буй өвчтөн.\n\n```text\nWARD ||──o< PATIENT\n```\n\nЭнэ хичээлийн текст тэмдэглэгээнд биетийн хажуугийн (дотор) тэмдэг хамгийн ихдээ хэд болохыг (`|` — нэг, `<` — олон), түүний гадна талын тэмдэг хамгийн багадаа хэд болохыг (`o` — тэг, `|` — нэг) заана. Аль өгүүлбэр шугамыг зөв уншсан бэ?",
+      "xp": 10,
+      "options": [
+        "Тасаг бүрт дор хаяж нэг өвчтөн заавал хэвтэнэ; өвчтөн бүр яг нэг тасагт хэвтэнэ",
+        "Нэг тасагт олон өвчтөн, нэг өвчтөн олон тасагт хэвтэж болно — энэ бол m:m хамаарал",
+        "Тасаг хоосон ч, олон өвчтөнтэй ч байж болно; өвчтөн бүр яг нэг тасагт хэвтэнэ",
+        "Өвчтөн тасаггүй эсвэл олон тасагтай байж болно; тасаг бүр яг нэг өвчтөнтэй"
+      ],
+      "answer": 2,
+      "hint": "Шугамыг нэг биетээс эхэлж, нөгөө үзүүрт байгаа тэмдгээр унш: нэг тасгаас эхлэхэд PATIENT-ийн үзүүрт юу байна? Нэг өвчтөнөөс эхлэхэд WARD-ийн үзүүрт юу байна? `o` ба `|`-ийн аль нь «заавал» гэсэн утгатай вэ?"
+    },
+    {
+      "id": "a3-2-02-trace",
+      "section": "A3.2.2",
+      "type": "tracing",
+      "title": "Таксины апп: ERD-ийн modality хүснэгтэд",
+      "prompt": "Таксины аппын ER диаграм:\n\n```text\nPASSENGER ||──o< RIDE >o──o| DRIVER\n```\n\nШугамыг энэ хичээлийн тэмдэглэгээгээр, нэг биетээс эхэлж нөгөө үзүүрийн тэмдгээр унш: биетэд ойр (дотор) тэмдэг — хамгийн ихдээ (`|` нэг, `<` эсвэл `>` олон), гадна тэмдэг — хамгийн багадаа (`o` тэг, `|` нэг). Программ энэ ERD-ийг хүснэгт болгоод (захиалга үүссэн ч жолооч хараахан хүлээж аваагүй байж болно), аялал нэмэхийг оролдоно.\n\nУншихад туслах:\n\n- «Яг нэг» → гадаад түлхүүр `NOT NULL`; «тэг эсвэл нэг» → гадаад түлхүүр хоосон байж болно. Python-ий `None` нь SQL-ийн хоосон утга `NULL`. Хоосон гадаад түлхүүр ямар ч бичлэг заагаагүй гэсэн үг тул DBMS түүнийг шалгахгүй.\n- `PRAGMA foreign_keys = ON` — гадаад түлхүүрийн шалгалт асаалттай. Дүрэм зөрчсөн `INSERT` `sqlite3.IntegrityError` үүсгэж, мөр нэмэгдэхгүй.\n- `COUNT(*)` нөхцөлд таарсан мөрийн тоог олно; `WHERE PASSENGER.Name = ?` нь `?`-ийн оронд `name`-ийн утгыг тавина; `IS NULL` — утга хоосон эсэх.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.execute(\"PRAGMA foreign_keys = ON\")\ncon.executescript(\"\"\"\nCREATE TABLE PASSENGER (PassengerID INTEGER PRIMARY KEY, Name TEXT);\nCREATE TABLE DRIVER (DriverID INTEGER PRIMARY KEY, Name TEXT);\nCREATE TABLE RIDE (RideID INTEGER PRIMARY KEY,\n                   PassengerID INTEGER NOT NULL REFERENCES PASSENGER(PassengerID),\n                   DriverID INTEGER REFERENCES DRIVER(DriverID));\nINSERT INTO PASSENGER VALUES (1, 'Anu'), (2, 'Bat'), (3, 'Saraa');\nINSERT INTO DRIVER VALUES (7, 'Tuya'), (8, 'Dorj');\n\"\"\")\n\nfor ride in [(100, 2, 7), (101, None, 8), (102, 3, None), (103, 2, 9), (104, 2, 8)]:\n    try:\n        con.execute(\"INSERT INTO RIDE VALUES (?, ?, ?)\", ride)\n        print(ride[0], \"accepted\")\n    except sqlite3.IntegrityError:\n        print(ride[0], \"rejected\")\n\nfor name in [\"Anu\", \"Bat\", \"Saraa\"]:\n    count = con.execute(\"\"\"SELECT COUNT(*) FROM RIDE JOIN PASSENGER\n                           ON RIDE.PassengerID = PASSENGER.PassengerID\n                           WHERE PASSENGER.Name = ?\"\"\", (name,)).fetchone()[0]\n    print(name, count)\nprint(\"rides without a driver:\", con.execute(\"SELECT COUNT(*) FROM RIDE WHERE DriverID IS NULL\").fetchone()[0])\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "100 accepted\n101 rejected\n102 accepted\n103 rejected\n104 accepted\nAnu 0\nBat 2\nSaraa 1\nrides without a driver: 1",
+      "hint": "Аялал бүрт хоёр гадаад түлхүүрийг тусад нь шалга: зорчигч хоосон байж болох уу, жолооч хоосон байж болох уу, заасан зорчигч, жолооч байгаа юу? Дараа нь зөвхөн хүлээн авсан аяллуудыг тоол — тэг аялалтай зорчигч ч хэвлэгдэнэ."
+    },
+    {
+      "id": "a3-2-03-mcq",
+      "section": "A3.2.3",
+      "type": "mcq",
+      "title": "Спорт клубын гишүүний дөрвөн талбар",
+      "prompt": "Спорт клуб гишүүн бүрийн дөрвөн талбарыг хадгална:\n\n- `MemberCode` — үргэлж 6 тэмдэгт, жишээ нь `M00417`;\n- `ParentPhone` — эцэг эхийн утас, жишээ нь `+97688112233`;\n- `WeightKg` — жин, жишээ нь `63.5`;\n- `HasLocker` — хувийн шүүгээтэй эсэх (тийм/үгүй).\n\nАль сонголт дөрвөн талбарт бүгдэд нь тохирох өгөгдлийн төрөл өгсөн бэ?",
+      "xp": 10,
+      "options": [
+        "MemberCode CHAR(6), ParentPhone VARCHAR(15), WeightKg REAL, HasLocker BOOLEAN",
+        "MemberCode CHAR(6), ParentPhone INTEGER, WeightKg REAL, HasLocker BOOLEAN",
+        "MemberCode INTEGER, ParentPhone VARCHAR(15), WeightKg REAL, HasLocker BOOLEAN",
+        "MemberCode VARCHAR(6), ParentPhone VARCHAR(15), WeightKg INTEGER, HasLocker VARCHAR(3)"
+      ],
+      "answer": 0,
+      "hint": "Талбар бүрд асуу: энэ утгаар тооцоо хийх үү? Үсэг, `+` тэмдэг, эхний 0 агуулах уу? Бутархай хэсэгтэй юу? Хоёрхон утгатай юу? Ганц буруу төрөл л сонголтыг бүхэлд нь буруу болгоно."
+    },
+    {
+      "id": "a3-2-03-trace",
+      "section": "A3.2.3",
+      "type": "tracing",
+      "title": "Гүйлтийн тэмцээн: текст ба тоон багана",
+      "prompt": "Гүйлтийн тэмцээний бүртгэлд оролцогчийн дугаарыг (`Bib`) TEXT, хугацааг секундээр (`Seconds`) INTEGER, сургуулийн кодыг (`SchoolCode`) INTEGER төрөлтэй баганад хадгалжээ. Python-оос бүх утгыг текстээр оруулсан.\n\nУншихад туслах (SQLite-ийн дүрэм):\n\n- TEXT баганын утгыг тэмдэгт тэмдэгтээр харьцуулж эрэмбэлнэ: `'25'` нь `'3'`-аас өмнө.\n- INTEGER баганад тоо шиг харагдах текстийг (`'15'`, `'0007'`) SQLite тоо болгож хадгална: `'0007'` нь 7 болно.\n- `[row[0] for row in …]` мөр бүрийн эхний талбарыг жагсаалт болгоно; `fetchone()` нэг мөрийг tuple болгож буцаана. Python текстийг жагсаалт, tuple дотор хашилттай (`'abc'`) хэвлэдэг.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.execute(\"CREATE TABLE Runner (Name VARCHAR(10), Bib TEXT, Seconds INTEGER, SchoolCode INTEGER)\")\ncon.executemany(\"INSERT INTO Runner VALUES (?, ?, ?, ?)\",\n                [(\"Anu\", \"7\", \"95\", \"0105\"), (\"Bat\", \"12\", \"102\", \"0042\"), (\"Saraa\", \"100\", \"88\", \"1230\")])\n\nprint([row[0] for row in con.execute(\"SELECT Bib FROM Runner ORDER BY Bib\")])\nprint([row[0] for row in con.execute(\"SELECT Seconds FROM Runner ORDER BY Seconds\")])\nprint(con.execute(\"SELECT MAX(Bib), MAX(Seconds) FROM Runner\").fetchone())\nprint(con.execute(\"SELECT SchoolCode FROM Runner WHERE Name = 'Bat'\").fetchone()[0])\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "['100', '12', '7']\n[88, 95, 102]\n('7', 102)\n42",
+      "hint": "Дугаарыг эхний тэмдэгтээс нь эхлэн харьцуул: '1' < '7'. Хугацаа ба кодыг эхлээд тоо болго — эхний 0 тоонд хадгалагдах уу? Текст утга хашилттай, тоо хашилтгүй хэвлэгдэнэ."
+    },
+    {
+      "id": "a3-2-04-mcq",
+      "section": "A3.2.4",
+      "type": "mcq",
+      "title": "Улсын дугаарын хүснэгтийн үндсэн түлхүүр",
+      "prompt": "Тээврийн хэрэгслийн бүртгэлийн хүснэгтийн хэсэг. Улсын дугаар нь 4 оронтой тоо (`Digits`) ба 3 үсэгтэй цуврал (`Series`)-аас бүрдэнэ:\n\n| Digits | Series | OwnerName | CarModel |\n|---|---|---|---|\n| 1234 | УБА | Bat | Prius |\n| 1234 | УНА | Saraa | Fit |\n| 5678 | УБА | Bat | Land Cruiser |\n| 3456 | ДАА | Anu | Prius |\n\nНэг хүн хэд хэдэн машинтай байж болох ба ижил нэртэй хүмүүс ч бий. Аль үндсэн түлхүүр зөв бэ?",
+      "xp": 10,
+      "options": [
+        "`Digits` — дөрвөн оронтой тоо машин бүрт өөр тул дангаараа хангалттай",
+        "`Series` — үсгийн цуврал машин бүрт ялгаатай тул цувралаар ялгана",
+        "(`Series`, `OwnerName`) — нэг цувралд эзэмшигч бүр өөр тул хос давтагдахгүй",
+        "(`Digits`, `Series`) — тоо ба цувралын нэг хосыг зөвхөн нэг машинд олгоно"
+      ],
+      "answer": 3,
+      "hint": "Хүснэгтэд аль талбар дангаараа давтагдаж байна? Хоёр талбарын хос хэрхэн? Bat-ийн хоёр машины мөрийг хар."
+    },
+    {
+      "id": "a3-2-04-trace",
+      "section": "A3.2.4",
+      "type": "tracing",
+      "title": "Дотуур байр: нийлмэл ба залгасан түлхүүр",
+      "prompt": "Дотуур байрны өрөө (ROOM) нийлмэл түлхүүртэй: (`Block`, `RoomNo`). Шүүгээ (LOCKER) залгасан түлхүүртэй: давхрын дугаар ба шүүгээний дугаарыг **тусгаарлагчгүйгээр** нэг текст болгон залгана.\n\nУншихад туслах:\n\n- Үндсэн түлхүүр давтагдсан `INSERT`-ийг өгөгдлийн сан татгалзаж, Python `sqlite3.IntegrityError` үүсгэнэ — мөр нэмэгдэхгүй.\n- `str(floor) + str(number)` хоёр тоог текст болгож залгана: `str(3) + str(4)` нь `'34'`.\n- `COUNT(*)` мөрийн тоо, `SUM(Beds)` орны нийлбэр. `LockerCode` текст тул `ORDER BY` тэмдэгт тэмдэгтээр эрэмбэлнэ.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.executescript(\"\"\"\nCREATE TABLE ROOM (Block CHAR(1), RoomNo INTEGER, Beds INTEGER,\n                   PRIMARY KEY (Block, RoomNo));                      -- composite key\nCREATE TABLE LOCKER (LockerCode VARCHAR(10) PRIMARY KEY, Owner TEXT);  -- concatenated key\n\"\"\")\n\nfor room in [(\"A\", 1, 4), (\"A\", 2, 3), (\"B\", 1, 4), (\"A\", 1, 2), (\"B\", 12, 2)]:\n    try:\n        con.execute(\"INSERT INTO ROOM VALUES (?, ?, ?)\", room)\n    except sqlite3.IntegrityError:\n        print(\"rejected room\", room[0], room[1])\n\nfor floor, number, owner in [(1, 12, \"Anu\"), (11, 2, \"Bat\"), (2, 5, \"Saraa\"), (2, 15, \"Tuya\")]:\n    code = str(floor) + str(number)            # joined WITHOUT a separator\n    try:\n        con.execute(\"INSERT INTO LOCKER VALUES (?, ?)\", (code, owner))\n    except sqlite3.IntegrityError:\n        print(\"rejected locker\", code, owner)\n\nprint(con.execute(\"SELECT COUNT(*), SUM(Beds) FROM ROOM\").fetchone())\nprint([row[0] for row in con.execute(\"SELECT LockerCode FROM LOCKER ORDER BY LockerCode\")])\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "rejected room A 1\nrejected locker 112 Bat\n(4, 13)\n['112', '215', '25']",
+      "hint": "Өрөө бүрт (Block, RoomNo) хос өмнө нь орсон эсэхийг шалга — зөвхөн RoomNo биш. Шүүгээ бүрийн кодыг өөрөө залгаж бич: 1 ба 12, 11 ба 2 юу болох вэ? Эцэст нь зөвхөн хүлээн авсан мөрүүдийг тоол."
+    },
+    {
+      "id": "a3-2-05-mcq",
+      "section": "A3.2.5",
+      "type": "mcq",
+      "title": "Сагсан бөмбөгийн бэлтгэлийн ирц",
+      "prompt": "Сагсан бөмбөгийн секц бэлтгэлийн ирцийг ингэж хадгалдаг. Тоглогч өдөрт нэг л бэлтгэлд ордог тул үндсэн түлхүүр нь (`PlayerID`, `SessionDate`):\n\n| PlayerID | SessionDate | PlayerPhone | MinutesPlayed |\n|---|---|---|---|\n| P07 | 2026-09-01 | 88112233 | 45 |\n| P07 | 2026-09-03 | 88112233 | 60 |\n| P12 | 2026-09-01 | 99001122 | 30 |\n\nТоглогч бүр нэг утастай; `MinutesPlayed` нь тухайн өдрийн бэлтгэлд тоглосон минут. Аль тайлбар зөв бэ?",
+      "xp": 10,
+      "options": [
+        "1NF-д ч биш: P07-ийн утас хоёр мөрөнд давтагдсан нь давтагдах бүлэг юм",
+        "1NF-д байгаа ч 2NF биш: `PlayerPhone` түлхүүрийн зөвхөн `PlayerID` хэсгээс хамаарна",
+        "2NF-д байгаа ч 3NF биш: `PlayerPhone` түлхүүр биш талбараас хамаарсан дамжсан хамаарал",
+        "3NF-д байна: мөр бүрийг (`PlayerID`, `SessionDate`) ялгадаг тул бүх талбар түлхүүрээс хамаарна"
+      ],
+      "answer": 1,
+      "hint": "Түлхүүр биш талбар бүрт «намайг юу тодорхойлдог вэ — бүтэн түлхүүр үү, түүний хэсэг үү, түлхүүр биш өөр талбар уу?» гэж асуу. Давтагдсан утга бүр давтагдах бүлэг мөн үү?"
+    },
+    {
+      "id": "a3-2-05-trace",
+      "section": "A3.2.5",
+      "type": "tracing",
+      "title": "Функциональ хамаарлыг өгөгдөл дээр шалгах",
+      "prompt": "Хүүхдийн хөлбөмбөгийн лигийн хүснэгтийн мөрүүд дээр функциональ хамаарлыг шалгана. `determines(a, b)` нь хоёр мөрийн `a` багана ижил атал `b` багана өөр байвал `False`, ийм хос олдохгүй бол `True` буцаана. Программ `True` бол `a -> b`, `False` бол `a -/-> b` (тодорхойлохгүй) гэж хэвлэнэ. `->` гэдэг нь зөвхөн «энэ өгөгдөлд зөрчил олдсонгүй» гэсэн үг — функциональ хамаарлыг батлахгүй. `columns.index(a)` нь баганын нэрээр түүний дугаарыг (0-ээс эхэлсэн) олно.\n\nПрограмм юу хэвлэх вэ?\n\n```python\ncolumns = [\"PlayerID\", \"MatchID\", \"PlayerName\", \"Team\", \"Goals\"]\nrows = [(\"P1\", \"M1\", \"Bat\", \"Eagles\", 2),\n        (\"P2\", \"M1\", \"Anu\", \"Eagles\", 0),\n        (\"P1\", \"M2\", \"Bat\", \"Eagles\", 1),\n        (\"P3\", \"M2\", \"Bat\", \"Wolves\", 1),\n        (\"P2\", \"M3\", \"Anu\", \"Eagles\", 0)]\n\ndef determines(a, b):\n    i = columns.index(a)\n    j = columns.index(b)\n    for row1 in rows:\n        for row2 in rows:\n            if row1[i] == row2[i] and row1[j] != row2[j]:\n                return False\n    return True\n\nchecks = [(\"PlayerID\", \"PlayerName\"), (\"PlayerName\", \"PlayerID\"), (\"PlayerID\", \"Team\"),\n          (\"PlayerName\", \"Team\"), (\"MatchID\", \"Goals\"), (\"PlayerID\", \"Goals\")]\nfor a, b in checks:\n    if determines(a, b):\n        print(a, \"->\", b)\n    else:\n        print(a, \"-/->\", b)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "PlayerID -> PlayerName\nPlayerName -/-> PlayerID\nPlayerID -> Team\nPlayerName -/-> Team\nMatchID -/-> Goals\nPlayerID -/-> Goals",
+      "hint": "Шалгалт бүрт `a` баганад ижил утгатай мөрүүдийг олоод, тэдгээрийн `b` утга ижил эсэхийг хар. Ганц зөрүү л `-/->` хэвлүүлнэ. Нэр давтагдсан мөрүүдэд онцгой анхаар."
+    },
+    {
+      "id": "a3-2-06-mcq",
+      "section": "A3.2.6",
+      "type": "mcq",
+      "title": "STUDENT хүснэгтийн 3NF алхам",
+      "prompt": "Нормчлолын 2NF алхмын дараа дараах хүснэгт үлджээ:\n\n```text\nSTUDENT (StudentID [PK], StudentName, HomeroomID, HomeroomTeacher)\n```\n\nСурагч бүр нэг ангид (`HomeroomID`) суралцдаг, анги бүр нэг ангийн багштай. Хүснэгтийг 3NF болгох зөв алхам аль нь вэ?",
+      "xp": 10,
+      "options": [
+        "HOMEROOM(HomeroomID [PK], HomeroomTeacher) гаргаж, STUDENT-д HomeroomID-г гадаад түлхүүрээр үлдээнэ",
+        "Юу ч өөрчлөхгүй: үндсэн түлхүүр нь ганц талбартай тул энэ хүснэгт аль хэдийн 3NF-д байгаа",
+        "Үндсэн түлхүүрийг (StudentID, HomeroomID) нийлмэл болгоно — ингэвэл багш бүтэн түлхүүрээс хамаарна",
+        "STUDENTNAME(StudentID [PK], StudentName) хүснэгт гаргана — нэр давтагдаж болох тул тусад нь хадгална"
+      ],
+      "answer": 0,
+      "hint": "`HomeroomTeacher` юунаас шууд хамаарна — `StudentID`-аас уу, эсвэл түлхүүр биш өөр талбараас уу? Ганц талбартай түлхүүр аль хэлбэрийг автоматаар баталгаажуулдаг вэ — 2NF үү, 3NF үү?"
+    },
+    {
+      "id": "a3-2-06-trace",
+      "section": "A3.2.6",
+      "type": "tracing",
+      "title": "Нэг UPDATE, нэг DELETE: 1NF ба 3NF",
+      "prompt": "A3.2.5-ын клубын жишээний хялбаршуулсан хувилбарыг хоёр янзаар хадгалжээ: 1NF хүснэгт `CLUB_1NF` (багшийн утас мөр бүрт) ба 3NF хүснэгтүүд `TEACHER`, `CLUB`, `MEMBERSHIP`. Bold багш (`TeacherID` 1) утасны дугаараа `99110009` болгож сольсон бөгөөд хэрэглэгч 1NF хүснэгтэд үүнийг **нэг** мөрөнд л засчээ. Дараа нь Saraa (202) Taekwondo клубээс гарсан.\n\nУншихад туслах:\n\n- `UPDATE … SET … WHERE` нөхцөлд таарсан мөрийн утгыг өөрчилнө; `DELETE FROM … WHERE` нөхцөлд таарсан мөрүүдийг устгана.\n- `COUNT(DISTINCT TeacherPhone)` нь давхардаагүй утасны дугаарын тоо; `COUNT(*)` мөрийн тоо.\n- `JOIN … ON` хоёр хүснэгтийн тохирох мөрүүдийг нэг мөр болгоно; `ORDER BY CLUB.ClubTitle` нь клубын нэрээр цагаан толгойн (A–Z) дарааллаар эрэмбэлнэ.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.executescript(\"\"\"\nCREATE TABLE CLUB_1NF (StudentID INTEGER, ClubTitle TEXT, TeacherName TEXT, TeacherPhone TEXT,\n                       PRIMARY KEY (StudentID, ClubTitle));\nINSERT INTO CLUB_1NF VALUES (101, 'Robotics', 'Bold', '99110001'), (101, 'Chess', 'Bold', '99110001'),\n                            (105, 'Robotics', 'Bold', '99110001'), (202, 'Taekwondo', 'Tuya', '88002233');\nCREATE TABLE TEACHER (TeacherID INTEGER PRIMARY KEY, TeacherName TEXT, TeacherPhone TEXT);\nCREATE TABLE CLUB (ClubTitle TEXT PRIMARY KEY, TeacherID INTEGER REFERENCES TEACHER(TeacherID));\nCREATE TABLE MEMBERSHIP (StudentID INTEGER, ClubTitle TEXT REFERENCES CLUB(ClubTitle),\n                         PRIMARY KEY (StudentID, ClubTitle));\nINSERT INTO TEACHER VALUES (1, 'Bold', '99110001'), (2, 'Tuya', '88002233');\nINSERT INTO CLUB VALUES ('Robotics', 1), ('Chess', 1), ('Taekwondo', 2);\nINSERT INTO MEMBERSHIP VALUES (101, 'Robotics'), (101, 'Chess'), (105, 'Robotics'), (202, 'Taekwondo');\n\"\"\")\n\ncon.execute(\"UPDATE CLUB_1NF SET TeacherPhone = '99110009' WHERE StudentID = 101 AND ClubTitle = 'Chess'\")\ncon.execute(\"UPDATE TEACHER SET TeacherPhone = '99110009' WHERE TeacherID = 1\")\ncon.execute(\"DELETE FROM CLUB_1NF WHERE StudentID = 202\")\ncon.execute(\"DELETE FROM MEMBERSHIP WHERE StudentID = 202\")\n\nprint(\"Bold phones in CLUB_1NF:\",\n      con.execute(\"SELECT COUNT(DISTINCT TeacherPhone) FROM CLUB_1NF WHERE TeacherName = 'Bold'\").fetchone()[0])\nprint(\"Taekwondo rows in CLUB_1NF:\",\n      con.execute(\"SELECT COUNT(*) FROM CLUB_1NF WHERE ClubTitle = 'Taekwondo'\").fetchone()[0])\nprint(\"Taekwondo rows in CLUB:\", con.execute(\"SELECT COUNT(*) FROM CLUB WHERE ClubTitle = 'Taekwondo'\").fetchone()[0])\nfor row in con.execute(\"\"\"SELECT CLUB.ClubTitle, TEACHER.TeacherPhone FROM CLUB\n                          JOIN TEACHER ON CLUB.TeacherID = TEACHER.TeacherID ORDER BY CLUB.ClubTitle\"\"\"):\n    print(row)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "Bold phones in CLUB_1NF: 2\nTaekwondo rows in CLUB_1NF: 0\nTaekwondo rows in CLUB: 1\n('Chess', '99110009')\n('Robotics', '99110009')\n('Taekwondo', '88002233')",
+      "hint": "1NF хүснэгтэд Bold хэдэн мөрөнд байсан, `UPDATE` хэдийг нь өөрчилсөн бэ? Saraa-гийн мөр устахад Taekwondo-гийн тухай өөр мөр үлдэх үү? 3NF-д утас хэдэн газар хадгалагддаг вэ?"
+    },
+    {
+      "id": "a3-2-07-mcq",
+      "section": "A3.2.7",
+      "type": "mcq",
+      "title": "Илүүдэлтэй тайлангийн хүснэгт хаана тохирох вэ?",
+      "prompt": "Дөрвөн байгууллагын өгөгдлийн сан бүгд 3NF хүртэл нормчлогдсон. Аль системд JOIN-гүй, илүүдэлтэй (денормчилсон) тайлангийн хүснэгт нэмэх нь хамгийн үндэслэлтэй вэ?",
+      "xp": 10,
+      "options": [
+        "Банкны шилжүүлэг: секундэд мянга мянган гүйлгээ бичигдэж, үлдэгдэл үргэлж зөв байх ёстой",
+        "Эмнэлгийн эмийн тун: сувилагч хэдэн минут тутамд шинэчилж, алдаа нь өвчтөнд аюултай",
+        "Сургуулийн 10 жилийн дүнгийн архив: олон хүн уншдаг, хуучин дүнг хэзээ ч засдаггүй",
+        "Онлайн тасалбарын захиалга: нэг суудлыг хоёр хүнд зарахгүйн тулд байнга шинэчилнэ"
+      ],
+      "answer": 2,
+      "hint": "Систем бүрт асуу: голдуу уншдаг уу, бичдэг үү? Хуулбар хуучирвал ямар хор хохирол гарах вэ?"
+    },
+    {
+      "id": "a3-2-07-trace",
+      "section": "A3.2.7",
+      "type": "tracing",
+      "title": "Денормчилсон тайлан хуучрах нь",
+      "prompt": "Дэлгүүр нормчилсон хүснэгтүүдээс (`Product`, `Sale`) гадна JOIN-гүй тайлангийн хүснэгт `SaleReport` үүсгэжээ: бүтээгдэхүүний нэр, үнийг тэнд **хуулсан**. Дараа нь Pen-ий үнэ өөрчлөгдөнө.\n\nУншихад туслах:\n\n- `CREATE TABLE SaleReport AS SELECT …` нь тухайн мөчийн асуулгын үр дүнгээр шинэ хүснэгт үүсгэнэ — хожим Product өөрчлөгдөхөд SaleReport өөрөө шинэчлэгдэхгүй.\n- `SUM(…)` бүх мөрийн нийлбэр; `COUNT(*)` нөхцөлд таарсан мөрийн тоо; `<>` — тэнцүү биш.\n- `DELETE FROM SaleReport` бүх мөрийг устгаж, `INSERT INTO SaleReport SELECT …` асуулгын үр дүнг дахин хийнэ — хуулбарыг шинэчилнэ.\n- REAL баганын нийлбэр бутархай тоо тул `12.0` гэх мэтээр хэвлэгдэнэ.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.executescript(\"\"\"\nCREATE TABLE Product (ProductID INTEGER PRIMARY KEY, Name TEXT, Price REAL);\nCREATE TABLE Sale (SaleID INTEGER PRIMARY KEY, ProductID INTEGER REFERENCES Product(ProductID), Qty INTEGER);\nINSERT INTO Product VALUES (1, 'Pen', 1.5), (2, 'Notebook', 4.0), (3, 'Bag', 25.0);\nINSERT INTO Sale VALUES (10, 1, 4), (11, 2, 2), (12, 1, 10), (13, 3, 1), (14, 2, 3);\nCREATE TABLE SaleReport AS\n    SELECT Sale.SaleID, Product.Name, Product.Price, Sale.Qty\n    FROM Sale JOIN Product ON Sale.ProductID = Product.ProductID;\n\"\"\")\ncon.execute(\"UPDATE Product SET Price = 2.0 WHERE ProductID = 1\")\n\ndef report():\n    normalised = con.execute(\"\"\"SELECT SUM(Product.Price * Sale.Qty) FROM Sale\n                                JOIN Product ON Sale.ProductID = Product.ProductID\"\"\").fetchone()[0]\n    copy = con.execute(\"SELECT SUM(Price * Qty) FROM SaleReport\").fetchone()[0]\n    stale = con.execute(\"SELECT COUNT(*) FROM SaleReport WHERE Name = 'Pen' AND Price <> 2.0\").fetchone()[0]\n    print(\"normalised:\", normalised, \"report:\", copy, \"out of date:\", stale)\n\nreport()\ncon.execute(\"DELETE FROM SaleReport\")\ncon.execute(\"\"\"INSERT INTO SaleReport SELECT Sale.SaleID, Product.Name, Product.Price, Sale.Qty\n               FROM Sale JOIN Product ON Sale.ProductID = Product.ProductID\"\"\")\nreport()\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "normalised: 73.0 report: 66.0 out of date: 2\nnormalised: 73.0 report: 73.0 out of date: 0",
+      "hint": "Эхлээд Product-ийн үнийг шинэчил, харин SaleReport-ийн үнэ хуучнаараа (Pen 1.5) үлдэнэ. Нийлбэр бүрийг мөр мөрөөр нь бод: Pen хоёр борлуулалттай. Дахин үүсгэсний дараа SaleReport ямар үнэ хуулах вэ?"
+    },
+    {
+      "id": "a3-2-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: фитнес төвийн хүснэгтийг 3NF болгох",
+      "prompt": "Фитнес төв гишүүдийн бүртгэлийг нэг хүснэгтэд хөтөлдөг:\n\n| MemberID | MemberName | PlanCode | PlanFee | Classes |\n|---|---|---|---|---|\n| M01 | Anu | GOLD | 120000 | C1 Yoga, C3 Boxing |\n| M02 | Bat | BASIC | 60000 | C3 Boxing |\n| M03 | Saraa | GOLD | 120000 | C1 Yoga, C2 Zumba |\n\nГишүүн бүр нэг төлбөрийн багцтай (`PlanCode`); багц бүрийн сарын төлбөр (`PlanFee`, төгрөгөөр) тогтмол. Гишүүн хэд хэдэн хичээлд бүртгүүлж болно; `Classes` нүдэнд хичээл бүрийн код (`ClassID`) ба нэр (`ClassName`) бичигдсэн.\n\n**Normalise the table to third normal form (3NF), showing each step.** [6]\n\nАлхам бүрт (1NF, 2NF, 3NF) хүснэгтүүдээ бичиж, ямар асуудал эсвэл ямар функциональ хамаарлыг арилгаснаа нэрлэ. Эцсийн хүснэгт бүрийн үндсэн ба гадаад түлхүүрийг `[PK]`, `[FK]`-ээр тэмдэглэ. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• 1NF: `Classes` нүд атомар биш (нэг нүдэнд жагсаалт) — гишүүн ба хичээлийн хос бүрийг тусдаа мөр болгож, `ClassID` ба `ClassName`-ийг тусдаа талбарт хуваасан [1]\n• 1NF: үндсэн түлхүүрийг нийлмэл (`MemberID`, `ClassID`) гэж тодорхойлсон [1]\n• 2NF: хэсэгчилсэн хамаарлыг нэрлэсэн: `MemberName`, `PlanCode`, `PlanFee` зөвхөн `MemberID`-аас, `ClassName` зөвхөн `ClassID`-аас хамаарна [1]\n• 2NF: MEMBER(MemberID, MemberName, PlanCode, PlanFee), CLASS(ClassID, ClassName), ENROLMENT(MemberID, ClassID) гэж хуваасан [1]\n• 3NF: дамжсан хамаарлыг нэрлэсэн: `MemberID → PlanCode → PlanFee` (багцын төлбөр гишүүнээс биш, багцаас хамаарна) [1]\n• 3NF: PLAN(PlanCode [PK], PlanFee) гаргаж, MEMBER(MemberID [PK], MemberName, PlanCode [FK]) болгосон; эцсийн дөрвөн хүснэгтийн түлхүүр зөв: CLASS(ClassID [PK], ClassName), ENROLMENT(MemberID [PK, FK], ClassID [PK, FK]) [1]\n(Дээд тал нь 6 оноо. Алхам, функциональ хамаарлыг нэрлээгүй, зөвхөн эцсийн хүснэгтүүдийг бичсэн бол «нэрлэсэн» гэсэн оноонууд өгөгдөхгүй. Зөв өөр хувилбар: ENROLMENT-д зохиомол түлхүүр (EnrolmentID) нэмэх. Энэ схем IB-ийн албан ёсны markscheme биш, энэ хичээлийн санал болгосон хариулт.)",
+      "hint": "Эхлээд `Classes` нүдийг задал: нэг мөрөнд нэг гишүүн, нэг хичээл. Дараа нь түлхүүр биш талбар бүрт «бүтэн түлхүүрээс үү, түүний хэсгээс үү, түлхүүр биш өөр талбараас уу?» гэж асуу. Алхам бүрт функциональ хамаарлыг сумаар (`A → B`) бич."
+    }
+  ]
+}

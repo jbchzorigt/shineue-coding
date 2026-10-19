@@ -4,7 +4,13 @@ import { CalendarClock, Pencil, Plus, Swords, Users } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { contestStatus, listContests, listParticipants, listProblems } from "@/lib/db/contests";
+import {
+  contestStatus,
+  countPending,
+  listContests,
+  listParticipants,
+  listProblems,
+} from "@/lib/db/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +23,7 @@ export default async function TeacherContestsPage() {
   if (!isStaff(profile?.role)) redirect("/");
 
   const contests = await listContests();
+  const pending = await countPending(contests.map((c) => c.id));
   const extras = await Promise.all(
     contests.map(async (c) => ({
       problems: (await listProblems(c.id)).length,
@@ -57,6 +64,11 @@ export default async function TeacherContestsPage() {
                 <div className="flex items-center gap-2">
                   <h2 className="font-semibold">{c.title}</h2>
                   <ContestStatusBadge status={contestStatus(c)} />
+                  {(pending.get(c.id) ?? 0) > 0 && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                      {pending.get(c.id)} хүсэлт хүлээгдэж байна
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">

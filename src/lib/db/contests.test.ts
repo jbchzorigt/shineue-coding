@@ -14,12 +14,15 @@ import {
   deleteContest,
   deleteProblem,
   getContest,
+  countPending,
+  decideRequests,
   getParticipant,
   getProblem,
   getProblemPrivate,
   listContests,
   listParticipants,
   listProblems,
+  listRequests,
   registerParticipant,
   upsertContest,
   upsertProblem,
@@ -37,7 +40,10 @@ const contest: Contest = {
   description: "d",
   starts_at: Date.parse("2026-03-01T09:00:00Z"),
   ends_at: Date.parse("2026-03-01T12:00:00Z"),
+  requires_approval: false,
 };
+/** Same contest, but «Оролцох» only files a request. */
+const gated: Contest = { ...contest, id: "gated-cup", requires_approval: true };
 const problem: ContestProblem = {
   id: "p1",
   title: "Нийлбэр",
@@ -113,7 +119,10 @@ test("problems keep hidden tests apart and are replaced on upsert", async () => 
 test("registerParticipant is idempotent", async () => {
   await setupContestWithStudent();
   await registerParticipant(contest.id, { uid: "s1", name: "Бат", email: "s1@shineue.edu.mn" });
-  assert.deepEqual(await getParticipant(contest.id, "s1"), {
+  const { registered_at, ...rest } = (await getParticipant(contest.id, "s1"))!;
+  assert.equal(typeof registered_at, "number");
+  assert.deepEqual(rest, {
+    status: "approved",
     uid: "s1",
     name: "Бат",
     email: "s1@shineue.edu.mn",
@@ -241,4 +250,123 @@ test("the database rejects an unknown problem kind", async () => {
   await assert.rejects(
     upsertProblem(contest.id, { ...problem, kind: "java" as never }, { hidden_test_cases: [] })
   );
+});
+
+/* ------------------------------ approval ------------------------------ */
+
+const join = (contestId: string, uid: string) =>
+  registerParticipant(contestId, { uid, name: uid, email: `${uid}@x` });
+
+async function statusOf(contestId: string, uid: string) {
+  return (await getParticipant(contestId, uid))?.status;
+}
+
+test("registration needs approval when the contest asks for it", async () => {
+  await addUser("s1");
+  await upsertContest(gated);
+  await upsertContest(contest);
+  assert.equal(await join(gated.id, "s1"), "pending");
+  assert.equal(await statusOf(gated.id, "s1"), "pending");
+  assert.equal(await join(contest.id, "s1"), "approved");
+});
+
+test("registering again never changes the status", async () => {
+  await addUser("s1");
+  await addUser("t1", { role: "teacher" });
+  await upsertContest(gated);
+  await join(gated.id, "s1");
+  assert.equal(await decideRequests(gated.id, ["s1"], "rejected", "t1"), 1);
+  assert.equal(await join(gated.id, "s1"), "rejected");
+  assert.equal(await statusOf(gated.id, "s1"), "rejected");
+});
+
+test("only approved participants are listed and ranked", async () => {
+  await addUser("a");
+  await addUser("b", { class_name: "10А" });
+  await addUser("t1", { role: "teacher" });
+  await upsertContest(gated);
+  await join(gated.id, "a");
+  await join(gated.id, "b");
+  await decideRequests(gated.id, ["a"], "approved", "t1");
+  assert.deepEqual((await listParticipants(gated.id)).map((p) => p.uid), ["a"]);
+  const requests = await listRequests(gated.id);
+  assert.deepEqual(
+    requests.map(({ uid, status, class_name }) => ({ uid, status, class_name })),
+    [{ uid: "b", status: "pending", class_name: "10А" }]
+  );
+  assert.equal(typeof requests[0].requested_at, "number");
+});
+
+test("approve moves pending and rejected rows; reject only pending", async () => {
+  for (const uid of ["p", "r", "ok", "late"]) await addUser(uid);
+  await addUser("t1", { role: "teacher" });
+  await addUser("t2", { role: "teacher" });
+  await upsertContest(gated);
+  for (const uid of ["p", "r", "ok"]) await join(gated.id, uid);
+  await decideRequests(gated.id, ["r"], "rejected", "t2");
+  await decideRequests(gated.id, ["ok"], "approved", "t2");
+
+  assert.equal(await decideRequests(gated.id, ["p", "r"], "approved", "t1"), 2);
+  assert.equal(await statusOf(gated.id, "p"), "approved");
+  assert.equal(await statusOf(gated.id, "r"), "approved");
+
+  // A second teacher's «Татгалзах» never demotes someone already approved.
+  await join(gated.id, "late");
+  assert.equal(await decideRequests(gated.id, ["ok", "late"], "rejected", "t2"), 1);
+  assert.equal(await statusOf(gated.id, "ok"), "approved");
+  assert.equal(await statusOf(gated.id, "late"), "rejected");
+
+  const rows = await getDb().select().from(contestParticipants);
+  const p = rows.find((r) => r.uid === "p")!;
+  assert.equal(p.decided_by, "t1");
+  assert.ok(p.decided_at instanceof Date);
+});
+
+test("decide ignores uids outside the contest", async () => {
+  await addUser("s2");
+  await addUser("t1", { role: "teacher" });
+  const other: Contest = { ...gated, id: "other-cup" };
+  await upsertContest(gated);
+  await upsertContest(other);
+  await join(other.id, "s2");
+  assert.equal(await decideRequests(gated.id, ["ghost", "s2"], "approved", "t1"), 0);
+  assert.equal(await statusOf(other.id, "s2"), "pending");
+  assert.equal(await decideRequests(gated.id, [], "approved", "t1"), 0);
+});
+
+test("countPending counts per contest", async () => {
+  for (const uid of ["a", "b"]) await addUser(uid);
+  const quiet: Contest = { ...gated, id: "quiet-cup" };
+  await upsertContest(gated);
+  await upsertContest(quiet);
+  await join(gated.id, "a");
+  await join(gated.id, "b");
+  assert.deepEqual([...(await countPending([gated.id, quiet.id]))], [[gated.id, 2]]);
+  assert.deepEqual([...(await countPending([]))], []);
+});
+
+test("a pending participant cannot score", async () => {
+  await addUser("s1");
+  await upsertContest(gated);
+  await join(gated.id, "s1");
+  await assert.rejects(
+    applySubmissionScore({
+      contestId: gated.id,
+      uid: "s1",
+      problemId: "p1",
+      score: 10,
+      code: "print(1)",
+      passedTests: 1,
+      totalTests: 1,
+    }),
+    (err) => err instanceof NotFoundError && err.message === "Багш таны хүсэлтийг зөвшөөрөөгүй байна."
+  );
+  assert.equal((await getDb().select().from(contestSubmissions)).length, 0);
+});
+
+test("requires_approval round-trips", async () => {
+  await upsertContest(gated);
+  assert.equal((await getContest(gated.id))?.requires_approval, true);
+  await upsertContest({ ...gated, requires_approval: false });
+  assert.equal((await getContest(gated.id))?.requires_approval, false);
 });

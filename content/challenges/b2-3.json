@@ -1,0 +1,242 @@
+{
+  "module_id": "b2-3",
+  "challenges": [
+    {
+      "id": "b2-3-01-mcq",
+      "section": "B2.3.1",
+      "type": "mcq",
+      "title": "Гацсан программ: шалтгаан ба засвар",
+      "prompt": "Сургуулийн программын хоёр thread зэрэг ажилладаг. Thread 1 оноонуудын файлын түгжээг аваад, принтерийн түгжээг хүлээж байна. Thread 2 принтерийн түгжээг аваад, оноонуудын файлын түгжээг хүлээж байна. Программ хаагдаагүй, алдааны мэдэгдэл ч гараагүй, гэвч 10 минут юу ч хийгдэхгүй байна.\n\nАль тайлбар **засвартайгаа хамт** зөв бэ?",
+      "xp": 10,
+      "options": [
+        "Төгсгөлгүй давталт — давталтын тоолуур өсөхгүй байгаа тул thread бүрт i = i + 1 нэмбэл программ үргэлжилнэ",
+        "Ажиллах үеийн алдаа — Python онцгой тохиолдол үүсгэсэн тул түгжээ авах мөрийг try/except-ээр барьвал засагдана",
+        "Харилцан түгжрэл — хоёр thread хоёулаа эхлээд файлын, дараа нь принтерийн түгжээг авдаг болбол тойрог үүсэхгүй",
+        "Харилцан түгжрэл — илүү хурдан процессортой компьютерт шилжүүлбэл thread-үүд түгжээгээ эрт суллаж, хүлээлт арилна"
+      ],
+      "answer": 2,
+      "hint": "Гурван асуулт: программ ажилласаар (CPU ашигласаар) байна уу, эсвэл thread-үүд хүлээж байна уу? Онцгой тохиолдол гарсан бол Python мэдэгдэл гаргах байсан уу? Хүлээлтийн тойрог яагаад үүссэн бэ — компьютерийн хурдтай холбоотой юу, түгжээ авах ээлжтэй холбоотой юу?"
+    },
+    {
+      "id": "b2-3-01-code",
+      "section": "B2.3.1",
+      "type": "coding",
+      "title": "Дэлгүүрийн баримт: мөрүүдийн ээлжийг зас",
+      "prompt": "Сургуулийн дэлгүүрийн онлайн захиалгын программ бараа бүрийн үнийг уншиж, баримт хэвлэдэг. Эхлэлийн кодын мөр бүр хэрэгтэй, зөв бичигдсэн — гэвч **гурван** мөр буруу газар байна. Программ алдааны мэдэгдэлгүй ажиллаад буруу баримт хэвлэдэг.\n\nМөрүүдийн ээлжийг засаарай. Шинэ тооцоо, шинэ мөр нэмэх шаардлагагүй — мөрийг дээш, доош эсвэл давталтын гадна шилжүүлэхэд хангалттай.\n\n**Баримтын дүрэм:**\n\n1. Бараа бүрийг уншмагцаа `Item <k>: <үнэ>, total <энэ барааг оруулсан нийт>` гэж хэвлэ (k нь 1-ээс эхэлнэ).\n2. Бүх барааны дараа `Subtotal: <барааны нийлбэр>`.\n3. `Discount: <хөнгөлөлт>` — хөнгөлөлт нь **зөвхөн барааны нийлбэрийн** 10%, доош бөөрөнхийлсөн (`// 10`). Хүргэлтийн төлбөрт хөнгөлөлт хамаарахгүй.\n4. `Delivery: 2000`.\n5. `To pay: <барааны нийлбэр − хөнгөлөлт + 2000>`.\n\n**Оролт:** 1-р мөрөнд барааны тоо n (1–20), дараагийн n мөр бүрт нэг барааны үнэ (эерэг бүхэл тоо, ₮).\n\n```text\nОролт:      Гаралт:\n3           Item 1: 1500, total 1500\n1500        Item 2: 2500, total 4000\n2500        Item 3: 4000, total 8000\n4000        Subtotal: 8000\n            Discount: 800\n            Delivery: 2000\n            To pay: 9200\n```\n\n```text\nОролт:      Гаралт:\n2           Item 1: 999, total 999\n999         Item 2: 1000, total 1999\n1000        Subtotal: 1999\n            Discount: 199\n            Delivery: 2000\n            To pay: 3800\n```\n\n1999-ийн 10% нь 199.9 — доош бөөрөнхийлөөд 199.\n\nЭхлээд эхлэлийн кодыг өөрчлөлгүй ажиллуулж, гаралтыг нь жишээтэй харьцуул.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "n = int(input())\ndelivery = 2000\nfor k in range(1, n + 1):\n    total = 0\n    price = int(input())\n    print(f\"Item {k}: {price}, total {total}\")\n    total = total + price\nprint(\"Subtotal:\", total)\ntotal = total + delivery\ndiscount = total // 10\nprint(\"Discount:\", discount)\nprint(\"Delivery:\", delivery)\nprint(\"To pay:\", total - discount)\n",
+      "tests": [
+        {
+          "input": "3\n1500\n2500\n4000",
+          "output": "Item 1: 1500, total 1500\nItem 2: 2500, total 4000\nItem 3: 4000, total 8000\nSubtotal: 8000\nDiscount: 800\nDelivery: 2000\nTo pay: 9200"
+        },
+        {
+          "input": "2\n999\n1000",
+          "output": "Item 1: 999, total 999\nItem 2: 1000, total 1999\nSubtotal: 1999\nDiscount: 199\nDelivery: 2000\nTo pay: 3800"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "1\n500",
+          "output": "Item 1: 500, total 500\nSubtotal: 500\nDiscount: 50\nDelivery: 2000\nTo pay: 2450"
+        },
+        {
+          "input": "4\n1200\n3300\n750\n5000",
+          "output": "Item 1: 1200, total 1200\nItem 2: 3300, total 4500\nItem 3: 750, total 5250\nItem 4: 5000, total 10250\nSubtotal: 10250\nDiscount: 1025\nDelivery: 2000\nTo pay: 11225"
+        },
+        {
+          "input": "2\n9\n5",
+          "output": "Item 1: 9, total 9\nItem 2: 5, total 14\nSubtotal: 14\nDiscount: 1\nDelivery: 2000\nTo pay: 2013"
+        },
+        {
+          "input": "1\n2995",
+          "output": "Item 1: 2995, total 2995\nSubtotal: 2995\nDiscount: 299\nDelivery: 2000\nTo pay: 4696"
+        },
+        {
+          "input": "5\n100\n200\n300\n400\n500",
+          "output": "Item 1: 100, total 100\nItem 2: 200, total 300\nItem 3: 300, total 600\nItem 4: 400, total 1000\nItem 5: 500, total 1500\nSubtotal: 1500\nDiscount: 150\nDelivery: 2000\nTo pay: 3350"
+        }
+      ],
+      "solution": "n = int(input())\ndelivery = 2000\ntotal = 0\nfor k in range(1, n + 1):\n    price = int(input())\n    total = total + price\n    print(f\"Item {k}: {price}, total {total}\")\nprint(\"Subtotal:\", total)\ndiscount = total // 10\ntotal = total + delivery\nprint(\"Discount:\", discount)\nprint(\"Delivery:\", delivery)\nprint(\"To pay:\", total - discount)\n",
+      "hint": "Эхлээд жишээ 1-ээр `k`, `price`, `total` баганатай мөшгих хүснэгт зур. Гурван асуулт: нийлбэрийг хаана эхлүүлэх ёстой вэ — давталтын дотор уу, өмнө нь уу? `Item` мөр хэвлэгдэх агшинд `total` энэ барааг аль хэдийн агуулсан байх ёстой юу? Хөнгөлөлтийг бодох агшинд `total`-д хүргэлтийн төлбөр нэмэгдсэн байх ёстой юу?"
+    },
+    {
+      "id": "b2-3-02-mcq",
+      "section": "B2.3.2",
+      "type": "mcq",
+      "title": "Кино театрын хөнгөлөлтийн нөхцөл",
+      "prompt": "Кино театр 12 хүрээгүй (0–11 настай) хүүхэд болон 60 ба түүнээс дээш настай хүмүүст хөнгөлөлт үзүүлдэг; бусад нь бүтэн үнээр орно. `age` нь насыг хадгалсан бүхэл тоо.\n\nАль `if` мөрийн нөхцөл хөнгөлөлт авах ёстой хүн бүрд үнэн, бусад бүх хүнд худал байх вэ?",
+      "xp": 10,
+      "options": [
+        "if age <= 12 or age >= 60:",
+        "if age < 12 or age >= 60:",
+        "if age < 12 and age >= 60:",
+        "if age < 12 or 60:"
+      ],
+      "answer": 1,
+      "hint": "Мөр бүрийн нөхцөлийг 5, 12, 30, 65 настай хүмүүсээр шалгаж, тус бүрд үнэн эсвэл худал гарахыг бич. Хөнгөлөлт авахын тулд аль нэг бүлэгт байхад хангалттай юу, эсвэл хоёуланд нь зэрэг байх ёстой юу? `or`-ийн баруун талд зөвхөн тоо байвал Python түүнийг юу гэж үздэг вэ?"
+    },
+    {
+      "id": "b2-3-02-code",
+      "section": "B2.3.2",
+      "type": "coding",
+      "title": "Шалгалтын дүн: хил дээрх оноо",
+      "prompt": "Сургуулийн цахим дэвтэр шалгалтын оноог (0–100) дүн болгодог. Багш заримдаа андуурч 105 эсвэл −3 гэх мэт боломжгүй оноо оруулдаг тул программ үүнийг ч таних ёстой.\n\n**Дүрэм** (хил дээрх оноо аль мөрөнд орохыг анхаар — хоёр тал нь хоёулаа орно):\n\n| Оноо | Дүн |\n|---|---|\n| 0-ээс бага эсвэл 100-аас их | `Invalid` |\n| 85–100 | `A` |\n| 70–84 | `B` |\n| 50–69 | `C` |\n| 40–49 | `Retake` (тэнцээгүй, дахин шалгалт өгөх эрхтэй) |\n| 0–39 | `Fail` |\n\n**Оролт:** 1-р мөрөнд онооны тоо n (1–20), дараагийн n мөр бүрт нэг бүхэл оноо (сөрөг ч байж болно).\n\n**Гаралт:** оноо бүрт нэг мөр: оноо, `: ` (хоёр цэг ба зай), дүн.\n\n```text\nОролт:      Гаралт:\n5           92: A\n92          85: A\n85          84: B\n84          50: C\n50          12: Fail\n12\n```\n\n```text\nОролт:      Гаралт:\n4           101: Invalid\n101         70: B\n70          45: Retake\n45          -5: Invalid\n-5\n```\n\nНэг `if–elif–else` гинж хангалттай. Хичээлийн `grade()` жишээнээс хил нь өөр бөгөөд `Invalid`, `Retake` ангилал нэмэгдсэнийг анхаар.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "n = int(input())\nfor i in range(n):\n    score = int(input())\n    # choose the grade with ONE if-elif-else chain\n    # then print the score, \": \" and the grade\n",
+      "tests": [
+        {
+          "input": "5\n92\n85\n84\n50\n12",
+          "output": "92: A\n85: A\n84: B\n50: C\n12: Fail"
+        },
+        {
+          "input": "4\n101\n70\n45\n-5",
+          "output": "101: Invalid\n70: B\n45: Retake\n-5: Invalid"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "6\n100\n69\n49\n40\n39\n0",
+          "output": "100: A\n69: C\n49: Retake\n40: Retake\n39: Fail\n0: Fail"
+        },
+        {
+          "input": "1\n50",
+          "output": "50: C"
+        },
+        {
+          "input": "3\n-1\n101\n1000",
+          "output": "-1: Invalid\n101: Invalid\n1000: Invalid"
+        },
+        {
+          "input": "4\n86\n71\n51\n41",
+          "output": "86: A\n71: B\n51: C\n41: Retake"
+        },
+        {
+          "input": "3\n70\n85\n40",
+          "output": "70: B\n85: A\n40: Retake"
+        }
+      ],
+      "solution": "n = int(input())\nfor i in range(n):\n    score = int(input())\n    if score < 0 or score > 100:\n        grade = \"Invalid\"\n    elif score >= 85:\n        grade = \"A\"\n    elif score >= 70:\n        grade = \"B\"\n    elif score >= 50:\n        grade = \"C\"\n    elif score >= 40:\n        grade = \"Retake\"\n    else:\n        grade = \"Fail\"\n    print(f\"{score}: {grade}\")\n",
+      "hint": "Эхлээд боломжгүй оноог (`score < 0 or score > 100`) шалга — эс бөгөөс 101 «A» болно. Дараа нь хилүүдийг дээрээс доош `>=`-ээр: 85, 70, 50, 40. `elif` эхний True салаан дээр зогсдог тул `score >= 50`-ийг `score >= 85`-аас өмнө бичвэл 92 «C» болно. Хил бүрийг (85 ба 84, 70 ба 69, 50 ба 49, 40 ба 39, 100 ба 101, 0 ба −1) өөрөө туршиж үз."
+    },
+    {
+      "id": "b2-3-03-trace",
+      "section": "B2.3.3",
+      "type": "tracing",
+      "title": "Давхар давталт ба break-ийг мөшгих",
+      "prompt": "Программ юу хэвлэх вэ? `i`, `j`, `passes`, `total` баганатай мөшгих хүснэгт зур: доторх давталтын дамжилт бүр нэг мөр.\n\n```python\ntotal = 0\npasses = 0\nfor i in range(1, 5):\n    for j in range(1, 5):\n        passes += 1\n        if j > i:\n            break\n        if (i + j) % 2 == 0:\n            total += j\n    print(\"i =\", i, \"total =\", total)\nprint(\"passes =\", passes)\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "i = 1 total = 1\ni = 2 total = 3\ni = 3 total = 7\ni = 4 total = 13\npasses = 13",
+      "hint": "`passes += 1` нь `passes = passes + 1`-ийн товчлол. `break` зөвхөн доторх (`j`) давталтаас гаргана — гаднах `i` давталт үргэлжилнэ. `passes += 1` нь `break`-ээс **өмнө** байгаа тул `break` хийсэн дамжилт ч тоологдоно. `range(1, 5)` нь 1–4. `print(\"i =\", …)` мөр гаднах давталтын дотор, доторх давталт дууссаны дараа ажиллана."
+    },
+    {
+      "id": "b2-3-03-code",
+      "section": "B2.3.3",
+      "type": "coding",
+      "title": "Алга ташилтын тоглоом: Clap ба Stomp",
+      "prompt": "Биеийн тамирын хичээлийн дасгал: анги тойрон зогсоод ээлжээр тоолно. 3-т хуваагдах тоон дээр алга ташина, 5-д хуваагдах тоон дээр хөлөө дэвсэнэ. Программ тоолох ээлжийг хэвлэнэ.\n\n**Дүрэм** — a-аас b хүртэлх бүхэл тоо бүрт нэг мөр:\n\n- 3-т **ба** 5-д хоёуланд нь хуваагдвал `ClapStomp`;\n- зөвхөн 3-т хуваагдвал `Clap`;\n- зөвхөн 5-д хуваагдвал `Stomp`;\n- бусад тохиолдолд тоо өөрөө.\n\na ба b **хоёулаа орно**. a ≤ b бол өсөхөөр (a, a + 1, …, b), a > b бол буурахаар (a, a − 1, …, b) тоол. a = b бол ганц мөр.\n\n**Оролт:** 2 мөр — a ба b (1–100 бүхэл тоо).\n\n```text\nОролт:      Гаралт:\n1           1\n15          2\n            Clap\n            4\n            Stomp\n            Clap\n            7\n            8\n            Clap\n            Stomp\n            11\n            Clap\n            13\n            14\n            ClapStomp\n```\n\n```text\nОролт:      Гаралт:\n20          Stomp\n14          19\n            Clap\n            17\n            16\n            ClapStomp\n            14\n```\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "a = int(input())\nb = int(input())\n\n# 1. choose the step: +1 when counting up, -1 when counting down\n# 2. loop from a to b - remember that b must be included\n# 3. for each number print ClapStomp, Clap, Stomp or the number itself\n",
+      "tests": [
+        {
+          "input": "1\n15",
+          "output": "1\n2\nClap\n4\nStomp\nClap\n7\n8\nClap\nStomp\n11\nClap\n13\n14\nClapStomp"
+        },
+        {
+          "input": "20\n14",
+          "output": "Stomp\n19\nClap\n17\n16\nClapStomp\n14"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "1\n1",
+          "output": "1"
+        },
+        {
+          "input": "15\n15",
+          "output": "ClapStomp"
+        },
+        {
+          "input": "3\n1",
+          "output": "Clap\n2\n1"
+        },
+        {
+          "input": "28\n31",
+          "output": "28\n29\nClapStomp\n31"
+        },
+        {
+          "input": "100\n89",
+          "output": "Stomp\nClap\n98\n97\nClap\nStomp\n94\nClap\n92\n91\nClapStomp\n89"
+        },
+        {
+          "input": "44\n46",
+          "output": "44\nClapStomp\n46"
+        }
+      ],
+      "solution": "a = int(input())\nb = int(input())\n\nif a <= b:\n    step = 1\nelse:\n    step = -1\n\nfor i in range(a, b + step, step):\n    if i % 3 == 0 and i % 5 == 0:\n        print(\"ClapStomp\")\n    elif i % 3 == 0:\n        print(\"Clap\")\n    elif i % 5 == 0:\n        print(\"Stomp\")\n    else:\n        print(i)\n",
+      "hint": "Хоёуланд нь хуваагдах тохиолдлыг **эхэлж** шалга — эс бөгөөс 15 «Clap» болно (`elif` эхний True дээр зогсоно). b-г оруулахын тулд `range`-ийн stop-ийг нэг алхмаар цааш тавь: өсөхөд `range(a, b + 1)`, буурахад `range(a, b - 1, -1)`."
+    },
+    {
+      "id": "b2-3-04-trace",
+      "section": "B2.3.4",
+      "type": "tracing",
+      "title": "Функцийн дуудлагыг мөшгих: return, print, None",
+      "prompt": "Программ юу хэвлэх вэ? Дуудлага бүрт аргумент аль параметрт очиж, функц юу **буцааж**, юу **хэвлэж** байгааг тусад нь бич.\n\n```python\ndef double(x):\n    return x * 2\n\ndef show(x):\n    print(\"show:\", x)\n\ndef combo(a, b):\n    a = double(a)\n    print(\"combo:\", a, b)\n    return a + double(b)\n\ndef first_even(nums):\n    for x in nums:\n        if x % 2 == 0:\n            return x\n    return -1\n\nn = 3\nr = combo(n, 1)\nprint(\"r =\", r, \"n =\", n)\ns = show(double(r))\nprint(\"s =\", s)\nprint(double(combo(1, n)))\nprint(first_even([3, 5, 8, 10]), first_even([1, 7]))\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "combo: 6 1\nr = 8 n = 3\nshow: 16\ns = None\ncombo: 2 3\n16\n8 -1",
+      "hint": "Хаалтан доторх дуудлага эхэлж бодогдоно: `show(double(r))` бол эхлээд `double(r)`. `combo` доторх `a = double(a)` нь зөвхөн локал `a`-г өөрчилнө — гаднах `n` хэвээр. `return`-гүй функц юу буцаадгийг сана. `return` давталтын дундуур ч функцийг тэр даруй дуусгана."
+    },
+    {
+      "id": "b2-3-04-code",
+      "section": "B2.3.4",
+      "type": "coding",
+      "title": "Хичээлийн хуваарь: минут буцаадаг функц",
+      "prompt": "Сургуулийн хуваарийн апп хичээл бүрийн үргэлжлэх хугацаа, хичээл хоорондын завсарлагыг минутаар, өдрийн нийт хичээлийн хугацааг цаг ба минутаар харуулна. Цагийг `HH:MM` хэлбэрийн текстээр өгнө: 24 цагийн, цаг ба минут үргэлж 2 оронтой (`08:30`, `14:05`).\n\nХоёр функц бич:\n\n- `to_minutes(t)` — `HH:MM` текстийг шөнө дундаас хойш өнгөрсөн минут болгож **буцаана**: `to_minutes(\"08:30\")` → 8 × 60 + 30 = `510`.\n- `duration(start, end)` — хичээлийн үргэлжлэх хугацааг минутаар **буцаана**; `to_minutes`-ийг хоёр удаа дуудаж ашигла. `end` нь `start`-аас хэзээ ч өмнө биш (хичээл шөнө дундыг давахгүй); тэнцүү бол 0.\n\nФункцүүд юу ч **хэвлэхгүй** — зөвхөн `return`. Эхлэлийн кодын доод хэсэг (үндсэн программ) бэлэн: хичээл бүрийн хугацааг `duration`-аар, хоёр хичээлийн хоорондох завсарлагыг `to_minutes`-ээр бодож хэвлээд, хугацааг нийлбэрт нэмнэ. **Үндсэн программыг бүү өөрчил.** Функц `return`-ийн оронд `print` хийвэл үндсэн программ `None` хэвлэх эсвэл `None`-оор тооцоо хийх гэж `TypeError` өгнө.\n\n**Оролт:** 1-р мөрөнд хичээлийн тоо n (1–10), дараагийн n мөр бүрт эхлэх ба дуусах цаг, зайгаар тусгаарласан. Хичээлүүд цагийн ээлжээрээ өгөгдөнө: дараагийн хичээл өмнөхийнхөө дууссанаас өмнө эхлэхгүй.\n\n```text\nОролт:            Гаралт:\n3                 08:30 -> 09:50 = 80 min\n08:30 09:50       Break: 10 min\n10:00 11:20       10:00 -> 11:20 = 80 min\n11:30 12:10       Break: 10 min\n                  11:30 -> 12:10 = 40 min\n                  Total: 3 h 20 min\n```\n\n```text\nОролт:            Гаралт:\n2                 13:45 -> 14:30 = 45 min\n13:45 14:30       Break: 10 min\n14:40 15:05       14:40 -> 15:05 = 25 min\n                  Total: 1 h 10 min\n```\n\nЦаг ба минутыг зүсэлтээр (B2.1.2) салга; `int(\"08\")` нь `8` өгнө — эхний 0 саад болохгүй.\n\n`input()`-д асуух текст бүү бичээрэй — гаралт жишээн дээрхтэй яг адил байх ёстой.",
+      "xp": 20,
+      "starter_code": "def to_minutes(t):\n    # \"08:30\" -> 510: hours * 60 + minutes\n    pass  # pass means \"do nothing yet\" - replace it with your code\n\n\ndef duration(start, end):\n    # use to_minutes twice and RETURN the difference\n    pass  # pass means \"do nothing yet\" - replace it with your code\n\n\n# ---- main program: do not change anything below ----\nn = int(input())\ntotal = 0\nprev_end = \"00:00\"\nfor i in range(n):\n    start, end = input().split()\n    if i > 0:\n        print(\"Break:\", to_minutes(start) - to_minutes(prev_end), \"min\")\n    minutes = duration(start, end)\n    print(start, \"->\", end, \"=\", minutes, \"min\")\n    total = total + minutes\n    prev_end = end\nprint(\"Total:\", total // 60, \"h\", total % 60, \"min\")\n",
+      "tests": [
+        {
+          "input": "3\n08:30 09:50\n10:00 11:20\n11:30 12:10",
+          "output": "08:30 -> 09:50 = 80 min\nBreak: 10 min\n10:00 -> 11:20 = 80 min\nBreak: 10 min\n11:30 -> 12:10 = 40 min\nTotal: 3 h 20 min"
+        },
+        {
+          "input": "2\n13:45 14:30\n14:40 15:05",
+          "output": "13:45 -> 14:30 = 45 min\nBreak: 10 min\n14:40 -> 15:05 = 25 min\nTotal: 1 h 10 min"
+        }
+      ],
+      "hidden_tests": [
+        {
+          "input": "1\n07:00 07:00",
+          "output": "07:00 -> 07:00 = 0 min\nTotal: 0 h 0 min"
+        },
+        {
+          "input": "1\n00:00 23:59",
+          "output": "00:00 -> 23:59 = 1439 min\nTotal: 23 h 59 min"
+        },
+        {
+          "input": "4\n08:00 08:45\n08:55 09:40\n09:50 10:35\n10:45 11:30",
+          "output": "08:00 -> 08:45 = 45 min\nBreak: 10 min\n08:55 -> 09:40 = 45 min\nBreak: 10 min\n09:50 -> 10:35 = 45 min\nBreak: 10 min\n10:45 -> 11:30 = 45 min\nTotal: 3 h 0 min"
+        },
+        {
+          "input": "2\n12:59 13:01\n19:30 21:15",
+          "output": "12:59 -> 13:01 = 2 min\nBreak: 389 min\n19:30 -> 21:15 = 105 min\nTotal: 1 h 47 min"
+        },
+        {
+          "input": "1\n09:05 10:00",
+          "output": "09:05 -> 10:00 = 55 min\nTotal: 0 h 55 min"
+        }
+      ],
+      "solution": "def to_minutes(t):\n    hours = int(t[:2])\n    minutes = int(t[3:])\n    return hours * 60 + minutes\n\n\ndef duration(start, end):\n    return to_minutes(end) - to_minutes(start)\n\n\n# ---- main program: do not change anything below ----\nn = int(input())\ntotal = 0\nprev_end = \"00:00\"\nfor i in range(n):\n    start, end = input().split()\n    if i > 0:\n        print(\"Break:\", to_minutes(start) - to_minutes(prev_end), \"min\")\n    minutes = duration(start, end)\n    print(start, \"->\", end, \"=\", minutes, \"min\")\n    total = total + minutes\n    prev_end = end\nprint(\"Total:\", total // 60, \"h\", total % 60, \"min\")\n",
+      "hint": "`\"08:30\"`-д аль индексүүд цаг, аль нь минут вэ? (`t[2]` бол `:`.) Хоёр хэсгийг зүсээд `int()`-ээр тоо болго; нэг цагт 60 минут. `duration` дотор `to_minutes`-ийг хоёр удаа дуудаад аль утгыг аль утгаас хасахаа бод — ээлжийг сольвол хасах тоо гарна. `:`-ийг хасаад `1505 - 1440` гэвэл 65 гарна, гэтэл `14:40`-өөс `15:05` хүртэл 25 минут — тиймээс эхлээд минут руу хөрвүүл. Функц `print` биш, `return` хийх ёстой."
+    },
+    {
+      "id": "b2-3-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: функцийн давуу тал",
+      "prompt": "**Explain the benefits of using functions.** [4]\n\nIB-ийн шалгалтын хэв маягийн асуулт. Функц ашиглах (кодыг модульчлах) давуу талуудыг нэрлээд зогсохгүй, тус бүр **яагаад** тус болохыг тайлбарла; жишээгээр баталбал илүү. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Дахин ашиглах (reusability): функцийг нэг удаа бичиж, программын олон газраас өөр өөр аргументаар дуудна — кодыг хуулж давтах шаардлагагүй тул программ богино болж, хөгжүүлэх хугацаа хэмнэгдэнэ [1]\n• Засварлахад хялбар (maintainability): алдаа засах эсвэл дүрэм өөрчлөхдөө зөвхөн функцийн тодорхойлолтыг нэг газар засахад бүх дуудлагад хүрнэ — хуулсан хувилбаруудын аль нэгийг засахаа мартах эрсдэлгүй [1]\n• Тестлэх, алдаа олох: функц бүрийг тусад нь, өөр өөр аргументаар шалгаж болох тул алдааг жижиг, тодорхой хэсгээс хайна [1]\n• Багаар ажиллах: том асуудлыг дэд асуудал бүрт нэг функц (модуль) болгон хуваах тул өөр программистууд зэрэг бичиж, дараа нь нэгтгэнэ [1]\n• Уншигдах байдал: утга бүхий нэртэй функц (жишээ нь `grade(avg)`) олон мөр кодыг нуух тул үндсэн программ алхмуудын жагсаалт шиг ойлгомжтой уншигдана [1]\n• Параметр ба локал хувьсагч ашигладаг тул функц бие даасан болж, гаж нөлөө (глобал өгөгдлийг санамсаргүй өөрчлөх) багасна [1]\n(Дээд тал нь 4 оноо. Давуу талыг нэрлээд зогсвол оноо авахгүй — яагаад тус болохыг тайлбарласан байх ёстой. Ижил санааг өөр үгээр давтвал нэг л оноо.)",
+      "hint": "Дөрвөн асуулт: функцийг дахин ашиглахад юу хэмнэгдэх вэ? Алдаа засах, дүрэм өөрчлөхөд юу амар болох вэ? Тестлэх, багаар ажиллахад яагаад тус болох вэ? Давуу тал бүрт «яагаад» гэдгийг бич."
+    }
+  ]
+}

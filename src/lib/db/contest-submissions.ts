@@ -3,6 +3,7 @@ import "server-only";
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { contestParticipants, contestSubmissions, users } from "@/lib/db/schema";
+import type { ScoreEvent } from "@/lib/contest-timeline";
 
 /** One attempt with the participant's name and email. */
 export interface SubmissionRow {
@@ -97,4 +98,22 @@ export async function allContestSubmissions(contestId: string): Promise<Submissi
     .where(eq(contestSubmissions.contest_id, contestId))
     .orderBy(asc(contestSubmissions.submitted_at), asc(contestSubmissions.id));
   return rows.map(toRow);
+}
+
+/** Approved participants' attempts, oldest first — the score chart's input. */
+export async function scoreEvents(contestId: string): Promise<ScoreEvent[]> {
+  const rows = await getDb()
+    .select({
+      uid: contestSubmissions.uid,
+      problem_id: contestSubmissions.problem_id,
+      score: contestSubmissions.score,
+      submitted_at: contestSubmissions.submitted_at,
+    })
+    .from(contestSubmissions)
+    .innerJoin(contestParticipants, participantOf)
+    .where(
+      and(eq(contestSubmissions.contest_id, contestId), eq(contestParticipants.status, "approved"))
+    )
+    .orderBy(asc(contestSubmissions.submitted_at), asc(contestSubmissions.id));
+  return rows.map((r) => ({ ...r, submitted_at: r.submitted_at.getTime() }));
 }

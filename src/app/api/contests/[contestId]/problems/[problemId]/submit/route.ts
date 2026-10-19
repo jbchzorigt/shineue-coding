@@ -9,6 +9,7 @@ import {
   getProblemPrivate,
 } from "@/lib/db/contests";
 import { getUserProfile } from "@/lib/db/users";
+import { entryBlock } from "@/lib/contest-access";
 import { NotFoundError } from "@/lib/errors";
 import { gradeLogic } from "@/lib/logic/grade";
 import { gradePython } from "@/lib/piston";
@@ -73,14 +74,12 @@ export async function POST(
   const staff = isStaff(profile?.role);
   const participant = await getParticipant(contestId, uid);
 
-  // Staff may dry-run problems anytime; students need registration and
-  // a running contest, checked server-side against server time.
+  // Staff may dry-run problems anytime; students need an approved
+  // registration and a running contest, checked server-side against server time.
   if (!staff) {
-    if (!participant) {
-      return NextResponse.json(
-        { message: "Эхлээд тэмцээнд бүртгүүлнэ үү." },
-        { status: 403 }
-      );
+    const block = entryBlock(participant);
+    if (block) {
+      return NextResponse.json({ message: block }, { status: 403 });
     }
     if (status === "upcoming") {
       return NextResponse.json({ message: "Тэмцээн хараахан эхлээгүй." }, { status: 403 });

@@ -39,8 +39,8 @@ export default async function ContestProblemPage({
   ]);
   const staff = isStaff(profile?.role);
 
-  // Unregistered students (or before start) don't get to read problems.
-  if (!staff && (!participant || status === "upcoming")) {
+  // Students without an approved registration (or before start) don't get to read problems.
+  if (!staff && (participant?.status !== "approved" || status === "upcoming")) {
     redirect(`/contests/${contestId}`);
   }
 

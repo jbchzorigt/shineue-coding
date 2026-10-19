@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { addUser, resetDb } from "@/lib/db/test-helpers";
 import { closeDb, getDb } from "@/lib/db/client";
 import { contestSubmissions } from "@/lib/db/schema";
-import { registerParticipant, upsertContest } from "@/lib/db/contests";
+import { decideRequests, registerParticipant, upsertContest } from "@/lib/db/contests";
 import {
   allContestSubmissions,
   bestSubmissions,
   listContestSubmissions,
+  scoreEvents,
 } from "@/lib/db/contest-submissions";
 
 beforeEach(resetDb);
@@ -23,6 +24,7 @@ async function seed(): Promise<void> {
       description: "",
       starts_at: Date.parse("2026-03-01T09:00:00Z"),
       ends_at: Date.parse("2026-03-01T12:00:00Z"),
+      requires_approval: false,
     });
   }
   await addUser("s1", { class_name: "11A" });
@@ -100,4 +102,32 @@ test("allContestSubmissions: every attempt of this contest, oldest first", async
   await attempt("s1", "p1", 40, 3, "other");
 
   assert.deepEqual((await allContestSubmissions(CUP)).map((r) => r.code), ["s1-p1-1", "s2-p1-2"]);
+});
+
+test("scoreEvents: this contest's attempts, oldest first, approved participants only", async () => {
+  await seed();
+  await attempt("s2", "p1", 20, 2);
+  await attempt("s1", "p1", 10, 1);
+  await attempt("s1", "p1", 40, 3, "other");
+  // A pending request never shows on the chart, even with stray attempts.
+  await upsertContest({
+    id: "gated",
+    title: "gated",
+    description: "",
+    starts_at: Date.parse("2026-03-01T09:00:00Z"),
+    ends_at: Date.parse("2026-03-01T12:00:00Z"),
+    requires_approval: true,
+  });
+  await addUser("t1", { role: "teacher" });
+  await registerParticipant("gated", { uid: "s2", name: null, email: "s2@x" });
+  await registerParticipant("gated", { uid: "s1", name: "Бат", email: "s1@x" });
+  await decideRequests("gated", ["s1"], "approved", "t1");
+  await attempt("s1", "p1", 5, 4, "gated");
+  await attempt("s2", "p1", 7, 5, "gated");
+
+  assert.deepEqual(await scoreEvents(CUP), [
+    { uid: "s1", problem_id: "p1", score: 10, submitted_at: Date.UTC(2026, 2, 1, 9, 1) },
+    { uid: "s2", problem_id: "p1", score: 20, submitted_at: Date.UTC(2026, 2, 1, 9, 2) },
+  ]);
+  assert.deepEqual((await scoreEvents("gated")).map((e) => e.uid), ["s1"]);
 });

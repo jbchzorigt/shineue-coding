@@ -160,6 +160,8 @@ export const contests = pgTable("contests", {
   description: text("description").notNull().default(""),
   starts_at: timestamp("starts_at", tz).notNull(),
   ends_at: timestamp("ends_at", tz).notNull(),
+  /** «Оролцох» files a request a teacher/admin must approve. */
+  requires_approval: boolean("requires_approval").notNull().default(true),
 });
 
 export const contestProblems = pgTable(
@@ -217,8 +219,16 @@ export const contestParticipants = pgTable(
     total: integer("total").notNull().default(0),
     last_improved_at: timestamp("last_improved_at", tz),
     registered_at: timestamp("registered_at", tz).notNull().defaultNow(),
+    /** Rows from before approvals existed count as approved; new rows get an explicit value. */
+    status: text("status").$type<"pending" | "approved" | "rejected">().notNull().default("approved"),
+    decided_by: text("decided_by").references(() => users.uid, { onDelete: "set null" }),
+    decided_at: timestamp("decided_at", tz),
   },
-  (t) => [primaryKey({ columns: [t.contest_id, t.uid] })]
+  (t) => [
+    primaryKey({ columns: [t.contest_id, t.uid] }),
+    check("contest_participants_status_check", sql`${t.status} in ('pending', 'approved', 'rejected')`),
+    index("contest_participants_status_idx").on(t.contest_id, t.status),
+  ]
 );
 
 /** Append-only attempt log. */

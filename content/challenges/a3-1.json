@@ -1,0 +1,40 @@
+{
+  "module_id": "a3-1",
+  "challenges": [
+    {
+      "id": "a3-1-01-mcq",
+      "section": "A3.1.1",
+      "type": "mcq",
+      "title": "Захиалгын хүснэгтийн түлхүүрүүд",
+      "prompt": "Нислэгийн компанийн өгөгдлийн сан PASSENGER (зорчигч), FLIGHT (нислэг), BOOKING (захиалга) гэсэн гурван хүснэгттэй. PASSENGER-ийн үндсэн түлхүүр нь `PassengerID`, FLIGHT-ийнх нь `FlightID`. BOOKING хүснэгтийн эхний дөрвөн бичлэг:\n\n| BookingID | PassengerID | FlightID | Seat |\n|---|---|---|---|\n| B101 | P07 | F301 | 12A |\n| B102 | P07 | F302 | 3C |\n| B103 | P12 | F301 | 12B |\n| B104 | P31 | F302 | 12A |\n\nBOOKING хүснэгтийн түлхүүрүүдийн талаар аль өгүүлбэр зөв бэ?",
+      "xp": 10,
+      "options": [
+        "`FlightID` бол BOOKING-ийн үндсэн түлхүүр: захиалга бүр нэг нислэгт хамаардаг тул нислэгийн дугаараар захиалгыг ялгаж таньдаг",
+        "`PassengerID` гадаад түлхүүр байж чадахгүй: P07 хоёр бичлэгт давтагдсан, харин түлхүүрийн утга давтагдах ёсгүй",
+        "`BookingID` бол үндсэн түлхүүр; `PassengerID` ба `FlightID` нь гадаад түлхүүр тул тэдгээрийн утга давтагдаж болно",
+        "`Seat` бол үндсэн түлхүүр: нэг суудлыг хоёр зорчигчид зарж болохгүй тул суудлын дугаар давхцахгүй"
+      ],
+      "answer": 2,
+      "hint": "Захиалгын хүснэгтэд аль багана дангаараа мөр бүрийг ялгаж чадах вэ? Өөр хүснэгтийг заадаг багана олон мөрөнд ижил утгатай байхад асуудал гарах уу?"
+    },
+    {
+      "id": "a3-1-01-trace",
+      "section": "A3.1.1",
+      "type": "tracing",
+      "title": "Сургуулийн өгөгдлийн сан: INSERT ба JOIN",
+      "prompt": "Сургуулийн өгөгдлийн сан хоёр хүснэгттэй: HOMEROOM (анги ба түүний багш), STUDENT (сурагч ба түүний анги). Программ таван сурагч нэмэхийг оролдоод, дараа нь хоёр хүснэгтийг JOIN-оор нийлүүлж хэвлэнэ.\n\nУншихад туслах:\n\n- Энэ программд гадаад түлхүүрийн шалгалт асаалттай (`PRAGMA foreign_keys = ON`). Түлхүүрийн дүрэм зөрчсөн `INSERT`-ийг өгөгдлийн сан татгалзаж, Python `sqlite3.IntegrityError` үүсгэнэ — тэр сурагч нэмэгдэхгүй.\n- `INSERT INTO STUDENT VALUES (?, ?, ?)` — `?` бүрийн оронд `student` tuple-ийн утгууд дарааллаараа орно.\n- `JOIN … ON STUDENT.RoomID = HOMEROOM.RoomID` нь `RoomID` ижил байгаа хоёр бичлэгийг нэг мөр болгоно; таарах хосгүй бичлэг гарахгүй. `ORDER BY STUDENT.Name` нь нэрээр цагаан толгойн (A–Z) дарааллаар эрэмбэлнэ.\n\nПрограмм юу хэвлэх вэ?\n\n```python\nimport sqlite3\n\ncon = sqlite3.connect(\":memory:\")\ncon.execute(\"PRAGMA foreign_keys = ON\")       # foreign keys are checked\ncon.execute(\"CREATE TABLE HOMEROOM (RoomID TEXT PRIMARY KEY, Teacher TEXT)\")\ncon.execute(\"\"\"CREATE TABLE STUDENT (\n                   StudentID TEXT PRIMARY KEY,\n                   Name      TEXT,\n                   RoomID    TEXT REFERENCES HOMEROOM(RoomID))\"\"\")\ncon.execute(\"INSERT INTO HOMEROOM VALUES ('10A', 'Saraa'), ('10B', 'Ganaa'), ('11A', 'Tuya')\")\n\nnew_students = [(\"S1\", \"Temuujin\", \"10B\"), (\"S2\", \"Anu\", \"10A\"), (\"S3\", \"Bold\", \"12C\"),\n                (\"S1\", \"Dulmaa\", \"10A\"), (\"S4\", \"Khulan\", \"10B\")]\nfor student in new_students:\n    try:\n        con.execute(\"INSERT INTO STUDENT VALUES (?, ?, ?)\", student)\n    except sqlite3.IntegrityError:\n        print(\"rejected:\", student[1])\n\nrows = con.execute(\"\"\"SELECT STUDENT.Name, HOMEROOM.Teacher\n                      FROM STUDENT JOIN HOMEROOM ON STUDENT.RoomID = HOMEROOM.RoomID\n                      ORDER BY STUDENT.Name\"\"\").fetchall()\nfor name, teacher in rows:\n    print(name, \"->\", teacher)\nprint(len(rows), \"rows\")\n```\n\nГаралтыг яг хэвлэгдэх хэлбэрээр нь, мөр бүрийг шинэ мөрөнд бичээрэй.",
+      "xp": 15,
+      "expected": "rejected: Bold\nrejected: Dulmaa\nAnu -> Saraa\nKhulan -> Ganaa\nTemuujin -> Ganaa\n3 rows",
+      "hint": "Сурагч бүрийг нэмэхийн өмнө хоёр зүйл шалга: энэ `StudentID` өмнө нь амжилттай нэмэгдсэн үү? Энэ `RoomID` HOMEROOM-д байгаа юу? Дараа нь зөвхөн нэмэгдсэн сурагчдыг багштай нь холбож, нэрээр нь эрэмбэл. Сурагчгүй анги JOIN-д гарах уу?"
+    },
+    {
+      "id": "a3-1-exam",
+      "type": "theory",
+      "title": "Шалгалтын асуулт: реляцын өгөгдлийн сангийн онцлог",
+      "prompt": "**Describe the features of a relational database.** [4]\n\nIB-ийн шалгалтын хэв маягийн асуулт. **Describe** гэдэг нь онцлог бүрийг нэрлээд зогсохгүй, юу болохыг нь дэлгэрэнгүй бичихийг хэлнэ. Нисэх онгоцны буудлын (AEROPLANE, FLIGHTS, PILOTFLIGHT) эсвэл өөрийн жишээг ашиглаж болно. Англиар эсвэл монголоор бичиж болно.\n\nИлгээсний дараа үнэлгээний схем (mark scheme) гарч ирнэ. Хариултаа түүнтэй харьцуулж, өөрийгөө үнэлээрэй.",
+      "xp": 20,
+      "mark_scheme": "• Өгөгдлийг хүснэгтүүдэд хадгална: хүснэгт бүр нэг биетийг (entity) дүрсэлж, мөр бүр нь бичлэг (record/tuple), багана бүр нь талбар (field/attribute) [1]\n• Үндсэн түлхүүр (primary key): хүснэгтийн бичлэг бүрийг давтагдашгүйгээр ялгаж таних, хоосон байж болохгүй талбар (жишээ нь AEROPLANE-ийн PlaneID) [1]\n• Гадаад түлхүүр (foreign key): өөр хүснэгтийн үндсэн түлхүүрийг заадаг талбар; хүснэгтүүдийг холбоно (жишээ нь FLIGHTS-ийн PlaneID) [1]\n• Нийлмэл түлхүүр (composite key): хоёр ба түүнээс олон талбар хамтдаа үндсэн түлхүүр болно (жишээ нь PILOTFLIGHT-ийн FlightID + PilotID) [1]\n• Хүснэгтүүдийн хооронд хамаарал (relationship) үүснэ: 1:1, 1:m, m:m; m:m-ийг холбох хүснэгтээр хоёр 1:m болгоно [1]\n• Лавлагааны бүрэн бүтэн байдал (referential integrity): DBMS гадаад түлхүүрийн утга бүр байгаа үндсэн түлхүүрийн утгатай таарахыг шалгадаг [1]\n(Дээд тал нь 4 оноо. Онцлогийг зөвхөн нэрлэвэл оноо өгөхгүй — юу болохыг нь тайлбарласан байх ёстой. Энэ схем IB-ийн албан ёсны markscheme биш, энэ хичээлийн санал болгосон хариулт.)",
+      "hint": "Нисэх онгоцны буудлын жишээг сана: онгоц бүрийг юугаар ялгадаг вэ? Нислэг онгоцтойгоо яаж холбогддог вэ? Нисгэгч ба нислэгийн холбоо хаана хадгалагддаг вэ? Байхгүй онгоцтой нислэгийг юу зөвшөөрдөггүй вэ? Хариулт бүр нэг онцлог."
+    }
+  ]
+}

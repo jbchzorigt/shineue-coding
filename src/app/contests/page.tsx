@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarClock, CheckCircle2, Plus, Swords, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock, Plus, Swords, Users, XCircle } from "lucide-react";
 import { auth } from "@/auth";
 import { contestStatus, listContests, listParticipants, getParticipant } from "@/lib/db/contests";
 import { registerForContest } from "@/lib/contest-actions";
@@ -52,7 +52,7 @@ export default async function ContestsPage() {
 
         {contests.map((c, i) => {
           const status = contestStatus(c);
-          const registered = !!extras[i].me;
+          const myStatus = extras[i].me?.status;
           return (
             <Card key={c.id}>
               <CardContent className="space-y-3">
@@ -83,10 +83,20 @@ export default async function ContestsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {registered ? (
+                  {myStatus === "approved" ? (
                     <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600">
                       <CheckCircle2 className="size-4" />
                       Бүртгүүлсэн
+                    </span>
+                  ) : myStatus === "pending" ? (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-amber-600">
+                      <Clock className="size-4" />
+                      Хүлээгдэж байна
+                    </span>
+                  ) : myStatus === "rejected" ? (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                      <XCircle className="size-4" />
+                      Татгалзсан
                     </span>
                   ) : (
                     status !== "finished" && (

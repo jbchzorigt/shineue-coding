@@ -4,9 +4,10 @@ import { ArrowLeft, ListChecks, Pencil, Plus, Star, Trophy } from "lucide-react"
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { getContest, listProblems } from "@/lib/db/contests";
+import { getContest, listProblems, listRequests } from "@/lib/db/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestForm } from "@/components/teacher/contest-form";
+import { ContestRequests } from "@/components/teacher/contest-requests";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -24,7 +25,9 @@ export default async function EditContestPage({
   const isNew = contestId === "new";
   const contest = isNew ? null : await getContest(contestId);
   if (!isNew && !contest) notFound();
-  const problems = isNew ? [] : await listProblems(contestId);
+  const [problems, requests] = isNew
+    ? [[], []]
+    : await Promise.all([listProblems(contestId), listRequests(contestId)]);
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -43,6 +46,14 @@ export default async function EditContestPage({
         <div className="rounded-xl border bg-background p-6">
           <ContestForm contest={contest} />
         </div>
+
+        {!isNew && (
+          <ContestRequests
+            contestId={contestId}
+            requests={requests}
+            requiresApproval={contest!.requires_approval}
+          />
+        )}
 
         {!isNew && (
           <Card>

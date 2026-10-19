@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TrendingUp } from "lucide-react";
 import { auth } from "@/auth";
 import {
   contestStatus,
@@ -8,10 +8,13 @@ import {
   listParticipants,
   listProblems,
 } from "@/lib/db/contests";
+import { scoreEvents } from "@/lib/db/contest-submissions";
+import { pickRacers, raceEnd, scoreTimeline } from "@/lib/contest-timeline";
 import { classFromParam, classOptions } from "@/lib/class-name";
 import { ClassFilter, ClassTag } from "@/components/class-filter";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
+import { ScoreRaceChart, type RaceSeries } from "@/components/contest/score-race-chart";
 import { ContestStatusBadge, formatTime, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,15 +43,31 @@ export default async function ContestLeaderboardPage({
   const contest = await getContest(contestId);
   if (!contest) notFound();
 
-  const [problems, everyone] = await Promise.all([
+  const [problems, everyone, events] = await Promise.all([
     listProblems(contestId),
     listParticipants(contestId),
+    scoreEvents(contestId),
   ]);
   // Ranked already; a class filter keeps that order and renumbers.
   const classes = classOptions(everyone.map((p) => p.class_name));
   const active = classFromParam((await searchParams).class, classes);
   const participants = active ? everyone.filter((p) => p.class_name === active) : everyone;
   const maxTotal = problems.reduce((s, p) => s + p.points, 0);
+
+  // Score race: the first ten of this (filtered) ranking, plus me if I'm lower.
+  const status = contestStatus(contest);
+  const chartEnd = raceEnd(contest.ends_at);
+  const lines = scoreTimeline(events, contest.starts_at, chartEnd);
+  const byUid = new Map(participants.map((p) => [p.uid, p]));
+  const racers = pickRacers(
+    participants.map((p) => p.uid).filter((uid) => lines.has(uid)),
+    session.user.id
+  );
+  const race: RaceSeries[] = racers.map((uid) => ({
+    name: byUid.get(uid)?.name ?? "Оролцогч",
+    data: lines.get(uid)!,
+    mine: uid === session.user.id,
+  }));
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -61,7 +80,7 @@ export default async function ContestLeaderboardPage({
           </Button>
           <div className="mt-2 flex items-center justify-between gap-3">
             <h1 className="text-2xl font-bold">{contest.title}</h1>
-            <ContestStatusBadge status={contestStatus(contest)} />
+            <ContestStatusBadge status={status} />
           </div>
           <p className="text-sm text-muted-foreground">
             {formatWindow(contest.starts_at, contest.ends_at)}
@@ -71,6 +90,16 @@ export default async function ContestLeaderboardPage({
         <ContestTabs contestId={contestId} active="leaderboard" />
 
         <ClassFilter options={classes} active={active} basePath={`/contests/${contestId}/leaderboard`} />
+
+        {status !== "upcoming" && race.length > 0 && (
+          <section className="rounded-xl border bg-background p-4">
+            <h2 className="mb-2 flex items-center gap-2 font-semibold">
+              <TrendingUp className="size-4" />
+              Онооны явц
+            </h2>
+            <ScoreRaceChart series={race} start={contest.starts_at} end={chartEnd} maxTotal={maxTotal} />
+          </section>
+        )}
 
         <div className="overflow-x-auto rounded-xl border bg-background">
           <Table>
