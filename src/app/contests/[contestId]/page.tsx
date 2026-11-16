@@ -11,6 +11,7 @@ import {
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
 import { formatDateTime } from "@/lib/datetime";
+import { divisionEligibility, divisionLabel } from "@/lib/contest-division";
 import { registerForContest } from "@/lib/contest-actions";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
@@ -42,6 +43,7 @@ export default async function ContestProblemsPage({
   const registered = participant?.status === "approved";
   // Problems stay hidden until the contest starts (staff can always see).
   const canViewProblems = staff || (registered && status !== "upcoming");
+  const eligibility = divisionEligibility(contest, profile?.class_name ?? null);
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -56,6 +58,11 @@ export default async function ContestProblemsPage({
             <h1 className="text-2xl font-bold">{contest.title}</h1>
             <ContestStatusBadge status={status} />
           </div>
+          {(contest.series || contest.grade_min !== null) && (
+            <p className="text-sm font-medium">
+              {[contest.series, divisionLabel(contest)].filter(Boolean).join(" · ")}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">
             {formatWindow(contest.starts_at, contest.ends_at)}
           </p>
@@ -69,14 +76,22 @@ export default async function ContestProblemsPage({
               <p className="text-muted-foreground">
                 Бодлогуудыг харахын тулд тэмцээнд бүртгүүлнэ үү.
               </p>
-              {status !== "finished" && (
+              {status !== "finished" && eligibility.kind === "ineligible" && (
+                <p className="font-medium">Таны ангид хамаарахгүй</p>
+              )}
+              {status !== "finished" && eligibility.kind !== "ineligible" && (
                 <form action={registerForContest.bind(null, contestId)}>
                   <Button type="submit">Оролцох</Button>
                 </form>
               )}
-              {status !== "finished" && contest.requires_approval && (
-                <p className="text-xs text-muted-foreground">Багш зөвшөөрсний дараа оролцоно</p>
+              {status !== "finished" && eligibility.kind === "unknown" && (
+                <p className="text-xs text-muted-foreground">Багш таны ангийг шалгаж зөвшөөрнө</p>
               )}
+              {status !== "finished" &&
+                contest.requires_approval &&
+                (eligibility.kind === "open" || eligibility.kind === "eligible") && (
+                  <p className="text-xs text-muted-foreground">Багш зөвшөөрсний дараа оролцоно</p>
+                )}
             </CardContent>
           </Card>
         )}

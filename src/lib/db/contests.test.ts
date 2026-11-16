@@ -14,6 +14,7 @@ import {
   deleteContest,
   deleteProblem,
   getContest,
+  copyProblem,
   countPending,
   decideRequests,
   getParticipant,
@@ -41,6 +42,9 @@ const contest: Contest = {
   starts_at: Date.parse("2026-03-01T09:00:00Z"),
   ends_at: Date.parse("2026-03-01T12:00:00Z"),
   requires_approval: false,
+  series: null,
+  grade_min: null,
+  grade_max: null,
 };
 /** Same contest, but «Оролцох» only files a request. */
 const gated: Contest = { ...contest, id: "gated-cup", requires_approval: true };
@@ -369,4 +373,90 @@ test("requires_approval round-trips", async () => {
   assert.equal((await getContest(gated.id))?.requires_approval, true);
   await upsertContest({ ...gated, requires_approval: false });
   assert.equal((await getContest(gated.id))?.requires_approval, false);
+});
+
+/* ------------------------------ divisions ----------------------------- */
+
+const juniors: Contest = { ...contest, id: "juniors-cup", series: "Намар", grade_min: 6, grade_max: 7 };
+
+test("division fields round-trip", async () => {
+  await upsertContest(juniors);
+  const got = await getContest(juniors.id);
+  assert.equal(got?.series, "Намар");
+  assert.equal(got?.grade_min, 6);
+  assert.equal(got?.grade_max, 7);
+});
+
+test("the database refuses a reversed grade range", async () => {
+  await assert.rejects(upsertContest({ ...juniors, grade_min: 8, grade_max: 6 }));
+  await assert.rejects(upsertContest({ ...juniors, grade_min: 6, grade_max: null }));
+});
+
+test("an out-of-range student cannot register", async () => {
+  await addUser("big", { class_name: "11B" });
+  await upsertContest(juniors);
+  await assert.rejects(
+    registerParticipant(juniors.id, { uid: "big", name: "big", email: "big@x" }),
+    (err) => err instanceof UserError && err.message === "Таны анги (11) энэ ангилалд хамаарахгүй."
+  );
+  assert.equal((await getDb().select().from(contestParticipants)).length, 0);
+});
+
+test("an in-range student follows the approval setting", async () => {
+  await addUser("small", { class_name: "7A" });
+  await upsertContest(juniors);
+  assert.equal(await registerParticipant(juniors.id, { uid: "small", name: "s", email: "s@x" }), "approved");
+});
+
+test("an unknown class always waits for a teacher", async () => {
+  await addUser("noclass");
+  await addUser("odd", { class_name: "A7" });
+  await upsertContest(juniors);
+  assert.equal(await registerParticipant(juniors.id, { uid: "noclass", name: "n", email: "n@x" }), "pending");
+  assert.equal(await registerParticipant(juniors.id, { uid: "odd", name: "o", email: "o@x" }), "pending");
+});
+
+test("the division check does not apply to staff", async () => {
+  await addUser("t-noclass", { role: "teacher" });
+  await addUser("a-senior", { role: "admin", class_name: "11B" });
+  await upsertContest(juniors);
+  assert.equal(await registerParticipant(juniors.id, { uid: "t-noclass", name: "t", email: "t@x" }), "approved");
+  assert.equal(await registerParticipant(juniors.id, { uid: "a-senior", name: "a", email: "a@x" }), "approved");
+});
+
+test("the open division takes any grade", async () => {
+  await addUser("big", { class_name: "11B" });
+  const open: Contest = { ...juniors, id: "open-cup", grade_min: null, grade_max: null };
+  await upsertContest(open);
+  assert.equal(await registerParticipant(open.id, { uid: "big", name: "b", email: "b@x" }), "approved");
+});
+
+test("copyProblem copies public and private parts", async () => {
+  const other: Contest = { ...juniors, id: "seniors-cup", grade_min: 11, grade_max: 12 };
+  await upsertContest(juniors);
+  await upsertContest(other);
+  const hidden = [{ input: "5 5", expected_output: "10" }];
+  await upsertProblem(juniors.id, problem, { hidden_test_cases: hidden });
+  await copyProblem(juniors.id, problem.id, other.id);
+  assert.deepEqual(await getProblem(other.id, problem.id), await getProblem(juniors.id, problem.id));
+  assert.deepEqual(await getProblemPrivate(other.id, problem.id), {
+    hidden_test_cases: hidden,
+    expected_table: undefined,
+  });
+});
+
+test("copyProblem refuses an id that exists in the target", async () => {
+  const other: Contest = { ...juniors, id: "seniors-cup", grade_min: 11, grade_max: 12 };
+  await upsertContest(juniors);
+  await upsertContest(other);
+  await upsertProblem(juniors.id, problem, { hidden_test_cases: [{ input: "1 1", expected_output: "2" }] });
+  await upsertProblem(other.id, { ...problem, title: "Өөр" }, { hidden_test_cases: [] });
+  await assert.rejects(
+    copyProblem(juniors.id, problem.id, other.id),
+    (err) => err instanceof UserError && err.message === "Тэр тэмцээнд «p1» ID-тэй бодлого аль хэдийн байна."
+  );
+  assert.equal((await getProblem(other.id, problem.id))?.title, "Өөр");
+  assert.deepEqual((await getProblemPrivate(other.id, problem.id))?.hidden_test_cases, []);
+  assert.equal((await getProblem(juniors.id, problem.id))?.title, problem.title);
+  await assert.rejects(copyProblem(juniors.id, "nope", other.id), (err) => err instanceof NotFoundError);
 });

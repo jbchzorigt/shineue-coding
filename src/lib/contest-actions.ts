@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import {
+  copyProblem,
   decideRequests,
   deleteContest as deleteContestDoc,
   deleteProblem as deleteProblemDoc,
@@ -14,6 +15,7 @@ import {
   upsertProblem,
 } from "@/lib/db/contests";
 import { requestUidsInScope } from "@/lib/contest-access";
+import { parseDivisionForm } from "@/lib/contest-division";
 import { NotFoundError, UserError, userMessage } from "@/lib/errors";
 import { parseLogicSpecJson } from "@/lib/logic/spec";
 import { normalizeMdx } from "@/lib/mdx-check";
@@ -54,6 +56,8 @@ export async function registerForContest(contestId: string): Promise<void> {
   } catch (err) {
     // The contest was deleted meanwhile, or the session outlived its account.
     if (err instanceof NotFoundError) redirect("/contests");
+    // Outside the division's grade range: the contest page shows why.
+    if (err instanceof UserError) redirect(`/contests/${contestId}`);
     throw err;
   }
   revalidatePath("/contests");
@@ -87,6 +91,25 @@ export async function decideContestRequests(
   revalidatePath(`/contests/${contestId}/leaderboard`);
 }
 
+/** Copies a problem (with hidden tests) into another contest, then opens that contest. */
+export async function copyContestProblem(
+  fromContestId: string,
+  problemId: string,
+  _prev: ActionState,
+  form: FormData
+): Promise<ActionState> {
+  const to = str(form, "to");
+  try {
+    await requireStaff();
+    if (!ID_RE.test(fromContestId) || !ID_RE.test(to)) return { error: "Тэмцээн олдсонгүй." };
+    await copyProblem(fromContestId, problemId, to);
+  } catch (err) {
+    return { error: userMessage(err) };
+  }
+  revalidatePath(`/teacher/contests/${to}`);
+  redirect(`/teacher/contests/${to}`);
+}
+
 /* ------------------------------- contests ------------------------------ */
 
 export async function saveContest(
@@ -109,6 +132,13 @@ export async function saveContest(
       return { error: "Эхлэх/дуусах цагаа сонгоно уу." };
     }
     if (ends <= starts) return { error: "Дуусах цаг эхлэх цагаас хойно байх ёстой." };
+    const division = parseDivisionForm(
+      str(form, "series"),
+      str(form, "division_mode"),
+      str(form, "grade_min"),
+      str(form, "grade_max")
+    );
+    if (!division.ok) return { error: division.error };
 
     await upsertContest({
       id,
@@ -117,6 +147,7 @@ export async function saveContest(
       starts_at: starts,
       ends_at: ends,
       requires_approval: form.get("requires_approval") === "on",
+      ...division.value,
     });
   } catch (err) {
     return { error: userMessage(err) };

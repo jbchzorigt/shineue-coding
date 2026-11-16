@@ -11,6 +11,7 @@ import {
 import { scoreEvents } from "@/lib/db/contest-submissions";
 import { pickRacers, raceEnd, scoreTimeline } from "@/lib/contest-timeline";
 import { classFromParam, classOptions } from "@/lib/class-name";
+import { divisionLabel } from "@/lib/contest-division";
 import { ClassFilter, ClassTag } from "@/components/class-filter";
 import { SiteHeader } from "@/components/site-header";
 import { ContestTabs } from "@/components/contest/contest-tabs";
@@ -82,6 +83,11 @@ export default async function ContestLeaderboardPage({
             <h1 className="text-2xl font-bold">{contest.title}</h1>
             <ContestStatusBadge status={status} />
           </div>
+          {(contest.series || contest.grade_min !== null) && (
+            <p className="text-sm font-medium">
+              {[contest.series, divisionLabel(contest)].filter(Boolean).join(" · ")}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">
             {formatWindow(contest.starts_at, contest.ends_at)}
           </p>

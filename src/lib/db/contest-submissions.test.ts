@@ -25,6 +25,9 @@ async function seed(): Promise<void> {
       starts_at: Date.parse("2026-03-01T09:00:00Z"),
       ends_at: Date.parse("2026-03-01T12:00:00Z"),
       requires_approval: false,
+      series: null,
+      grade_min: null,
+      grade_max: null,
     });
   }
   await addUser("s1", { class_name: "11A" });
@@ -117,6 +120,9 @@ test("scoreEvents: this contest's attempts, oldest first, approved participants 
     starts_at: Date.parse("2026-03-01T09:00:00Z"),
     ends_at: Date.parse("2026-03-01T12:00:00Z"),
     requires_approval: true,
+    series: null,
+    grade_min: null,
+    grade_max: null,
   });
   await addUser("t1", { role: "teacher" });
   await registerParticipant("gated", { uid: "s2", name: null, email: "s2@x" });

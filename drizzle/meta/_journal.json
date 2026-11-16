@@ -50,6 +50,20 @@
       "when": 1792371862123,
       "tag": "0006_harsh_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794638742682,
+      "tag": "0007_rapid_sentinel",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794638800568,
+      "tag": "0008_wakeful_siren",
+      "breakpoints": true
     }
   ]
 }

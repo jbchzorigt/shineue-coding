@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Contest } from "@/lib/db/contests";
+import { DivisionFields } from "@/components/teacher/division-fields";
 
 /** datetime-local value (local time) for a given epoch ms. */
 function toLocalInput(ms: number): string {
@@ -45,7 +46,7 @@ function DateTimeField({
   );
 }
 
-export function ContestForm({ contest }: { contest: Contest | null }) {
+export function ContestForm({ contest, seriesOptions }: { contest: Contest | null; seriesOptions: string[] }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(
     saveContest,
     { error: null }
@@ -86,6 +87,8 @@ export function ContestForm({ contest }: { contest: Contest | null }) {
         <DateTimeField name="starts_at_ms" label="Эхлэх цаг" initialMs={contest?.starts_at ?? null} />
         <DateTimeField name="ends_at_ms" label="Дуусах цаг" initialMs={contest?.ends_at ?? null} />
       </div>
+
+      <DivisionFields contest={contest} seriesOptions={seriesOptions} />
 
       <label className="flex items-center gap-2 text-sm">
         <input

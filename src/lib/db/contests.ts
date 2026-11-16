@@ -11,10 +11,11 @@ import {
   users,
 } from "@/lib/db/schema";
 import { ACCOUNT_MISSING, NotFoundError, UserError } from "@/lib/errors";
+import { divisionEligibility, type DivisionFields } from "@/lib/contest-division";
 import type { LogicSpec, TruthTable } from "@/lib/logic/spec";
-import type { PublicTestCase } from "@/lib/types";
+import { isStaff, type PublicTestCase } from "@/lib/types";
 
-export interface Contest {
+export interface Contest extends DivisionFields {
   id: string;
   title: string;
   description: string;
@@ -93,6 +94,9 @@ function toContest(r: typeof contests.$inferSelect): Contest {
     starts_at: r.starts_at.getTime(),
     ends_at: r.ends_at.getTime(),
     requires_approval: r.requires_approval,
+    series: r.series,
+    grade_min: r.grade_min,
+    grade_max: r.grade_max,
   };
 }
 
@@ -114,6 +118,9 @@ export async function upsertContest(contest: Contest): Promise<void> {
     starts_at: new Date(contest.starts_at),
     ends_at: new Date(contest.ends_at),
     requires_approval: contest.requires_approval,
+    series: contest.series,
+    grade_min: contest.grade_min,
+    grade_max: contest.grade_max,
   };
   await getDb()
     .insert(contests)
@@ -233,6 +240,26 @@ export async function upsertProblem(
   }
 }
 
+/**
+ * Copies a problem (with its hidden tests and expected table) into another
+ * contest under the same id. The copy is independent of the original.
+ */
+export async function copyProblem(
+  fromContestId: string,
+  problemId: string,
+  toContestId: string
+): Promise<void> {
+  const [problem, privateData] = await Promise.all([
+    getProblem(fromContestId, problemId),
+    getProblemPrivate(fromContestId, problemId),
+  ]);
+  if (!problem || !privateData) throw new NotFoundError("Бодлого олдсонгүй.");
+  if (await getProblem(toContestId, problemId)) {
+    throw new UserError(`Тэр тэмцээнд «${problemId}» ID-тэй бодлого аль хэдийн байна.`);
+  }
+  await upsertProblem(toContestId, problem, privateData);
+}
+
 export async function deleteProblem(contestId: string, problemId: string): Promise<void> {
   await getDb().delete(contestProblems).where(problemKey(contestId, problemId));
 }
@@ -292,8 +319,10 @@ export async function listParticipants(contestId: string): Promise<Participant[]
 
 /**
  * «Оролцох»: a pending request when the contest needs approval, otherwise an
- * approved participant. Pressing it again never changes an existing row
- * (a rejected student stays rejected). Returns the row's status.
+ * approved participant. A division's grade range is enforced here: a student
+ * outside it is refused, one whose grade can't be told from their class waits
+ * for a teacher. Pressing it again never changes an existing row (a rejected
+ * student stays rejected). Returns the row's status.
  */
 export async function registerParticipant(
   contestId: string,
@@ -302,11 +331,28 @@ export async function registerParticipant(
   try {
     return await getDb().transaction(async (tx) => {
       const [contest] = await tx
-        .select({ requires_approval: contests.requires_approval })
+        .select({
+          requires_approval: contests.requires_approval,
+          grade_min: contests.grade_min,
+          grade_max: contests.grade_max,
+        })
         .from(contests)
         .where(eq(contests.id, contestId))
         .limit(1);
       if (!contest) throw new NotFoundError("Тэмцээн олдсонгүй.");
+      const [account] = await tx
+        .select({ class_name: users.class_name, role: users.role })
+        .from(users)
+        .where(eq(users.uid, user.uid))
+        .limit(1);
+      // Divisions sort students by grade; staff may join any division.
+      const eligibility = isStaff(account?.role)
+        ? ({ kind: "open" } as const)
+        : divisionEligibility(contest, account?.class_name ?? null);
+      if (eligibility.kind === "ineligible") {
+        throw new UserError(`Таны анги (${eligibility.grade}) энэ ангилалд хамаарахгүй.`);
+      }
+      const needsTeacher = contest.requires_approval || eligibility.kind === "unknown";
       await tx
         .insert(contestParticipants)
         .values({
@@ -314,7 +360,7 @@ export async function registerParticipant(
           uid: user.uid,
           name: user.name,
           email: user.email,
-          status: contest.requires_approval ? "pending" : "approved",
+          status: needsTeacher ? "pending" : "approved",
         })
         .onConflictDoNothing();
       const [row] = await tx

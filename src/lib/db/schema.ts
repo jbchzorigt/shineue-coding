@@ -154,15 +154,31 @@ export const news = pgTable(
   ]
 );
 
-export const contests = pgTable("contests", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull().default(""),
-  starts_at: timestamp("starts_at", tz).notNull(),
-  ends_at: timestamp("ends_at", tz).notNull(),
-  /** «Оролцох» files a request a teacher/admin must approve. */
-  requires_approval: boolean("requires_approval").notNull().default(true),
-});
+export const contests = pgTable(
+  "contests",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    starts_at: timestamp("starts_at", tz).notNull(),
+    ends_at: timestamp("ends_at", tz).notNull(),
+    /** «Оролцох» files a request a teacher/admin must approve. */
+    requires_approval: boolean("requires_approval").notNull().default(true),
+    /** Event this contest is a division of («Намрын тэмцээн 2026»); null = standalone. */
+    series: text("series"),
+    /** Grade range of the division; both null = open to every grade («Сонирхогчид»). */
+    grade_min: integer("grade_min"),
+    grade_max: integer("grade_max"),
+  },
+  (t) => [
+    // Spelled out with "is not null": a CHECK that evaluates to NULL passes,
+    // so (6, null) would slip through a bare BETWEEN.
+    check(
+      "contests_grade_range_check",
+      sql`(${t.grade_min} is null and ${t.grade_max} is null) or (${t.grade_min} is not null and ${t.grade_max} is not null and ${t.grade_min} between 1 and 12 and ${t.grade_max} between ${t.grade_min} and 12)`
+    ),
+  ]
+);
 
 export const contestProblems = pgTable(
   "contest_problems",

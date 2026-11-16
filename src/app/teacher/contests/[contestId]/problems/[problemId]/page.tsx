@@ -4,7 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { getContest, getProblem, getProblemPrivate } from "@/lib/db/contests";
+import { getContest, getProblem, getProblemPrivate, listContests } from "@/lib/db/contests";
+import { divisionLabel } from "@/lib/contest-division";
+import { CopyProblemForm } from "@/components/teacher/copy-problem-form";
 import { SiteHeader } from "@/components/site-header";
 import { ContestProblemForm } from "@/components/teacher/contest-problem-form";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,14 @@ export default async function EditContestProblemPage({
       ]);
   if (!isNew && !problem) notFound();
 
+  // Copy targets: every other contest, this series first.
+  const others = isNew ? [] : (await listContests()).filter((c) => c.id !== contestId);
+  const sameSeries = (c: (typeof others)[number]) => !!contest.series && c.series === contest.series;
+  const targets = [...others.filter(sameSeries), ...others.filter((c) => !sameSeries(c))].map((c) => ({
+    id: c.id,
+    label: `${c.title} (${divisionLabel(c)})`,
+  }));
+
   return (
     <div className="min-h-screen bg-muted/40">
       <SiteHeader />
@@ -57,6 +67,11 @@ export default async function EditContestProblemPage({
             privateData={privateData}
           />
         </div>
+        {!isNew && (
+          <div className="rounded-xl border bg-background p-6 text-sm">
+            <CopyProblemForm contestId={contestId} problemId={problemId} targets={targets} />
+          </div>
+        )}
       </main>
     </div>
   );

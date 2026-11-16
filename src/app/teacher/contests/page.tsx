@@ -10,11 +10,59 @@ import {
   listContests,
   listParticipants,
   listProblems,
+  type Contest,
 } from "@/lib/db/contests";
+import { divisionLabel, groupContests } from "@/lib/contest-division";
 import { SiteHeader } from "@/components/site-header";
 import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+interface Extra {
+  problems: number;
+  participants: number;
+}
+
+function ContestRow({ c, extra, pending }: { c: Contest; extra: Extra; pending: number }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-semibold">{c.series ? divisionLabel(c) : c.title}</h2>
+          {!c.series && c.grade_min !== null && (
+            <span className="text-sm text-muted-foreground">{divisionLabel(c)}</span>
+          )}
+          <ContestStatusBadge status={contestStatus(c)} />
+          {pending > 0 && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              {pending} хүсэлт хүлээгдэж байна
+            </span>
+          )}
+        </div>
+        <p className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <CalendarClock className="size-3.5" />
+            {formatWindow(c.starts_at, c.ends_at)}
+          </span>
+          <span>{extra.problems} бодлого</span>
+          <span className="flex items-center gap-1">
+            <Users className="size-3.5" />
+            {extra.participants}
+          </span>
+        </p>
+      </div>
+      <Button
+        render={<Link href={`/teacher/contests/${c.id}`} />}
+        nativeButton={false}
+        variant="outline"
+        size="sm"
+      >
+        <Pencil className="size-3.5" />
+        Удирдах
+      </Button>
+    </div>
+  );
+}
 
 export default async function TeacherContestsPage() {
   const session = await auth();
@@ -24,11 +72,16 @@ export default async function TeacherContestsPage() {
 
   const contests = await listContests();
   const pending = await countPending(contests.map((c) => c.id));
-  const extras = await Promise.all(
-    contests.map(async (c) => ({
-      problems: (await listProblems(c.id)).length,
-      participants: (await listParticipants(c.id)).length,
-    }))
+  const extras = new Map<string, Extra>(
+    await Promise.all(
+      contests.map(async (c): Promise<[string, Extra]> => [
+        c.id,
+        {
+          problems: (await listProblems(c.id)).length,
+          participants: (await listParticipants(c.id)).length,
+        },
+      ])
+    )
   );
 
   return (
@@ -57,40 +110,15 @@ export default async function TeacherContestsPage() {
           </Card>
         )}
 
-        {contests.map((c, i) => (
-          <Card key={c.id}>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-semibold">{c.title}</h2>
-                  <ContestStatusBadge status={contestStatus(c)} />
-                  {(pending.get(c.id) ?? 0) > 0 && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                      {pending.get(c.id)} хүсэлт хүлээгдэж байна
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <CalendarClock className="size-3.5" />
-                    {formatWindow(c.starts_at, c.ends_at)}
-                  </span>
-                  <span>{extras[i].problems} бодлого</span>
-                  <span className="flex items-center gap-1">
-                    <Users className="size-3.5" />
-                    {extras[i].participants}
-                  </span>
-                </p>
+        {groupContests(contests).map((group) => (
+          <Card key={group.series ? `series:${group.series}` : group.contests[0].id}>
+            <CardContent className="space-y-3">
+              {group.series && <h2 className="text-lg font-semibold">{group.series}</h2>}
+              <div className="divide-y [&>*]:py-3 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
+                {group.contests.map((c) => (
+                  <ContestRow key={c.id} c={c} extra={extras.get(c.id)!} pending={pending.get(c.id) ?? 0} />
+                ))}
               </div>
-              <Button
-                render={<Link href={`/teacher/contests/${c.id}`} />}
-                nativeButton={false}
-                variant="outline"
-                size="sm"
-              >
-                <Pencil className="size-3.5" />
-                Удирдах
-              </Button>
             </CardContent>
           </Card>
         ))}

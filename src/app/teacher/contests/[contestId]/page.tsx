@@ -4,7 +4,7 @@ import { ArrowLeft, ListChecks, Pencil, Plus, Star, Trophy } from "lucide-react"
 import { auth } from "@/auth";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
-import { getContest, listProblems, listRequests } from "@/lib/db/contests";
+import { getContest, listContests, listProblems, listRequests } from "@/lib/db/contests";
 import { SiteHeader } from "@/components/site-header";
 import { ContestForm } from "@/components/teacher/contest-form";
 import { ContestRequests } from "@/components/teacher/contest-requests";
@@ -25,6 +25,9 @@ export default async function EditContestPage({
   const isNew = contestId === "new";
   const contest = isNew ? null : await getContest(contestId);
   if (!isNew && !contest) notFound();
+  const seriesOptions = [
+    ...new Set((await listContests()).map((c) => c.series).filter((s): s is string => !!s)),
+  ];
   const [problems, requests] = isNew
     ? [[], []]
     : await Promise.all([listProblems(contestId), listRequests(contestId)]);
@@ -44,7 +47,7 @@ export default async function EditContestPage({
         </div>
 
         <div className="rounded-xl border bg-background p-6">
-          <ContestForm contest={contest} />
+          <ContestForm contest={contest} seriesOptions={seriesOptions} />
         </div>
 
         {!isNew && (

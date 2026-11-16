@@ -1,6 +1,7 @@
 /**
  * Opens a Cloudflare quick tunnel to the local Piston, points the Vercel
- * production PISTON_URL at it and redeploys. Run after every reboot:
+ * production PISTON_URL at it and rebuilds the current production deployment
+ * (never this folder: shipping code stays a separate deploy). Run after every reboot:
  *   npm.cmd run script -- scripts/piston-tunnel.ts
  * Needs: Docker (coding-piston), cloudflared, and a logged-in, linked Vercel CLI.
  */
@@ -9,6 +10,7 @@ import { mkdirSync, openSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const PISTON = "http://localhost:2000";
+const PROD_ALIAS = "coding-ibdp-cs.vercel.app";
 const LOG = path.join(process.cwd(), "data", "cloudflared.log");
 const WIN = process.platform === "win32";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -40,10 +42,23 @@ async function main() {
   }
 
   console.log("2/5 Хуучин tunnel-ийг зогсоож байна…");
+  // Only the tunnel to this Piston: other projects run their own cloudflared.
   try {
-    execFileSync(WIN ? "taskkill" : "pkill", WIN ? ["/IM", "cloudflared.exe", "/F"] : ["-f", "cloudflared tunnel"], {
-      stdio: "ignore",
-    });
+    if (WIN) {
+      execFileSync(
+        "powershell",
+        [
+          "-NoProfile",
+          "-Command",
+          `Get-CimInstance Win32_Process -Filter "name='cloudflared.exe'" | ` +
+            `Where-Object { $_.CommandLine -like '*--url ${PISTON}*' } | ` +
+            `ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`,
+        ],
+        { stdio: "ignore" }
+      );
+    } else {
+      execFileSync("pkill", ["-f", `cloudflared tunnel --url ${PISTON}`], { stdio: "ignore" });
+    }
   } catch {
     // none was running
   }
@@ -72,8 +87,10 @@ async function main() {
   }
   vercel(["env", "add", "PISTON_URL", "production"], `${url}/api/v2`);
 
-  console.log("5/5 Production deploy хийж байна (1–3 минут)…");
-  vercel(["deploy", "--prod", "--yes"]);
+  // Rebuild what production already runs, so the new PISTON_URL takes effect
+  // without shipping this folder's uncommitted work (or skipping a migration).
+  console.log("5/5 Production-ийг шинэ хаягаар дахин build хийж байна (1–3 минут)…");
+  vercel(["redeploy", PROD_ALIAS, "--target", "production"]);
   console.log("Дууслаа. Сайт дээр Python бодлого илгээж шалгаарай.");
 }
 
