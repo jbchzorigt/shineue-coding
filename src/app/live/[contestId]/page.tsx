@@ -76,7 +76,8 @@ export default async function LiveContestPage({ params }: { params: Promise<{ co
           </nav>
         )}
 
-        <div className={cn("grid gap-6", showChart && "lg:grid-cols-[3fr_2fr]")}>
+        {/* Stacked on every screen: the chart above, the ranking below. */}
+        <div className="grid gap-6">
           {showChart && (
             <section className="rounded-xl border bg-background p-4">
               <h2 className="mb-2 flex items-center gap-2 font-semibold">
