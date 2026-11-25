@@ -7,6 +7,7 @@ import {
   contestProblemAnswers,
   contestProblems,
   contestSubmissions,
+  contests,
 } from "@/lib/db/schema";
 import {
   applySubmissionScore,
@@ -45,6 +46,7 @@ const contest: Contest = {
   series: null,
   grade_min: null,
   grade_max: null,
+  is_public: false,
 };
 /** Same contest, but «Оролцох» only files a request. */
 const gated: Contest = { ...contest, id: "gated-cup", requires_approval: true };
@@ -429,6 +431,13 @@ test("the open division takes any grade", async () => {
   const open: Contest = { ...juniors, id: "open-cup", grade_min: null, grade_max: null };
   await upsertContest(open);
   assert.equal(await registerParticipant(open.id, { uid: "big", name: "b", email: "b@x" }), "approved");
+});
+
+test("is_public defaults to false and round-trips", async () => {
+  await getDb().insert(contests).values({ id: "raw-cup", title: "t", starts_at: new Date(0), ends_at: new Date(1) });
+  assert.equal((await getContest("raw-cup"))?.is_public, false);
+  await upsertContest({ ...contest, is_public: true });
+  assert.equal((await getContest(contest.id))?.is_public, true);
 });
 
 test("copyProblem copies public and private parts", async () => {

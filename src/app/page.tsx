@@ -12,6 +12,9 @@ import { NavCards, type NavLink } from "@/components/nav-cards";
 import { NewsList } from "@/components/news/news-list";
 import { NewsCategoryFilter } from "@/components/news/news-category";
 import { HeroStencilTitle } from "@/components/landing/hero-stencil-title";
+import { HomeContests } from "@/components/live/home-contests";
+import { getPublicContests } from "@/lib/live-cache";
+import { homeBoard } from "@/lib/live-board";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,7 +34,10 @@ export default async function HomePage({
   const category = categoryFromParam((await searchParams).category);
   const emptyText = category ? "Энэ ангилалд мэдээ алга." : undefined;
 
-  // Public landing for visitors: hero + news + sign-in.
+  // Public contests anyone may watch live (cached for 10 s).
+  const board = homeBoard(await getPublicContests().catch(() => []));
+
+  // Public landing for visitors: hero + contests + news + sign-in.
   if (!session?.user?.id) {
     const posts = await listNews({ category, limit: 5 }).catch(() => []);
     return (
@@ -49,6 +55,8 @@ export default async function HomePage({
               Сургуулийн имэйлээр нэвтрэх
             </Button>
           </section>
+
+          <HomeContests board={board} />
 
           <section className="space-y-4">
             <h2 className="flex items-center gap-2 text-xl font-bold">
@@ -141,6 +149,8 @@ export default async function HomePage({
         )}
 
         <NavCards links={navLinks} />
+
+        <HomeContests board={board} />
 
         {profile && (
           <Card>

@@ -114,7 +114,14 @@ export default async function ContestLeaderboardPage({
                 <TableHead className="w-14">Байр</TableHead>
                 <TableHead>Оролцогч</TableHead>
                 {problems.map((p, i) => (
-                  <TableHead key={p.id} className="text-right" title={p.title}>
+                  <TableHead
+                    // By position: React sends keys to the browser, and an id
+                    // like «fibonacci» would give a problem away before the start.
+                    key={i}
+                    className="text-right"
+                    // Titles stay hidden until the start, like the problems themselves.
+                    title={status === "upcoming" ? undefined : p.title}
+                  >
                     Б{i + 1}
                     <span className="block text-[10px] font-normal text-muted-foreground">
                       /{p.points}
@@ -159,11 +166,11 @@ export default async function ContestLeaderboardPage({
                         </span>
                       )}
                     </TableCell>
-                    {problems.map((pr) => {
+                    {problems.map((pr, j) => {
                       const score = p.scores?.[pr.id];
                       return (
                         <TableCell
-                          key={pr.id}
+                          key={j}
                           className={cn(
                             "text-right",
                             score === pr.points && "font-semibold text-emerald-600",

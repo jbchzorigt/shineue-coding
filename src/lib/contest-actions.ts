@@ -147,6 +147,7 @@ export async function saveContest(
       starts_at: starts,
       ends_at: ends,
       requires_approval: form.get("requires_approval") === "on",
+      is_public: form.get("is_public") === "on",
       ...division.value,
     });
   } catch (err) {

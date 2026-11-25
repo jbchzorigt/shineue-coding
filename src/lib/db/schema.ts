@@ -169,6 +169,8 @@ export const contests = pgTable(
     /** Grade range of the division; both null = open to every grade («Сонирхогчид»). */
     grade_min: integer("grade_min"),
     grade_max: integer("grade_max"),
+    /** Shown on the home page and the public /live boards (no sign-in needed). */
+    is_public: boolean("is_public").notNull().default(false),
   },
   (t) => [
     // Spelled out with "is not null": a CHECK that evaluates to NULL passes,

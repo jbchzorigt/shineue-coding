@@ -183,6 +183,7 @@ async function setupApp(students: number): Promise<{ email: string; password: st
     series: null,
     grade_min: null,
     grade_max: null,
+    is_public: false,
   });
   await upsertProblem(
     CONTEST,

@@ -77,6 +77,8 @@ export const authConfig = {
       if (pathname === "/") return true;
       if (pathname.startsWith("/news")) return true;
       if (pathname.startsWith("/verify")) return true;
+      // Public live contest boards (only contests marked «Нийтэд харуулах»).
+      if (pathname.startsWith("/live")) return true;
 
       const isLoginPage = pathname.startsWith("/login");
 

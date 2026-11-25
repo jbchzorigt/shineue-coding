@@ -28,6 +28,7 @@ async function seed(): Promise<void> {
       series: null,
       grade_min: null,
       grade_max: null,
+      is_public: false,
     });
   }
   await addUser("s1", { class_name: "11A" });
@@ -123,6 +124,7 @@ test("scoreEvents: this contest's attempts, oldest first, approved participants 
     series: null,
     grade_min: null,
     grade_max: null,
+    is_public: false,
   });
   await addUser("t1", { role: "teacher" });
   await registerParticipant("gated", { uid: "s2", name: null, email: "s2@x" });

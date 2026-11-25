@@ -64,6 +64,13 @@
       "when": 1794638800568,
       "tag": "0008_wakeful_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795566880933,
+      "tag": "0009_glossy_rhino",
+      "breakpoints": true
     }
   ]
 }

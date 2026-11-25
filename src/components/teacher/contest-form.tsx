@@ -100,6 +100,16 @@ export function ContestForm({ contest, seriesOptions }: { contest: Contest | nul
         Оролцоход багшийн зөвшөөрөл шаардах
       </label>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="is_public"
+          defaultChecked={contest?.is_public ?? false}
+          className="size-4 accent-primary"
+        />
+        Нийтэд харуулах (нүүр хуудас, шууд leaderboard)
+      </label>
+
       {state.error && (
         <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {state.error}

@@ -24,15 +24,11 @@ export interface Contest extends DivisionFields {
   ends_at: number;
   /** «Оролцох» files a request that a teacher/admin approves. */
   requires_approval: boolean;
+  /** Listed on the home page and the public /live boards. */
+  is_public: boolean;
 }
 
-export type ContestStatus = "upcoming" | "running" | "finished";
-
-export function contestStatus(c: Contest, now = Date.now()): ContestStatus {
-  if (now < c.starts_at) return "upcoming";
-  if (now <= c.ends_at) return "running";
-  return "finished";
-}
+export { contestStatus, type ContestStatus } from "@/lib/contest-status";
 
 /** "logic" problems are answered with a circuit instead of code. */
 export type ContestProblemKind = "python" | "logic";
@@ -97,6 +93,7 @@ function toContest(r: typeof contests.$inferSelect): Contest {
     series: r.series,
     grade_min: r.grade_min,
     grade_max: r.grade_max,
+    is_public: r.is_public,
   };
 }
 
@@ -121,6 +118,7 @@ export async function upsertContest(contest: Contest): Promise<void> {
     series: contest.series,
     grade_min: contest.grade_min,
     grade_max: contest.grade_max,
+    is_public: contest.is_public,
   };
   await getDb()
     .insert(contests)
