@@ -11,6 +11,11 @@
 | 127.0.0.1:2000 | 50 | 2.4 | 6.2 | 6.3 | 17.1 | 0 | 0 | 25/0 |
 | 127.0.0.1:2000 | 100 | 4.5 | 8.8 | 8.9 | 17.9 | 0 | 0 | 50/0 |
 | 127.0.0.1:2000 | 150 | 8.3 | 12.6 | 12.8 | 20.1 | 0 | 0 | 75/0 |
+| furniture-thereafter-substances-continuous.trycloudflare.com | 50 | 2.7 | 6.7 | 6.7 | 17.8 | 0 | 0 | 25/0 |
+| furniture-thereafter-substances-continuous.trycloudflare.com | 100 | 4.6 | 9.3 | 9.4 | 18.6 | 0 | 0 | 50/0 |
+| furniture-thereafter-substances-continuous.trycloudflare.com | 150 | 9.2 | 13.1 | 13.6 | 21.5 | 0 | 0 | 75/0 |
+
+`trycloudflare.com` мөрүүд нь production-тэй ижил замаар (Cloudflare quick tunnel → энэ компьютерийн Piston) явсан түр tunnel; тестийн дараа зогсоосон. Production-ий tunnel-д хүрээгүй.
 
 ## Сайтын бүтэн урсгал (local `next start`)
 
