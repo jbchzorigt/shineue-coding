@@ -9,8 +9,10 @@ import {
   getProblem,
   getProblemPrivate,
 } from "@/lib/db/contests";
+import { latestSubmissionCode } from "@/lib/db/contest-submissions";
 import { getUserProfile } from "@/lib/db/users";
 import { isStaff } from "@/lib/types";
+import { parseCircuit } from "@/lib/logic/circuit";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { ContestRunner } from "@/components/contest/contest-runner";
@@ -34,9 +36,11 @@ export default async function ContestProblemPage({
   if (!problem) notFound();
 
   const status = contestStatus(contest);
-  const [profile, participant] = await Promise.all([
+  const [profile, participant, saved] = await Promise.all([
     getUserProfile(session.user.id).catch(() => null),
     getParticipant(contestId, session.user.id),
+    // The editor reopens on the student's last submission instead of the starter code.
+    latestSubmissionCode(contestId, session.user.id, problem.id),
   ]);
   const staff = isStaff(profile?.role);
 
@@ -50,6 +54,7 @@ export default async function ContestProblemPage({
   const expected = logicSpec?.table_visible
     ? ((await getProblemPrivate(contestId, problem.id))?.expected_table ?? null)
     : null;
+  const savedCircuit = logicSpec && saved ? parseCircuit(saved) : null;
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -87,7 +92,7 @@ export default async function ContestProblemPage({
               <LogicSolver
                 spec={logicSpec}
                 expected={expected}
-                initialCircuit={null}
+                initialCircuit={savedCircuit?.ok ? savedCircuit.circuit : null}
                 target={{
                   kind: "contest",
                   contestId,
@@ -103,7 +108,7 @@ export default async function ContestProblemPage({
           <ContestRunner
             contestId={contestId}
             problemId={problem.id}
-            initialCode={problem.starter_code ?? ""}
+            initialCode={saved ?? problem.starter_code ?? ""}
             disabled={!staff && status !== "running"}
           />
         )}

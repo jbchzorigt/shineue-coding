@@ -6,7 +6,9 @@ import { contestSubmissions } from "@/lib/db/schema";
 import { decideRequests, registerParticipant, upsertContest } from "@/lib/db/contests";
 import {
   allContestSubmissions,
+  attemptStats,
   bestSubmissions,
+  latestSubmissionCode,
   listContestSubmissions,
   scoreEvents,
 } from "@/lib/db/contest-submissions";
@@ -138,4 +140,62 @@ test("scoreEvents: this contest's attempts, oldest first, approved participants 
     { uid: "s2", problem_id: "p1", score: 20, submitted_at: Date.UTC(2026, 2, 1, 9, 2) },
   ]);
   assert.deepEqual((await scoreEvents("gated")).map((e) => e.uid), ["s1"]);
+});
+
+test("latestSubmissionCode: the student's last attempt at this problem, not the best", async () => {
+  await seed();
+  await attempt("s1", "p1", 90, 1);
+  await attempt("s1", "p1", 10, 3);
+  await attempt("s1", "p1", 50, 2);
+  await attempt("s2", "p1", 0, 4);
+  await attempt("s1", "p2", 0, 5);
+  await attempt("s1", "p1", 0, 6, "other");
+
+  assert.equal(await latestSubmissionCode(CUP, "s1", "p1"), "s1-p1-3");
+  assert.equal(await latestSubmissionCode(CUP, "s2", "p2"), null);
+});
+
+test("attempt numbers count per student and problem, also on a filtered later page", async () => {
+  await seed();
+  await attempt("s1", "p1", 10, 1);
+  await attempt("s2", "p1", 20, 2);
+  await attempt("s1", "p1", 30, 3);
+  await attempt("s1", "p2", 40, 4);
+  await attempt("s1", "p1", 50, 5);
+
+  const all = await listContestSubmissions(CUP, { limit: 10, offset: 0 });
+  assert.deepEqual(
+    all.rows.map((r) => [r.code, r.attempt]),
+    [["s1-p1-5", 3], ["s1-p2-4", 1], ["s1-p1-3", 2], ["s2-p1-2", 1], ["s1-p1-1", 1]]
+  );
+  const page = await listContestSubmissions(CUP, { uid: "s1", problemId: "p1", limit: 1, offset: 1 });
+  assert.deepEqual(page.rows.map((r) => [r.code, r.attempt]), [["s1-p1-3", 2]]);
+});
+
+test("allContestSubmissions: one student's attempts when asked, numbered", async () => {
+  await seed();
+  await attempt("s1", "p1", 10, 1);
+  await attempt("s2", "p1", 20, 2);
+  await attempt("s1", "p1", 30, 3);
+  await attempt("s1", "p1", 40, 4, "other");
+
+  assert.deepEqual(
+    (await allContestSubmissions(CUP, { uid: "s1" })).map((r) => [r.code, r.attempt]),
+    [["s1-p1-1", 1], ["s1-p1-3", 2]]
+  );
+});
+
+test("attemptStats: attempts and best score per student and problem, this contest only", async () => {
+  await seed();
+  await attempt("s1", "p1", 10, 1);
+  await attempt("s1", "p1", 70, 2);
+  await attempt("s1", "p1", 30, 3);
+  await attempt("s2", "p2", 0, 4);
+  await attempt("s1", "p1", 99, 5, "other");
+
+  const stats = (await attemptStats(CUP)).sort((a, b) => a.uid.localeCompare(b.uid));
+  assert.deepEqual(stats, [
+    { uid: "s1", problem_id: "p1", attempts: 3, best: 70 },
+    { uid: "s2", problem_id: "p2", attempts: 1, best: 0 },
+  ]);
 });

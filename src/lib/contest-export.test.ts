@@ -68,8 +68,8 @@ test("results with no participants is just the header", () => {
 
 test("attempts: school time, kind, and the answer as code or formulas", () => {
   const rows: SubmissionRow[] = [
-    { id: 1, uid: "s1", name: "Бат", email: "s1@x", class_name: "11A", problem_id: "p1", code: "print(1)", score: 100, passed_tests: 2, total_tests: 2, submitted_at: Date.parse("2026-03-01T01:02:03Z") },
-    { id: 2, uid: "s2", name: null, email: "s2@x", class_name: null, problem_id: "p2", code: CIRCUIT, score: 50, passed_tests: 4, total_tests: 4, submitted_at: Date.parse("2026-03-01T01:05:00Z") },
+    { id: 1, uid: "s1", name: "Бат", email: "s1@x", class_name: "11A", problem_id: "p1", attempt: 1, code: "print(1)", score: 100, passed_tests: 2, total_tests: 2, submitted_at: Date.parse("2026-03-01T01:02:03Z") },
+    { id: 2, uid: "s2", name: null, email: "s2@x", class_name: null, problem_id: "p2", attempt: 1, code: CIRCUIT, score: 50, passed_tests: 4, total_tests: 4, submitted_at: Date.parse("2026-03-01T01:05:00Z") },
   ];
   assert.equal(
     attemptsCsv([PY, LOGIC], rows),

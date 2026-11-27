@@ -10,9 +10,14 @@ import {
   type ContestProblem,
   type Participant,
 } from "@/lib/db/contests";
-import { bestSubmissions, listContestSubmissions } from "@/lib/db/contest-submissions";
+import {
+  attemptStats,
+  bestSubmissions,
+  listContestSubmissions,
+} from "@/lib/db/contest-submissions";
 import { findSimilarPairs } from "@/lib/plagiarism/pairs";
 import {
+  downloadHref,
   parseSubmissionsQuery,
   submissionsHref,
   type SubmissionsQuery,
@@ -21,12 +26,17 @@ import {
 import { isStaff } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
-import { SimilarPairs, SubmissionList } from "@/components/teacher/contest-submissions";
+import {
+  SimilarPairs,
+  StudentTable,
+  SubmissionList,
+} from "@/components/teacher/contest-submissions";
 import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 100;
 const TABS: [SubmissionsTab, string][] = [
   ["attempts", "Илгээлтүүд"],
+  ["students", "Сурагчаар"],
   ["similar", "Хуулбар сэжиг"],
 ];
 const SELECT = "border-input bg-background flex h-9 w-full rounded-md border px-3 text-sm shadow-xs";
@@ -101,11 +111,19 @@ export default async function ContestSubmissionsPage({
           ))}
         </nav>
 
-        {query.tab === "attempts" ? (
+        {query.tab === "attempts" && (
           <AttemptsTab contestId={contestId} base={base} query={query} problems={problems} participants={participants} />
-        ) : (
-          <SimilarTab contestId={contestId} problems={problems} />
         )}
+        {query.tab === "students" && (
+          <StudentTable
+            contestId={contestId}
+            participants={participants}
+            problems={problems}
+            stats={await attemptStats(contestId)}
+            attemptsHref={(uid) => submissionsHref(base, { tab: "attempts", student: uid, page: 1 })}
+          />
+        )}
+        {query.tab === "similar" && <SimilarTab contestId={contestId} problems={problems} />}
       </main>
     </div>
   );
@@ -164,7 +182,16 @@ async function AttemptsTab({
         </Button>
       </form>
 
-      <SubmissionList rows={rows} problems={problems} />
+      {query.student && total > 0 && (
+        <div className="flex justify-end">
+          <Button render={<a href={downloadHref(contestId, query.student)} download />} nativeButton={false} variant="outline" size="sm">
+            <Download className="size-3.5" />
+            Энэ сурагчийн бүх оролдлого (ZIP)
+          </Button>
+        </div>
+      )}
+
+      <SubmissionList contestId={contestId} rows={rows} problems={problems} />
 
       {(rows.length > 0 || query.page > 1) && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">

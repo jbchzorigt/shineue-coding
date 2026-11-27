@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseSubmissionsQuery, submissionsHref } from "@/lib/submissions-query";
+import { downloadHref, parseSubmissionsQuery, submissionsHref } from "@/lib/submissions-query";
 
 const known = { studentIds: ["s1", "s2"], problemIds: ["p1"] };
 
@@ -45,4 +45,17 @@ test("submissionsHref leaves defaults out of the URL", () => {
     submissionsHref(base, { tab: "similar", student: "s1", problem: "p1", page: 2 }),
     `${base}?tab=similar&student=s1&problem=p1&page=2`
   );
+});
+
+test("the students tab is read and kept in links", () => {
+  assert.equal(parseSubmissionsQuery({ tab: "students" }, known).tab, "students");
+  assert.equal(
+    submissionsHref("/b", { tab: "students", page: 1 }),
+    "/b?tab=students"
+  );
+});
+
+test("downloadHref: one attempt, or all of a student's as a zip", () => {
+  assert.equal(downloadHref("cup", "a b/c", 42), "/api/teacher/contests/cup/download?student=a+b%2Fc&attempt=42");
+  assert.equal(downloadHref("cup", "s1"), "/api/teacher/contests/cup/download?student=s1");
 });

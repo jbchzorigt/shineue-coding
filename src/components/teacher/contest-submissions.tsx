@@ -1,10 +1,14 @@
-import type { ContestProblem } from "@/lib/db/contests";
-import type { SubmissionRow } from "@/lib/db/contest-submissions";
+import Link from "next/link";
+import { Download } from "lucide-react";
+import type { ContestProblem, Participant } from "@/lib/db/contests";
+import type { AttemptStat, SubmissionRow } from "@/lib/db/contest-submissions";
 import { formatDateTime } from "@/lib/datetime";
 import { parseCircuit } from "@/lib/logic/circuit";
 import { circuitFormulas } from "@/lib/logic/formula";
 import type { SimilarPair } from "@/lib/plagiarism/pairs";
+import { downloadHref } from "@/lib/submissions-query";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const PRE = "max-h-96 overflow-auto rounded-md bg-muted p-3 font-mono text-xs leading-relaxed";
 const EMPTY = "rounded-xl border bg-background p-6 text-center text-sm text-muted-foreground";
@@ -31,7 +35,15 @@ export function AnswerView({ problem, code }: { problem: ContestProblem | undefi
   return <pre className={PRE}>{code}</pre>;
 }
 
-export function SubmissionList({ rows, problems }: { rows: SubmissionRow[]; problems: ContestProblem[] }) {
+export function SubmissionList({
+  contestId,
+  rows,
+  problems,
+}: {
+  contestId: string;
+  rows: SubmissionRow[];
+  problems: ContestProblem[];
+}) {
   if (rows.length === 0) return <p className={EMPTY}>Илгээлт алга.</p>;
   const byId = new Map(problems.map((p) => [p.id, p]));
   return (
@@ -48,7 +60,10 @@ export function SubmissionList({ rows, problems }: { rows: SubmissionRow[]; prob
                   {r.class_name && <span className="ml-1.5 text-muted-foreground">{r.class_name}</span>}
                   {r.name && <span className="ml-2 text-muted-foreground">{r.email}</span>}
                 </span>
-                <span className="text-muted-foreground">{problem?.title ?? r.problem_id}</span>
+                <span className="text-muted-foreground">
+                  {problem?.title ?? r.problem_id}
+                  <span className="ml-1.5 text-xs">· {r.attempt}-р оролдлого</span>
+                </span>
                 <span className="font-medium tabular-nums">
                   {r.score}/{problem?.points ?? "?"}
                 </span>
@@ -56,7 +71,18 @@ export function SubmissionList({ rows, problems }: { rows: SubmissionRow[]; prob
                   {r.passed_tests}/{r.total_tests} тест
                 </span>
               </summary>
-              <div className="px-4 pb-4">
+              <div className="space-y-2 px-4 pb-4">
+                <div className="flex justify-end">
+                  <Button
+                    render={<a href={downloadHref(contestId, r.uid, r.id)} download />}
+                    nativeButton={false}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="size-3.5" />
+                    Татах
+                  </Button>
+                </div>
                 <AnswerView problem={problem} code={r.code} />
               </div>
             </details>
@@ -64,6 +90,105 @@ export function SubmissionList({ rows, problems }: { rows: SubmissionRow[]; prob
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * One row per student: best score and number of attempts on each problem.
+ * The name opens their attempts; ZIP downloads all of them.
+ */
+export function StudentTable({
+  contestId,
+  participants,
+  problems,
+  stats,
+  attemptsHref,
+}: {
+  contestId: string;
+  participants: Participant[];
+  problems: ContestProblem[];
+  stats: AttemptStat[];
+  attemptsHref: (uid: string) => string;
+}) {
+  if (participants.length === 0) return <p className={EMPTY}>Оролцогч алга.</p>;
+  const byStudent = new Map<string, Map<string, AttemptStat>>();
+  for (const s of stats) {
+    const mine = byStudent.get(s.uid) ?? new Map<string, AttemptStat>();
+    mine.set(s.problem_id, s);
+    byStudent.set(s.uid, mine);
+  }
+  const TH = "px-3 py-2 font-medium";
+  return (
+    <div className="overflow-x-auto rounded-xl border bg-background">
+      <table className="w-full text-sm">
+        <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th className={cn(TH, "px-4 text-left")}>Сурагч</th>
+            {problems.map((p, i) => (
+              <th key={p.id} className={cn(TH, "text-center")} title={p.title}>
+                <span className="mx-auto block max-w-[8rem] truncate">
+                  {i + 1}. {p.title}
+                </span>
+              </th>
+            ))}
+            <th className={cn(TH, "text-center")}>Нийт</th>
+            <th className={cn(TH, "text-center")}>Оролдлого</th>
+            <th className={TH}>
+              <span className="sr-only">Татах</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {participants.map((p) => {
+            const mine = byStudent.get(p.uid);
+            const attempts = [...(mine?.values() ?? [])].reduce((n, s) => n + s.attempts, 0);
+            return (
+              <tr key={p.uid} className="hover:bg-muted/30">
+                <td className="px-4 py-2">
+                  <Link href={attemptsHref(p.uid)} className="font-medium hover:underline">
+                    {p.name ?? p.email}
+                  </Link>
+                  {p.class_name && <span className="ml-1.5 text-muted-foreground">{p.class_name}</span>}
+                  {p.name && <div className="text-xs text-muted-foreground">{p.email}</div>}
+                </td>
+                {problems.map((problem) => {
+                  const s = mine?.get(problem.id);
+                  return (
+                    <td key={problem.id} className="px-3 py-2 text-center tabular-nums">
+                      {s ? (
+                        <>
+                          <div className="font-medium">
+                            {s.best}/{problem.points}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{s.attempts} удаа</div>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className="px-3 py-2 text-center font-semibold tabular-nums">{p.total}</td>
+                <td className="px-3 py-2 text-center tabular-nums">{attempts}</td>
+                <td className="px-3 py-2 text-right">
+                  {attempts > 0 && (
+                    <Button
+                      render={<a href={downloadHref(contestId, p.uid)} download />}
+                      nativeButton={false}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Download className="size-3.5" />
+                      ZIP
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

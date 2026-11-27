@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, max, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { contestParticipants, contestSubmissions, users } from "@/lib/db/schema";
 import type { ScoreEvent } from "@/lib/contest-timeline";
@@ -13,6 +13,8 @@ export interface SubmissionRow {
   email: string;
   class_name: string | null;
   problem_id: string;
+  /** 1 for the student's first attempt at this problem, 2 for the next… */
+  attempt: number;
   /** Python code, or the circuit as JSON. */
   code: string;
   score: number;
@@ -22,6 +24,15 @@ export interface SubmissionRow {
   submitted_at: number;
 }
 
+/**
+ * Counted over the student's attempts at the problem. Correct as long as a
+ * query filters only by contest, student and problem — every query here does.
+ */
+const attemptNumber = sql<number>`row_number() over (
+  partition by ${contestSubmissions.contest_id}, ${contestSubmissions.uid}, ${contestSubmissions.problem_id}
+  order by ${contestSubmissions.submitted_at}, ${contestSubmissions.id}
+)`.mapWith(Number);
+
 const columns = {
   id: contestSubmissions.id,
   uid: contestSubmissions.uid,
@@ -29,6 +40,7 @@ const columns = {
   email: contestParticipants.email,
   class_name: users.class_name,
   problem_id: contestSubmissions.problem_id,
+  attempt: attemptNumber,
   code: contestSubmissions.code,
   score: contestSubmissions.score,
   passed_tests: contestSubmissions.passed_tests,
@@ -88,16 +100,67 @@ export async function bestSubmissions(contestId: string): Promise<SubmissionRow[
   return rows.map(toRow);
 }
 
-/** Every attempt, oldest first — for the CSV export. */
-export async function allContestSubmissions(contestId: string): Promise<SubmissionRow[]> {
+/** The code (or circuit JSON) of a student's last attempt at a problem, so the editor picks up where they left off. */
+export async function latestSubmissionCode(
+  contestId: string,
+  uid: string,
+  problemId: string
+): Promise<string | null> {
+  const [row] = await getDb()
+    .select({ code: contestSubmissions.code })
+    .from(contestSubmissions)
+    .where(
+      and(
+        eq(contestSubmissions.contest_id, contestId),
+        eq(contestSubmissions.uid, uid),
+        eq(contestSubmissions.problem_id, problemId)
+      )
+    )
+    .orderBy(desc(contestSubmissions.submitted_at), desc(contestSubmissions.id))
+    .limit(1);
+  return row?.code ?? null;
+}
+
+/** Every attempt (or one student's), oldest first — for the CSV export and the zip. */
+export async function allContestSubmissions(
+  contestId: string,
+  opts: { uid?: string } = {}
+): Promise<SubmissionRow[]> {
   const rows = await getDb()
     .select(columns)
     .from(contestSubmissions)
     .innerJoin(contestParticipants, participantOf)
     .leftJoin(users, eq(users.uid, contestSubmissions.uid))
-    .where(eq(contestSubmissions.contest_id, contestId))
+    .where(
+      and(
+        eq(contestSubmissions.contest_id, contestId),
+        opts.uid ? eq(contestSubmissions.uid, opts.uid) : undefined
+      )
+    )
     .orderBy(asc(contestSubmissions.submitted_at), asc(contestSubmissions.id));
   return rows.map(toRow);
+}
+
+export interface AttemptStat {
+  uid: string;
+  problem_id: string;
+  attempts: number;
+  best: number;
+}
+
+/** How often each student tried each problem, and their best score there. */
+export async function attemptStats(contestId: string): Promise<AttemptStat[]> {
+  const rows = await getDb()
+    .select({
+      uid: contestSubmissions.uid,
+      problem_id: contestSubmissions.problem_id,
+      attempts: count(),
+      best: max(contestSubmissions.score),
+    })
+    .from(contestSubmissions)
+    .where(eq(contestSubmissions.contest_id, contestId))
+    .groupBy(contestSubmissions.uid, contestSubmissions.problem_id);
+  return rows.map((r) => ({ ...r, best: r.best ?? 0 }));
 }
 
 /** Approved participants' attempts, oldest first — the score chart's input. */
