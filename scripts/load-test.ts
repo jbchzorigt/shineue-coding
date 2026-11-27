@@ -6,7 +6,8 @@
  *       each runs 5 tests one after another, 300 ms apart, like gradePython.
  *   npm run script -- scripts/load-test.ts app <appBaseUrl> [students]
  *       LOCAL ONLY. Full flow through a running `next start`: K test students
- *       log in at the same moment, then all submit at the same moment.
+ *       log in at the same moment, all open the problem page at the same
+ *       moment, then all submit at the same moment.
  *       Creates its own contest and users, and deletes them again.
  *   npm run script -- scripts/load-test.ts report
  *       Writes the collected results to docs/superpowers/reports/.
@@ -23,7 +24,7 @@ import { generateTempPassword, hashPassword } from "../src/lib/passwords";
 import { isLocalUrl } from "../src/lib/local-only";
 
 const RESULTS = path.join(".superpowers", "sdd", "2026-11-14-contest-divisions", "load-results.jsonl");
-const REPORT = path.join("docs", "superpowers", "reports", "2026-11-14-contest-load-test.md");
+const REPORT = path.join("docs", "superpowers", "reports", `${new Date().toISOString().slice(0, 10)}-contest-load-test.md`);
 const TESTS_PER_SUBMISSION = 5;
 const RUN_GAP_MS = 300;
 
@@ -254,7 +255,31 @@ async function appMode(baseUrl: string, students: number): Promise<void> {
     );
     record({ mode: "app-login", level: students, ...loginStats, failures: loginFailures });
 
-    // Phase 2: everyone submits at the same moment.
+    // Phase 2: everyone opens the problem page at the same moment.
+    const tPage = Date.now();
+    const pages = await Promise.all(
+      accounts.map(async (_, i) => {
+        const started = Date.now();
+        try {
+          const res = await fetch(`${baseUrl}/contests/${CONTEST}/problems/${PROBLEM}`, {
+            redirect: "manual",
+            headers: { Cookie: logins[i].jar.header() },
+          });
+          const html = await res.text();
+          return { ok: res.status === 200 && html.includes("Нийлбэр"), status: res.status, ms: Date.now() - started };
+        } catch {
+          return { ok: false, status: 0, ms: Date.now() - started };
+        }
+      })
+    );
+    const pageStats = summary(pages.map((p) => p.ms));
+    const pageFailures = pages.filter((p) => !p.ok).length;
+    console.log(
+      `problem page: ${students - pageFailures}/${students} ok in ${((Date.now() - tPage) / 1000).toFixed(1)} s — p50 ${(pageStats.p50 / 1000).toFixed(1)} s, p95 ${(pageStats.p95 / 1000).toFixed(1)} s, max ${(pageStats.max / 1000).toFixed(1)} s`
+    );
+    record({ mode: "app-page", level: students, ...pageStats, failures: pageFailures });
+
+    // Phase 3: everyone submits at the same moment.
     const t1 = Date.now();
     const submits = await Promise.all(
       accounts.map(async (a, i) => {
@@ -308,6 +333,7 @@ function reportMode(): void {
   const s = (ms: unknown) => (Number(ms) / 1000).toFixed(1);
   const piston = rows.filter((r) => r.mode === "piston");
   const logins = rows.filter((r) => r.mode === "app-login");
+  const pages = rows.filter((r) => r.mode === "app-page");
   const submits = rows.filter((r) => r.mode === "app-submit");
   const lines = [
     "# Тэмцээний ачааллын тест",
@@ -330,6 +356,7 @@ function reportMode(): void {
     "| Үе шат | Сурагч | p50 (с) | p95 (с) | max (с) | Үр дүн |",
     "|---|---|---|---|---|---|",
     ...logins.map((r) => `| Зэрэг нэвтрэх | ${r.level} | ${s(r.p50)} | ${s(r.p95)} | ${s(r.max)} | ${r.failures} амжилтгүй |`),
+    ...pages.map((r) => `| Зэрэг бодлого нээх | ${r.level} | ${s(r.p50)} | ${s(r.p95)} | ${s(r.max)} | ${r.failures} амжилтгүй |`),
     ...submits.map(
       (r) =>
         `| Зэрэг илгээх | ${r.level} | ${s(r.p50)} | ${s(r.p95)} | ${s(r.max)} | статус ${JSON.stringify(r.statuses)}, оноо зөрсөн ${r.scoreMismatches}, сервер ${r.alive ? "ажиллаж байна" : "УНАСАН"} |`
