@@ -14,6 +14,7 @@ import { isStaff } from "@/lib/types";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { SiteHeader } from "@/components/site-header";
 import { ContestRunner } from "@/components/contest/contest-runner";
+import { NoCopy } from "@/components/contest/no-copy";
 import { LogicConstraints } from "@/components/logic/logic-constraints";
 import { LogicSolver } from "@/components/logic/logic-solver";
 import { Button } from "@/components/ui/button";
@@ -71,13 +72,14 @@ export default async function ContestProblemPage({
           </span>
         </div>
 
-        <div className="rounded-xl border bg-background p-6">
+        {/* Students can't copy the statement; staff can. */}
+        <NoCopy enabled={!staff} className="rounded-xl border bg-background p-6">
           <h1 className="mb-4 text-xl font-bold">{problem.title}</h1>
           <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
             <MdxContent source={problem.prompt} />
           </div>
           {logicSpec && <LogicConstraints spec={logicSpec} />}
-        </div>
+        </NoCopy>
 
         {problem.kind === "logic" ? (
           logicSpec ? (
