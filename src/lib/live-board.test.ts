@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Contest } from "@/lib/db/contests";
 import {
+  divisionShape,
   formatDuration,
   homeBoard,
   liveView,
@@ -167,4 +168,10 @@ test("rowKeys: unique, even for a repeated id", () => {
   const [a, b] = rowKeys("cup", ["u1", "u1"]);
   assert.notEqual(a, b);
   assert.deepEqual(rowKeys("cup", ["u1"]), [a]);
+});
+
+test("divisionShape: the division's place in its series picks one of the seven shapes", () => {
+  const members = ["d67", "d8", "d9", "d10", "d11", "d12", "fans", "extra"].map((id) => ({ id }));
+  assert.deepEqual(members.map((m) => divisionShape(members, m.id)), [0, 1, 2, 3, 4, 5, 6, 0]);
+  assert.equal(divisionShape(members, "unknown"), 0);
 });

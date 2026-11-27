@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { LayoutGrid, TrendingUp } from "lucide-react";
 import { auth } from "@/auth";
 import { getLiveSnapshot, getPublicContests } from "@/lib/live-cache";
-import { liveView, seriesMembers } from "@/lib/live-board";
+import { divisionShape, liveView, seriesMembers } from "@/lib/live-board";
 import { divisionLabel } from "@/lib/contest-division";
 import { SiteHeader } from "@/components/site-header";
 import { ScoreRaceChart } from "@/components/contest/score-race-chart";
 import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-status-badge";
 import { AutoRefresh } from "@/components/live/auto-refresh";
 import { Countdown } from "@/components/live/countdown";
+import { DivisionShape } from "@/components/live/division-shape";
 import { LiveTable } from "@/components/live/live-table";
 import { LiveDot, LiveRefreshIcon } from "@/components/live/motion";
 import { cn } from "@/lib/utils";
@@ -31,29 +32,32 @@ export default async function LiveContestPage({ params }: { params: Promise<{ co
       <SiteHeader />
       <AutoRefresh until={contest.ends_at} />
       <main className="mx-auto max-w-4xl space-y-6 p-4 pt-8 lg:max-w-7xl">
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold lg:text-3xl">{contest.title}</h1>
-            <span className="flex items-center gap-2">
-              {view.status === "running" && <LiveDot />}
-              <ContestStatusBadge status={view.status} />
-            </span>
-          </div>
-          {(contest.series || contest.grade_min !== null) && (
-            <p className="text-sm font-medium lg:text-base">
-              {[contest.series, divisionLabel(contest)].filter(Boolean).join(" · ")}
+        <div className="flex items-start gap-4">
+          <DivisionShape index={divisionShape(members, contest.id)} className="size-14 lg:size-20" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-2xl font-bold lg:text-3xl">{contest.title}</h1>
+              <span className="flex items-center gap-2">
+                {view.status === "running" && <LiveDot />}
+                <ContestStatusBadge status={view.status} />
+              </span>
+            </div>
+            {(contest.series || contest.grade_min !== null) && (
+              <p className="text-sm font-medium lg:text-base">
+                {[contest.series, divisionLabel(contest)].filter(Boolean).join(" · ")}
+              </p>
+            )}
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span>{formatWindow(contest.starts_at, contest.ends_at)}</span>
+              <span className="font-semibold text-foreground lg:text-lg">
+                <Countdown startsAt={contest.starts_at} endsAt={contest.ends_at} />
+              </span>
+              <span className="flex items-center gap-1">
+                <LiveRefreshIcon className="size-3.5" />
+                15 с тутам шинэчлэгдэнэ
+              </span>
             </p>
-          )}
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span>{formatWindow(contest.starts_at, contest.ends_at)}</span>
-            <span className="font-semibold text-foreground lg:text-lg">
-              <Countdown startsAt={contest.starts_at} endsAt={contest.ends_at} />
-            </span>
-            <span className="flex items-center gap-1">
-              <LiveRefreshIcon className="size-3.5" />
-              15 с тутам шинэчлэгдэнэ
-            </span>
-          </p>
+          </div>
         </div>
 
         {members.length > 1 && (

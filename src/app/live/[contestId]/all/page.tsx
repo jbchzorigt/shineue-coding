@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getLiveSnapshot, getPublicContests } from "@/lib/live-cache";
-import { liveView, seriesMembers } from "@/lib/live-board";
+import { divisionShape, liveView, seriesMembers } from "@/lib/live-board";
 import { contestStatus } from "@/lib/contest-status";
 import { divisionLabel } from "@/lib/contest-division";
 import { SiteHeader } from "@/components/site-header";
 import { AutoRefresh } from "@/components/live/auto-refresh";
 import { Countdown } from "@/components/live/countdown";
+import { DivisionShape } from "@/components/live/division-shape";
 import { LiveListRow } from "@/components/live/live-table";
 import { LiveDot, LiveRefreshIcon } from "@/components/live/motion";
 import { cn } from "@/lib/utils";
@@ -59,11 +60,14 @@ export default async function LiveSeriesPage({ params }: { params: Promise<{ con
         <div className={cn("grid gap-4 md:grid-cols-2", COLUMNS[boards.length] ?? "lg:grid-cols-4")}>
           {boards.map(({ contest, rows }) => (
             <section key={contest.id} className="rounded-xl border bg-background p-4">
-              <h2 className="mb-3 text-lg font-bold lg:text-xl 2xl:text-3xl">
-                <Link href={`/live/${contest.id}`} className="hover:underline">
-                  {divisionLabel(contest)}
-                </Link>
-              </h2>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-bold lg:text-xl 2xl:text-3xl">
+                  <Link href={`/live/${contest.id}`} className="hover:underline">
+                    {divisionLabel(contest)}
+                  </Link>
+                </h2>
+                <DivisionShape index={divisionShape(members, contest.id)} className="size-10 lg:size-12 2xl:size-16" />
+              </div>
               {rows.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">Оролцогч бүртгүүлээгүй байна.</p>
               ) : (
