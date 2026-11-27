@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { RefreshCw } from "lucide-react";
 import { auth } from "@/auth";
 import { getLiveSnapshot, getPublicContests } from "@/lib/live-cache";
 import { liveView, seriesMembers } from "@/lib/live-board";
+import { contestStatus } from "@/lib/contest-status";
 import { divisionLabel } from "@/lib/contest-division";
 import { SiteHeader } from "@/components/site-header";
-import { ClassTag } from "@/components/class-filter";
 import { AutoRefresh } from "@/components/live/auto-refresh";
 import { Countdown } from "@/components/live/countdown";
+import { LiveListRow } from "@/components/live/live-table";
+import { LiveDot, LiveRefreshIcon } from "@/components/live/motion";
 import { cn } from "@/lib/utils";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
 const TOP = 10;
 /** Fill the hall screen whatever the number of divisions (literal classes for Tailwind). */
 const COLUMNS: Record<number, string> = { 2: "lg:grid-cols-2", 3: "lg:grid-cols-3" };
@@ -35,6 +35,7 @@ export default async function LiveSeriesPage({ params }: { params: Promise<{ con
   ).filter((b) => b !== null);
   const startsAt = Math.min(...members.map((c) => c.starts_at));
   const endsAt = Math.max(...members.map((c) => c.ends_at));
+  const running = members.some((c) => contestStatus(c) === "running");
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -44,11 +45,12 @@ export default async function LiveSeriesPage({ params }: { params: Promise<{ con
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-2xl font-bold lg:text-4xl 2xl:text-5xl">{members[0].series}</h1>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="text-lg font-semibold text-foreground lg:text-2xl">
+            <span className="flex items-center gap-2 text-lg font-semibold text-foreground lg:text-2xl">
+              {running && <LiveDot />}
               <Countdown startsAt={startsAt} endsAt={endsAt} />
             </span>
             <span className="flex items-center gap-1">
-              <RefreshCw className="size-3.5" />
+              <LiveRefreshIcon className="size-3.5" />
               15 с тутам шинэчлэгдэнэ
             </span>
           </p>
@@ -65,18 +67,10 @@ export default async function LiveSeriesPage({ params }: { params: Promise<{ con
               {rows.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">Оролцогч бүртгүүлээгүй байна.</p>
               ) : (
-                <ol className="divide-y">
+                // Positioned, so rows measure their place against the list (see useRowMotion).
+                <ol className="relative divide-y">
                   {rows.map((r) => (
-                    <li key={r.rank} className="flex items-center justify-between gap-2 py-1.5 lg:text-lg 2xl:py-2.5 2xl:text-2xl">
-                      <span className="min-w-0 truncate">
-                        <span className="inline-block w-8">
-                          {MEDALS[r.rank - 1] ?? <span className="text-sm text-muted-foreground">{r.rank}</span>}
-                        </span>
-                        <span className="font-medium">{r.name}</span>
-                        <ClassTag value={r.class_name} />
-                      </span>
-                      <span className="font-bold tabular-nums">{r.total}</span>
-                    </li>
+                    <LiveListRow key={r.key} row={r} />
                   ))}
                 </ol>
               )}

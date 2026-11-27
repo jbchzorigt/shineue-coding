@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { LayoutGrid, RefreshCw, TrendingUp } from "lucide-react";
+import { LayoutGrid, TrendingUp } from "lucide-react";
 import { auth } from "@/auth";
 import { getLiveSnapshot, getPublicContests } from "@/lib/live-cache";
 import { liveView, seriesMembers } from "@/lib/live-board";
@@ -11,6 +11,7 @@ import { ContestStatusBadge, formatWindow } from "@/components/contest/contest-s
 import { AutoRefresh } from "@/components/live/auto-refresh";
 import { Countdown } from "@/components/live/countdown";
 import { LiveTable } from "@/components/live/live-table";
+import { LiveDot, LiveRefreshIcon } from "@/components/live/motion";
 import { cn } from "@/lib/utils";
 
 /** One division's public, self-refreshing board. */
@@ -33,7 +34,10 @@ export default async function LiveContestPage({ params }: { params: Promise<{ co
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-2xl font-bold lg:text-3xl">{contest.title}</h1>
-            <ContestStatusBadge status={view.status} />
+            <span className="flex items-center gap-2">
+              {view.status === "running" && <LiveDot />}
+              <ContestStatusBadge status={view.status} />
+            </span>
           </div>
           {(contest.series || contest.grade_min !== null) && (
             <p className="text-sm font-medium lg:text-base">
@@ -46,7 +50,7 @@ export default async function LiveContestPage({ params }: { params: Promise<{ co
               <Countdown startsAt={contest.starts_at} endsAt={contest.ends_at} />
             </span>
             <span className="flex items-center gap-1">
-              <RefreshCw className="size-3.5" />
+              <LiveRefreshIcon className="size-3.5" />
               15 с тутам шинэчлэгдэнэ
             </span>
           </p>
@@ -87,7 +91,7 @@ export default async function LiveContestPage({ params }: { params: Promise<{ co
               <ScoreRaceChart series={view.race} start={contest.starts_at} end={view.chartEnd} maxTotal={view.maxTotal} />
             </section>
           )}
-          <LiveTable view={view} />
+          <LiveTable rows={view.rows} problems={view.problems} maxTotal={view.maxTotal} />
         </div>
       </main>
     </div>

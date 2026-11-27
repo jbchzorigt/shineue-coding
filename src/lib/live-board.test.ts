@@ -6,6 +6,7 @@ import {
   homeBoard,
   liveView,
   publicName,
+  rowKeys,
   seriesMembers,
   type LiveSnapshot,
 } from "./live-board";
@@ -148,4 +149,22 @@ test("a reused series name does not pull in last year's divisions", () => {
 test("liveView hides problem titles before the start", () => {
   assert.equal(liveView(snap, { uid: null }, T0 - 1).problems[0].title, null);
   assert.equal(liveView(snap, { uid: null }, T0 + 1).problems[0].title, "Нийлбэр");
+});
+
+test("liveView: a row's key follows the student between refreshes and viewers, without the uid", () => {
+  const visitor = liveView(snap, { uid: null }, T0 + 2 * HOUR);
+  const student = liveView(snap, { uid: "u2" }, T0 + 2 * HOUR);
+  const keys = visitor.rows.map((r) => r.key);
+  assert.deepEqual(student.rows.map((r) => r.key), keys);
+  assert.notEqual(keys[0], keys[1]);
+  // Sara overtakes Bat: the keys move with them.
+  const swapped = liveView({ ...snap, participants: [...snap.participants].reverse() }, { uid: null }, T0 + 2 * HOUR);
+  assert.deepEqual(swapped.rows.map((r) => r.key), [keys[1], keys[0]]);
+  for (const key of keys) assert.match(key, /^[0-9a-z_]+$/);
+});
+
+test("rowKeys: unique, even for a repeated id", () => {
+  const [a, b] = rowKeys("cup", ["u1", "u1"]);
+  assert.notEqual(a, b);
+  assert.deepEqual(rowKeys("cup", ["u1"]), [a]);
 });
